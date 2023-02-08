@@ -1,0 +1,2 @@
+Acts as a placeholder to allow git to integrate the folder structure.
+This should be deleted once actual files have been committed to the folder.
