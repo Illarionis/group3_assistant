@@ -1,19 +1,10 @@
 # Group 3 - Digital Assistant
 
-## Dependencies
-The GUI of the project is built using the JavaFX-library.
-This is an external library that requires to be [downloaded](https://gluonhq.com/products/javafx/) <br>
-Moreover, have a look at the [documentation](https://openjfx.io/openjfx-docs/) 
-to see how to link the downloaded FX-library to the IDEA you have used to open this project.
-
-## Temporary Solution: Fixing the project structure in IntelliJ
-<li> Go the navigation bar at the top </li> 
-<li> Select the option 'File' </li>
-<li> Select the option 'Project Structure' </li>
-<li> Click on 'Modules' </li>
-<li> Click on the folder 'framework' </li>
-<li> Mark the folder 'framework' as 'Sources' </li>
-<li> Click on the folder 'implementation' as 'Sources' </li>
-<li> Mark the folder 'implementation' as 'Sources' </li>
-<li> Click on the folder 'verification' </li>
-<li> Mark the folder 'verification' as 'Tests' </li>
+## Running the GUI in IntelliJ using Gradle
+1. Open the gradle tab that is located on the right side menu ![](images/readme/1.png)
+2. Open the dropdown menu by clicking once ![](images/readme/2.png)
+3. Open the next dropdown menu by clicking on 'Tasks' ![](images/readme/3.png)
+4. Open the one last dropdown menu by clicking on 'build' ![](images/readme/4.png)
+5. Double-click on the other 'build' to compile the project ![](images/readme/5.png)
+6. Open the last dropdown menu by clicking on 'application' ![](images/readme/6.png)
+7. Finally, double-click on 'run' and the GUI will be activated ![](images/readme/7.png)
