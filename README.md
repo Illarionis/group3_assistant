@@ -11,4 +11,4 @@
 
 ### Remark: GUI Location
 To see what is running on the GUI or to add some new interactions etc.,
-one can find the GUI (definition) in src/java/desktop/MainApp
+one can find the GUI (definition) in src/main/java/desktop/MainApp
