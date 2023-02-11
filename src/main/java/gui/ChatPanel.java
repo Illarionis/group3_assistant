@@ -1,8 +1,10 @@
 package gui;
 
 import javafx.scene.control.TextField;
+import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.*;
+import javafx.scene.paint.Color;
 import javafx.scene.text.Text;
 
 import java.util.ArrayDeque;
@@ -44,9 +46,11 @@ final class ChatPanel extends BorderPane {
             INPUT_FIELD.clear();
 
             if (message.length() != 0) {
-                Text messageHolder = new Text("User: " + message);
-                CHAT_HISTORY.getChildren().add(messageHolder);
-                UNPROCESSED_MESSAGES.add(message);
+//                Text messageHolder = new Text("User: " + message);
+//                CHAT_HISTORY.getChildren().add(messageHolder);
+//                UNPROCESSED_MESSAGES.add(message);
+                ImageView imageView = speechbubble.createSpeechBubble(message, 200, 100,true, Color.GREEN);
+                CHAT_HISTORY.getChildren().add(imageView);
             }
         });
     }
