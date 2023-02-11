@@ -49,7 +49,7 @@ final class ChatPanel extends BorderPane {
 //                Text messageHolder = new Text("User: " + message);
 //                CHAT_HISTORY.getChildren().add(messageHolder);
 //                UNPROCESSED_MESSAGES.add(message);
-                ImageView imageView = speechbubble.createSpeechBubble(message, 200, 100,true, Color.GREEN);
+                ImageView imageView = speechbubble.createSpeechBubble(message, 200, 100,true);
                 CHAT_HISTORY.getChildren().add(imageView);
             }
         });
