@@ -6,28 +6,16 @@ import javafx.scene.control.TabPane;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.HBox;
 
-/**
- * Provides the layout of the application running on a desktop.
- **/
-public class DesktopLayout extends AnchorPane {
+final class ChatManager extends AnchorPane {
     private final TabPane CHATS = new TabPane();
     private int activeTabs = 0;
 
-    public DesktopLayout() {
-        final SideMenu MENU = new SideMenu();
+    public ChatManager() {
         final HBox CONTROLS = new HBox();
 
-        // Setting the preferred width of the side menu in a 1920x1080 setting
-        MENU.setPrefWidth(180);
-
-        // Setting the anchor locations of the side menu
-        AnchorPane.setTopAnchor(MENU, 0.0);
-        AnchorPane.setLeftAnchor(MENU, 0.0);
-        AnchorPane.setBottomAnchor(MENU, 0.0);
-
         // Setting the anchor locations of the chat tabs
-        AnchorPane.setTopAnchor(CHATS,0.0);
-        AnchorPane.setLeftAnchor(CHATS, 180.0);
+        AnchorPane.setTopAnchor(CHATS,1.0);
+        AnchorPane.setLeftAnchor(CHATS, 1.0);
         AnchorPane.setRightAnchor(CHATS, 1.0);
         AnchorPane.setBottomAnchor(CHATS, 1.0);
 
@@ -47,8 +35,7 @@ public class DesktopLayout extends AnchorPane {
             CHATS.getTabs().add(t);
         });
 
-
         // Adding all components to the layout
-        getChildren().addAll(MENU, CHATS, CONTROLS);
+        getChildren().addAll(CHATS, CONTROLS);
     }
 }
