@@ -1,18 +1,16 @@
 package gui;
 
+import design.engine.Assistant;
+import design.engine.Function;
 import javafx.scene.control.TextField;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.*;
 
-import java.util.ArrayDeque;
-import java.util.Queue;
-
-final class ChatPanel extends BorderPane {
-    private final Queue<String> UNPROCESSED_MESSAGES = new ArrayDeque<>();
+final class ChatPanel<Input, Output> extends BorderPane {
     private final VBox CHAT_HISTORY = new VBox();
 
-    public ChatPanel() {
+    public ChatPanel(Assistant<Input, Output> a) {
         // Provides the user input field.
         final TextField INPUT_FIELD = new TextField();
 
@@ -45,11 +43,25 @@ final class ChatPanel extends BorderPane {
 
             // Reminder; When a message has a length of 0, it means there is no input.
             if (message.length() != 0) {
-                // Store the message into the memory.
-                UNPROCESSED_MESSAGES.add(message);
-
                 // Display the message.
                 displayMessage(message, true);
+
+
+                // Obtains the functions to pre-process the input and post-process the output.
+                Function<String, Input> f1  = a.getPreProcessor();
+                Function<Output, String> f2 = a.getPostProcessor();
+
+                // Pre-processing the input.
+                Input x = f1.evaluate(message);
+
+                // Obtaining the output.
+                Output y = a.process(x);
+
+                // Post-processing the output.
+                String response = f2.evaluate(y);
+
+                // Displaying the received response.
+                displayMessage(response, false);
             }
         });
     }
@@ -67,15 +79,11 @@ final class ChatPanel extends BorderPane {
         return b;
     }
 
-    public void displayMessage(String s, boolean messageIsFromUser) {
+    private void displayMessage(String s, boolean messageIsFromUser) {
         // Create the message box that gets displayed on the screen.
         HBox messageBox = createMessageBox(s, messageIsFromUser);
 
         // Add it to the conversation history, in order for it to get displayed.
         CHAT_HISTORY.getChildren().add(messageBox);
-    }
-
-    public Queue<String> getUnprocessedMessages() {
-        return UNPROCESSED_MESSAGES;
     }
 }

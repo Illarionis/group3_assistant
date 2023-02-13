@@ -1,16 +1,18 @@
 package gui;
 
+import design.engine.Assistant;
 import javafx.scene.control.Button;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.HBox;
 
-final class ChatManager extends AnchorPane {
-    private final TabPane CHATS = new TabPane();
+final class ChatManager<Input, Output> extends AnchorPane {
     private int activeTabs = 0;
 
-    public ChatManager() {
+    public ChatManager(Assistant<Input, Output> a) {
+        // Definition of the components used to make the chat window.
+        final TabPane CHATS = new TabPane();
         final HBox CONTROLS = new HBox();
 
         // Setting the anchor locations of the chat tabs
@@ -29,9 +31,14 @@ final class ChatManager extends AnchorPane {
 
         // Defining the functionality of the new tab button
         newTab.setOnMouseClicked(event -> {
+            // Making the new tab.
             Tab t = new Tab("Tab " + ++activeTabs);
-            ChatPanel chat = new ChatPanel();
+
+            // Making a new chat panel.
+            ChatPanel<Input, Output> chat = new ChatPanel<>(a);
             t.setContent(chat);
+
+            // Adding the new conversation tab.
             CHATS.getTabs().add(t);
         });
 
