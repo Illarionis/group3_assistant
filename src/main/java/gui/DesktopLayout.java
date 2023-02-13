@@ -59,7 +59,7 @@ public class DesktopLayout extends AnchorPane implements Layout {
             if (hasUnprocessedMessagesAtActiveTab()) {
                 Queue<String> queue = getUnprocessedMessagesFromActiveTab();
                 ChatPanel chat = (ChatPanel) getActiveChatTab().getContent();
-                chat.displayMessage("You have typed: " + queue.poll());
+                chat.displayMessage("You have typed: " + queue.poll(), false);
             }
         });
 

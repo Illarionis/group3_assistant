@@ -4,8 +4,6 @@ import javafx.scene.control.TextField;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.*;
-import javafx.scene.paint.Color;
-import javafx.scene.text.Text;
 
 import java.util.ArrayDeque;
 import java.util.Queue;
@@ -15,7 +13,7 @@ final class ChatPanel extends BorderPane {
     private final VBox CHAT_HISTORY = new VBox();
 
     public ChatPanel() {
-
+        // Provides the user input field.
         final TextField INPUT_FIELD = new TextField();
 
         // Sets how much empty space there should be between each message.
@@ -45,19 +43,36 @@ final class ChatPanel extends BorderPane {
             String message = INPUT_FIELD.getText();
             INPUT_FIELD.clear();
 
+            // Reminder; When a message has a length of 0, it means there is no input.
             if (message.length() != 0) {
-//                Text messageHolder = new Text("User: " + message);
-//                CHAT_HISTORY.getChildren().add(messageHolder);
-//                UNPROCESSED_MESSAGES.add(message);
-                ImageView imageView = speechbubble.createSpeechBubble(message, 200, 100,true);
-                CHAT_HISTORY.getChildren().add(imageView);
+                // Store the message into the memory.
+                UNPROCESSED_MESSAGES.add(message);
+
+                // Display the message.
+                displayMessage(message, true);
             }
         });
     }
 
-    public void displayMessage(String s) {
-        Text messageHolder = new Text(s);
-        CHAT_HISTORY.getChildren().add(messageHolder);
+    private HBox createMessageBox(String s, boolean stringIsUserMessage) {
+        final HBox b = new HBox();
+        var children = b.getChildren();
+        if (stringIsUserMessage) {
+            final Pane emptySpaceHolder = new Pane();
+            HBox.setHgrow(emptySpaceHolder, Priority.ALWAYS);
+            children.add(emptySpaceHolder);
+        }
+        ImageView decoratedMessage = SpeechBubble.createSpeechBubble(s, 200, 100,true);
+        children.add(decoratedMessage);
+        return b;
+    }
+
+    public void displayMessage(String s, boolean messageIsFromUser) {
+        // Create the message box that gets displayed on the screen.
+        HBox messageBox = createMessageBox(s, messageIsFromUser);
+
+        // Add it to the conversation history, in order for it to get displayed.
+        CHAT_HISTORY.getChildren().add(messageBox);
     }
 
     public Queue<String> getUnprocessedMessages() {

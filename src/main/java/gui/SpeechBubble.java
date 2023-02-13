@@ -10,15 +10,15 @@ import javafx.scene.text.TextAlignment;
 import javafx.scene.text.Text;
 import static javafx.geometry.VPos.*;
 
-public class speechbubble {
+public final class SpeechBubble {
+    private SpeechBubble() {}
 
-
-    //create a new speechbubble javafx image with the given text
-    //the speechbubble is rectangular with round corners and has a tail
-    //the tail is at the bottom of the speechbubble
-    //the tail is at the left or right side of the speechbubble and the user can choose which side
-    //method returns the speechbubble javafx image
-    //define the constructur of the speechbubble class
+    //create a new speech bubble javafx image with the given text
+    //the speech bubble is rectangular with round corners and has a tail
+    //the tail is at the bottom of the speech bubble
+    //the tail is at the left or right side of the speech bubble and the user can choose which side
+    //method returns the speech bubble javafx image
+    //define the constructor of the speech bubble class
     //public static ImageView createSpeechBubble(String text, int width, int height, int tail, boolean left, Color color)
 
     public static ImageView createSpeechBubble(String message, int maxWidth, int maxHeight, boolean left){
@@ -45,11 +45,11 @@ public class speechbubble {
         //add a canvas to draw on
         Canvas canvas = new Canvas(width, height);
         GraphicsContext gc = canvas.getGraphicsContext2D();
-        //draw the speechbubble
-        //draw the speechbubble rectangle
+        //draw the speech bubble
+        //draw the speech bubble rectangle
         gc.setFill(Color.rgb(220, 248, 198));
         gc.fillRoundRect(0, 0, width, height, 20, 20);
-        //draw the speechbubble tail
+        //draw the speech bubble tail
         /*gc.setFill(Color.RED);
         if(left){
             gc.fillPolygon(new double[]{0, 0, 20}, new double[]{height/2d, height/2d+20, height/2d}, 3);
