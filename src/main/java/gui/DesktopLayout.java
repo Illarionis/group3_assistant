@@ -6,12 +6,10 @@ import javafx.scene.control.TabPane;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.HBox;
 
-import java.util.Queue;
-
 /**
  * Provides the layout of the application running on a desktop.
  **/
-public class DesktopLayout extends AnchorPane implements Layout {
+public class DesktopLayout extends AnchorPane {
     private final TabPane CHATS = new TabPane();
     private int activeTabs = 0;
 
@@ -50,45 +48,7 @@ public class DesktopLayout extends AnchorPane implements Layout {
         });
 
 
-        // Adding a test button to mirror the last typed message
-        Button mirror = new Button("Repeat Message");
-        MENU.getChildren().add(mirror);
-
-        // Defining the functionality of the new mirror button
-        mirror.setOnMouseClicked(event -> {
-            if (hasUnprocessedMessagesAtActiveTab()) {
-                Queue<String> queue = getUnprocessedMessagesFromActiveTab();
-                ChatPanel chat = (ChatPanel) getActiveChatTab().getContent();
-                chat.displayMessage("You have typed: " + queue.poll(), false);
-            }
-        });
-
         // Adding all components to the layout
         getChildren().addAll(MENU, CHATS, CONTROLS);
-    }
-
-    private Tab getActiveChatTab() {
-        var tabSelectionModel = CHATS.getSelectionModel();
-        return tabSelectionModel.getSelectedItem();
-    }
-
-    @Override
-    public Queue<String> getUnprocessedMessagesFromActiveTab() {
-        Tab active = getActiveChatTab();
-        if (active != null) {
-            ChatPanel chat = (ChatPanel) active.getContent();
-            return chat.getUnprocessedMessages();
-        }
-        throw new IllegalStateException("There is not a single chat tab open!");
-    }
-
-    @Override
-    public boolean hasUnprocessedMessagesAtActiveTab() {
-        Tab active = getActiveChatTab();
-        if (active != null) {
-            ChatPanel chat = (ChatPanel) active.getContent();
-            return chat.getUnprocessedMessages().size() > 0;
-        }
-        return false;
     }
 }
