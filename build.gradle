@@ -33,4 +33,4 @@ test {
 
 
 
-mainClassName = "engine.CalendarQuickstart"
+mainClassName = "desktop.MainApp"
