@@ -74,7 +74,7 @@ final class ChatPanel<Input, Output> extends BorderPane {
             HBox.setHgrow(emptySpaceHolder, Priority.ALWAYS);
             children.add(emptySpaceHolder);
         }
-        ImageView decoratedMessage = SpeechBubble.createSpeechBubble(s, 200, 100,true);
+        ImageView decoratedMessage = SpeechBubble.createSpeechBubble(s,stringIsUserMessage);
         children.add(decoratedMessage);
         return b;
     }

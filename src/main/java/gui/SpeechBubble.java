@@ -19,11 +19,11 @@ public final class SpeechBubble {
     //the tail is at the left or right side of the speech bubble and the user can choose which side
     //method returns the speech bubble javafx image
     //define the constructor of the speech bubble class
-    //public static ImageView createSpeechBubble(String text, int width, int height, int tail, boolean left, Color color)
 
-    public static ImageView createSpeechBubble(String message, int maxWidth, int maxHeight, boolean left){
-        int maxCharperRow = 40;
-
+    public static ImageView createSpeechBubble(String message, boolean stringIsUserMessage){
+        int maxCharPerRow = 20;
+        //if string is user message, then the speech bubble is on the right side and the color is Color.rgb(220, 248, 198); (light green) otherwise it is on the left side and the color is Color.rgb(255, 255, 255); (white)
+        Color color = stringIsUserMessage ? Color.rgb(220, 248, 198) : Color.rgb(255, 255, 255);
         Font font = Font.font("Verdana", FontWeight.NORMAL, 20);
         Text text = new Text(message);
         text.setFont(font);
@@ -31,11 +31,11 @@ public final class SpeechBubble {
         double width = text.getLayoutBounds().getWidth()+20;
         double height = text.getLayoutBounds().getHeight();
 
-        if(message.length() > maxCharperRow){
-            int rows = (int) Math.ceil(message.length() / maxCharperRow);
+        if(message.length() > maxCharPerRow){
+            int rows = (int) Math.ceil(message.length() / maxCharPerRow);
             StringBuilder sb = new StringBuilder();
             for (int i = 1; i <= rows; i++)
-                sb.append(message, maxCharperRow * (i - 1), maxCharperRow * i).append("\n");
+                sb.append(message, maxCharPerRow * (i - 1), maxCharPerRow * i).append("\n");
             text.setText(sb.toString());
             width = text.getLayoutBounds().getWidth()+20;
             height = text.getLayoutBounds().getHeight();
@@ -43,20 +43,27 @@ public final class SpeechBubble {
 
         ImageView imageView = new ImageView();
         //add a canvas to draw on
-        Canvas canvas = new Canvas(width, height);
+        Canvas canvas = new Canvas(width+10, height+5);
         GraphicsContext gc = canvas.getGraphicsContext2D();
+
+        //draw the background the size of the canvas
+        gc.setFill(Color.rgb(244, 244, 244));
+        gc.fillRect(0, 0, width+10, height+5);
         //draw the speech bubble
-        //draw the speech bubble rectangle
-        gc.setFill(Color.rgb(220, 248, 198));
-        gc.fillRoundRect(0, 0, width, height, 20, 20);
-        //draw the speech bubble tail
-        /*gc.setFill(Color.RED);
-        if(left){
-            gc.fillPolygon(new double[]{0, 0, 20}, new double[]{height/2d, height/2d+20, height/2d}, 3);
+        gc.setFill(color);
+        gc.fillRoundRect(5, 0, width, height, 20, 20);
+
+        //draw a red speech bubble tail at the stringIsUserMessage or right side
+        //the tail has the shape of a triangle
+        //the tail is at the bottom of the speech bubble
+        //if the tail is at the stringIsUserMessage it points to the stringIsUserMessage
+        //if the tail is at the right it points to the right
+        gc.setFill(color);
+        if(stringIsUserMessage){
+            gc.fillPolygon(new double[]{width, width-5, width-15}, new double[]{height+15, height-20, height}, 3);
         }else{
-            gc.fillPolygon(new double[]{width, width, width-20}, new double[]{height/2d, height/2d+20, height/2d}, 3);
-        }*/
-        //draw the text
+            gc.fillPolygon(new double[]{-5, 5, 15}, new double[]{height+15, height-20, height}, 3);
+        }
         gc.setFill(Color.BLACK);
         gc.setFont(font);
         gc.setTextAlign(TextAlignment.LEFT);
