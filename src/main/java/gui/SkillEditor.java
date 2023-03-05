@@ -1,40 +1,28 @@
 package gui;
 
 
-import javafx.application.Application;
-import javafx.scene.Scene;
+import javafx.collections.ObservableList;
+import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
-import javafx.stage.Stage;
 import javafx.geometry.Pos;
 import javafx.scene.paint.*;
 import javafx.scene.text.*;
 
 
-public class SkillEditor {
+public class SkillEditor extends VBox {
 
     //buttons
     Button bsave=new Button("Save");
     Button bdelete=new Button("Delete");
-    Button addslot= new Button("+");
 
     //labels
     Label Q1=new Label("Question: ");
-    Label S2=new Label("Slots: ");
-
 
     //textfields
     TextField question=new TextField();
-    TextField slots=new TextField();
-    TextField newslot = new TextField();
 
-
-    VBox vboxnewslot = new VBox();
-
-
-    SkillEditor(Stage primaryStage)
-    {
-
+    public SkillEditor() {
         //HBox for the question: includes question label and textfield
         HBox questionBox=new HBox();
         questionBox.getChildren().add(Q1);
@@ -42,17 +30,10 @@ public class SkillEditor {
         questionBox.setSpacing(5);
         questionBox.getChildren().add(question);
 
-
-        //HBox for the slots: includes slot label and textfield
-        HBox slotBox=new HBox();
-        slotBox.getChildren().add(S2);
-        slotBox.setAlignment(Pos.CENTER);
-        slotBox.setSpacing(5);
-        slotBox.getChildren().add(slots);
-        slotBox.getChildren().add(addslot);
-
-        vboxnewslot.getChildren().add(slotBox);
-
+        // Creating the slot holder
+        VBox slotHolder = new VBox();
+        ObservableList<Node> slots = slotHolder.getChildren();
+        addNewSlot(slots);
 
         //HBox for the buttons: includes save and delete buttons
         HBox buttonsBox=new HBox();
@@ -60,7 +41,6 @@ public class SkillEditor {
         buttonsBox.getChildren().add(bdelete);
         buttonsBox.setAlignment(Pos.CENTER);
         buttonsBox.setSpacing(5);
-
 
         //adding the textflow for the help text
         HBox textBox=new HBox();
@@ -78,35 +58,47 @@ public class SkillEditor {
         textBox.getChildren().add(text_flow);
 
         //adding the HBoxes
-        VBox editor=new VBox();
-        editor.getChildren().add(questionBox);
-        editor.setAlignment(Pos.CENTER);
-        editor.setSpacing(70);
+        getChildren().add(questionBox);
+        setAlignment(Pos.CENTER);
+        setSpacing(70);
 
-        editor.getChildren().add(vboxnewslot);
-        editor.setAlignment(Pos.CENTER);
-        editor.setSpacing(70);
+        getChildren().add(slotHolder);
+        setAlignment(Pos.CENTER);
+        setSpacing(70);
 
-        editor.getChildren().add(buttonsBox);
-        editor.setAlignment(Pos.CENTER);
+        getChildren().add(buttonsBox);
+        setAlignment(Pos.CENTER);
 
-        editor.getChildren().add(textBox);
-        editor.setAlignment(Pos.CENTER);
+        getChildren().add(textBox);
+        setAlignment(Pos.CENTER);
+    }
 
-        addslot.setOnAction(event -> {
-            //setting a max of 10 slots per skill
-            for (int i = 0; i < 10; i++) {
-                newslot.setPrefWidth(5);
-                newslot.setPrefHeight(5);
-                vboxnewslot.getChildren().add(newslot);
+    private void addNewSlot(ObservableList<Node> slotList) {
+        // Creating the slot object
+        HBox box = new HBox();
+        box.setAlignment(Pos.CENTER);
+        box.setSpacing(5);
+
+        // Creating slot components
+        Label l = new Label("Slot: ");
+        TextField slotField = new TextField();
+        Button newSlotButton = new Button("+");
+        Button removeSlotButton = new Button("-");
+
+        // Adding all components to the slot object
+        box.getChildren().addAll(l, slotField, newSlotButton, removeSlotButton);
+
+        // Defining the functionality of the new slot button.
+        newSlotButton.setOnAction(e -> addNewSlot(slotList));
+
+        // Defining the functionality of the remove slot button.
+        removeSlotButton.setOnAction(e -> {
+            if (slotList.size() > 1) {
+                slotList.remove(box);
             }
         });
 
-        Scene scene = new Scene (editor, 500, 750);
-        primaryStage.setTitle("Skill Editor");
-        primaryStage.setScene(scene);
-        primaryStage.show();
+        // Adding the slot to the slot list
+        slotList.add(box);
     }
-
-
 }

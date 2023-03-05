@@ -2,8 +2,13 @@ package gui;
 
 import design.engine.Assistant;
 import design.gui.Session;
+import javafx.geometry.Insets;
 import javafx.scene.Scene;
+import javafx.scene.layout.Background;
+import javafx.scene.layout.BackgroundFill;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.CornerRadii;
+import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 
 public final class UserSession<Input, Output> implements Session<Input, Output> {
@@ -12,15 +17,19 @@ public final class UserSession<Input, Output> implements Session<Input, Output> 
         // Creating a bordered layout for the main scene/screen
         BorderPane pane = new BorderPane();
 
-        // Todo: Swap the menu template with the graphical skill editor.
-        // Creating a side menu template
-        SideMenu menu = new SideMenu();
+        // Creating the skill editor.
+        var editor = new SkillEditor();
 
-        // Giving the menu a preferred width (so it can be displayed on the border pane)
-        menu.setPrefWidth(100);
+        // Setting the desired (max) width of the editor
+        editor.setPrefWidth(300);
 
-        // Setting the side menu on the left side
-        pane.setLeft(menu);
+        // Setting a background to the editor.
+        var fill = new BackgroundFill(Color.GRAY, CornerRadii.EMPTY, Insets.EMPTY);
+        var background = new Background(fill);
+        editor.setBackground(background);
+
+        // Setting the editor on the left of the main window.
+        pane.setLeft(editor);
 
         // Creating the chat window
         ChatManager<Input, Output> manager = new ChatManager<>(a);
