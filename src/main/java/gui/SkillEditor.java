@@ -11,7 +11,7 @@ import javafx.scene.paint.*;
 import javafx.scene.text.*;
 
 
-public class SkillEditor extends Application {
+public class SkillEditor {
 
     //buttons
     Button bsave=new Button("Save");
@@ -32,9 +32,7 @@ public class SkillEditor extends Application {
     VBox vboxnewslot = new VBox();
 
 
-
-    @Override
-    public void start(Stage primaryStage)
+    SkillEditor(Stage primaryStage)
     {
 
         //HBox for the question: includes question label and textfield
