@@ -62,6 +62,9 @@ final class ChatPanel<Input, Output> extends BorderPane {
 
                 // Displaying the received response.
                 displayMessage(response, false);
+
+                //TODO: SAVE HERE ===========================================================================================
+
             }
         });
     }
