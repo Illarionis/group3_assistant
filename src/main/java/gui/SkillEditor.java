@@ -15,6 +15,7 @@ public class SkillEditor extends VBox {
     //buttons
     Button bsave=new Button("Save");
     Button bdelete=new Button("Delete");
+    Button bhelp = new Button();
 
     //labels
     Label Q1=new Label("Question: ");
@@ -45,16 +46,24 @@ public class SkillEditor extends VBox {
         //adding the textflow for the help text
         HBox textBox=new HBox();
         TextFlow text_flow = new TextFlow();
-        Text help = new Text("HELP\n");
+        Text help = new Text("HELP");
         help.setFill(Color.RED);
         help.setFont(Font.font("Times New Roman", FontPosture.ITALIC,25));
 
-        Text helptext = new Text("Through this Skill Editor you have the possibility to define new skills. Said skills are loaded and saved into a text file ");
+        Text helptext = new Text("\nThrough this Skill Editor you have the possibility to define new skills. Said skills are loaded and saved into a text file ");
         helptext.setFill(Color.BLACK);
         helptext.setFont(Font.font("Helvetica", 15));
+        helptext.setVisible(false);
 
-        text_flow.getChildren().add(help);
-        text_flow.getChildren().add(helptext);
+        //help button displays the help text
+        //press button again to hide text
+
+        bhelp.setGraphic(help);
+        bhelp.setOnAction(event -> {
+            helptext.setVisible(!helptext.isVisible());
+        });
+
+        text_flow.getChildren().addAll(bhelp, helptext);
         textBox.getChildren().add(text_flow);
 
         //adding the HBoxes

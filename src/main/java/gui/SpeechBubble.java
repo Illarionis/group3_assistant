@@ -13,10 +13,6 @@ import static javafx.geometry.VPos.*;
 public final class SpeechBubble {
     private SpeechBubble() {}
 
-    //create a new speech bubble javafx image with the given text
-    //the speech bubble is rectangular with round corners and has a tail
-    //the tail is at the bottom of the speech bubble
-    //the tail is at the left or right side of the speech bubble and the user can choose which side
     //method returns the speech bubble javafx image
     //define the constructor of the speech bubble class
 
@@ -53,7 +49,7 @@ public final class SpeechBubble {
         gc.setFill(color);
         gc.fillRoundRect(5, 0, width, height, 20, 20);
 
-        //draw a red speech bubble tail at the stringIsUserMessage or right side
+        //draw a tail at the stringIsUserMessage or right side
         //the tail has the shape of a triangle
         //the tail is at the bottom of the speech bubble
         //if the tail is at the stringIsUserMessage it points to the stringIsUserMessage
