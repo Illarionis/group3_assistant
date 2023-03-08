@@ -45,7 +45,7 @@ final class ChatPanel<Input, Output> extends BorderPane {
             if (message.length() != 0) {
                 // Display the message.
                 displayMessage(message, true);
-
+                // TODO: message user save
 
                 // Obtains the functions to pre-process the input and post-process the output.
                 Function<String, Input> f1  = a.getPreProcessor();
@@ -63,7 +63,7 @@ final class ChatPanel<Input, Output> extends BorderPane {
                 // Displaying the received response.
                 displayMessage(response, false);
 
-                //TODO: SAVE HERE ===========================================================================================
+                //TODO: SAVE ressponse
 
             }
         });
