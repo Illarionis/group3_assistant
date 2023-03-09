@@ -16,42 +16,69 @@ import java.util.Objects;
 
 public class LogController {
     private final int userId;
-    private final int conversationId;
+    private final int chatId;
     private String messageText;
     private boolean isRequest;
     private String fileName;
     private File fileLog;
     private JSONArray messagesArr;
 
-    public LogController(int userId, int conversationId, String messageText, boolean isRequest) {
+    /**
+     * Constructor 1
+     *
+     * Used for saving
+     *
+     * @param userId - id of the user
+     * @param chatId - id of the chat
+     * @param messageText - text to be saved
+     * @param isRequest - if true - the message is from the user, else - the message is from the assistant
+     */
+    public LogController(int userId, int chatId, String messageText, boolean isRequest) {
         this.userId = userId;
-        this.conversationId = conversationId;
+        this.chatId = chatId;
         this.messageText = messageText;
         this.isRequest = isRequest;
         setFileName();
         setFileLog();
     }
 
-    public LogController(int userId, int conversationId) {
+    /**
+     * Constructor 2
+     * Used for loading and deleting
+     * @param userId - id of the user
+     * @param chatId - id of the chat
+     */
+    public LogController(int userId, int chatId) {
         this.userId = userId;
-        this.conversationId = conversationId;
+        this.chatId = chatId;
         setFileName();
         setFileLog();
     }
 
+    /**
+     * Saving the message text using this.userId and this.chatId, defined in Constructor 1
+     * If you used Constructor 2 - you cannot use save()
+     */
     public void save() {
+        if(Objects.isNull(messageText)){
+            return;
+        }
         if (!logExists()) {
             createFile();
         }
         setMessagesArr();
 
-        if (!saveMessage()) System.out.println("Saved successfully!");
+        if (saveMessage()) System.out.println("Saved successfully!");
         else System.out.println("Saving failed :(");
     }
 
-    public void deleteConversation() {
+    /**
+     * Deletes the chat from the log system by using this.userId and this.chatId
+     * Either constructors are applicable
+     */
+    public void deleteChat() {
         fileLog.delete();
-        int newIdIter = this.conversationId + 1;
+        int newIdIter = this.chatId + 1;
         File next = getFileByChatId(newIdIter);
         File tmp;
         if (!next.exists()) return;
@@ -64,17 +91,25 @@ public class LogController {
         }
     }
 
+    /**
+     * Uses this.userId and this.chatId to retrieve the chat log in a form of JSONString
+     * @return JSONString of a certain chat
+     */
     public String loadString() {
-        JSONArray conversation = loadJSON();
-        if (Objects.isNull(conversation)) {
-            return "Conversation does not exist";
+        JSONArray chat = loadJSON();
+        if (Objects.isNull(chat)) {
+            return "Chat does not exist";
         }
-        return conversation.toJSONString();
+        return chat.toJSONString();
     }
 
+    /**
+     * Uses this.userId and this.chatId to retrieve the chat log in a form of JSONArray
+     * @return JSONArray of a certain chat
+     */
     public JSONArray loadJSON() {
         if (!logExists()) {
-            System.out.println("Conversation is not in log");
+            System.out.println("Chat is not in log");
             return new JSONArray();
         }
         return (JSONArray) readJSONfromFile();
@@ -101,7 +136,7 @@ public class LogController {
     }
 
     private void setFileName() {
-        this.fileName = "log_" + this.userId + "_" + this.conversationId + ".json";
+        this.fileName = "log_" + this.userId + "_" + this.chatId + ".json";
     }
 
     private void setFileLog() {
