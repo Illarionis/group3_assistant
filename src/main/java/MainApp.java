@@ -1,5 +1,3 @@
-package desktop;
-
 import engine.DigitalAssistant;
 import gui.UserSession;
 import javafx.application.Application;
