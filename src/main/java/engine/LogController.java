@@ -15,8 +15,8 @@ import java.util.Objects;
 
 
 public class LogController {
-    private int userId;
-    private int conversationId;
+    private final int userId;
+    private final int conversationId;
     private String messageText;
     private boolean isRequest;
     private String fileName;
@@ -29,14 +29,14 @@ public class LogController {
         this.messageText = messageText;
         this.isRequest = isRequest;
         setFileName();
-        this.fileLog = new File(fileName);
+        setFileLog();
     }
 
-    public LogController(int userId, int conversationId){
+    public LogController(int userId, int conversationId) {
         this.userId = userId;
         this.conversationId = conversationId;
         setFileName();
-        this.fileLog = new File(fileName);
+        setFileLog();
     }
 
     public void save() {
@@ -45,28 +45,43 @@ public class LogController {
         }
         setMessagesArr();
 
-        if (saveMessage()) System.out.println("Saved successfully!");
+        if (!saveMessage()) System.out.println("Saved successfully!");
         else System.out.println("Saving failed :(");
     }
 
-    public String getConversationString(){
-        JSONArray conversation = getConversationJSON();
+    public void deleteConversation() {
+        fileLog.delete();
+        int newIdIter = this.conversationId + 1;
+        File next = getFileByChatId(newIdIter);
+        File tmp;
+        if (!next.exists()) return;
+
+        while (next.exists()) {
+            tmp = getFileByChatId(newIdIter - 1);
+            next.renameTo(tmp);
+            newIdIter++;
+            next = getFileByChatId(newIdIter);
+        }
+    }
+
+    public String loadString() {
+        JSONArray conversation = loadJSON();
         if (Objects.isNull(conversation)) {
             return "Conversation does not exist";
         }
         return conversation.toJSONString();
     }
 
-    public JSONArray getConversationJSON(){
-        if(!logExists()){
+    public JSONArray loadJSON() {
+        if (!logExists()) {
             System.out.println("Conversation is not in log");
             return new JSONArray();
         }
-        return getConversationFromFile();
+        return (JSONArray) readJSONfromFile();
     }
 
-    private JSONArray getConversationFromFile(){
-        return (JSONArray) readJSONfromFile();
+    private File getFileByChatId(int id) {
+        return new File("log_" + this.userId + "_" + id + ".json");
     }
 
     private boolean saveMessage() {
@@ -85,8 +100,12 @@ public class LogController {
         this.messagesArr = (JSONArray) readJSONfromFile();
     }
 
-    private void setFileName(){
+    private void setFileName() {
         this.fileName = "log_" + this.userId + "_" + this.conversationId + ".json";
+    }
+
+    private void setFileLog() {
+        this.fileLog = new File(fileName);
     }
 
     private boolean logExists() {
@@ -128,14 +147,5 @@ public class LogController {
             System.out.println("<EXCEPTION> readJSONfromFile: " + e.getMessage());
             return null;
         }
-    }
-
-    public static void main(String[] args) {
-//        LogController logger = new LogController(0, 0, "helloooo", true);
-//        LogController logController = new LogController(1, 0, "olaaaa", true);
-//        logController.save();
-//
-//        System.out.println(new LogController(1, 0).getConversationString());
-
     }
 }
