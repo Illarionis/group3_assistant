@@ -1,0 +1,20 @@
+[
+  {
+    "dateTime": "2023-03-08T13:31:53.231929700",
+    "messageText": "helloooo",
+    "isRequest": true,
+    "messageId": 0
+  },
+  {
+    "dateTime": "2023-03-08T13:32:36.574451900",
+    "messageText": "good day, i am assistant",
+    "isRequest": false,
+    "messageId": 1
+  },
+  {
+    "dateTime": "2023-03-09T17:36:38.329047900",
+    "messageText": "at first was 0",
+    "isRequest": true,
+    "messageId": 2
+  }
+]
