@@ -1,3 +1,4 @@
+import engine.LogController;
 import gui.Chat;
 import gui.Overview;
 import gui.SkillEditor;
@@ -63,10 +64,18 @@ public class MainApp extends Application {
 
             final TextField messageField = c.getMessageField();
             messageField.setOnKeyPressed(keyPressedEvent -> {
-                if (keyPressedEvent.getCode() == KeyCode.ENTER && !(titleField.getText() == null || titleField.getText().isBlank())) {
-                   final Node message = c.createNode(messageField.getText(), true);
-                   c.addNode(message);
-                   messageField.clear();
+                if (keyPressedEvent.getCode() == KeyCode.ENTER) {
+                    String s = messageField.getText();
+                    if (s == null || s.isBlank()) {
+                        return;
+                    }
+
+                    final Node message = c.createNode(messageField.getText(), true);
+                    c.addNode(message);
+
+                    LogController l = new LogController(69, 0, s, true);
+                    l.save();
+                    messageField.clear();
                 }
             });
         });
