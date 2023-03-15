@@ -1,7 +1,9 @@
-import engine.LogController;
-import gui.Chat;
-import gui.Overview;
-import gui.SkillEditor;
+package old;
+
+import old.engine.LogController;
+import old.gui.Chat;
+import old.gui.Overview;
+import old.gui.SkillEditor;
 import javafx.application.Application;
 import javafx.scene.Node;
 import javafx.scene.Scene;
