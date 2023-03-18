@@ -16,4 +16,5 @@ out/
 !**/src/test/**/out/
 
 ### Data ###
+data
 .data

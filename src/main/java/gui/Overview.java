@@ -1,13 +1,10 @@
 package gui;
 
 import javafx.event.ActionEvent;
-import javafx.event.Event;
 import javafx.event.EventHandler;
 import javafx.scene.Node;
 import javafx.scene.control.*;
-import javafx.scene.layout.AnchorPane;
-import javafx.scene.layout.Border;
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 
 import java.util.List;
@@ -16,13 +13,13 @@ public final class Overview extends AnchorPane {
     private static final Border SOLID_BOX = Border.stroke(Color.DARKGRAY);
     private final ActionEvent listViewRequested, tabViewRequested;
     private final EventHandler<ActionEvent> viewModeEventHandler;
-    private final EventHandler<Event> tabClosedEventHandler;
-    private final List<Node> nodes;
+    private final List<Node> buttons;
     private final List<Tab> tabs;
     private final SelectionModel<Tab> cursor;
 
     public Overview(String listViewTitle, String tabViewTitle) {
         final Button manageContent = getExpandableButton(20);
+        manageContent.setText("+");
         setLeftAnchor(manageContent, 5.0);
         setRightAnchor(manageContent, 5.0);
         setBottomAnchor(manageContent, 5.0);
@@ -34,7 +31,7 @@ public final class Overview extends AnchorPane {
 
         final VBox listContent = new VBox();
         listContent.setSpacing(1.0);
-        nodes = listContent.getChildren();
+        buttons = listContent.getChildren();
 
         final TabPane tabContent = new TabPane();
         tabContent.setTabClosingPolicy(TabPane.TabClosingPolicy.UNAVAILABLE);
@@ -65,12 +62,6 @@ public final class Overview extends AnchorPane {
             }
         };
 
-        tabClosedEventHandler = event -> {
-            if (tabs.size() == 0) {
-                showList();
-            }
-        };
-
         getChildren().addAll(titleHolder, viewPort, manageContent);
         setFocused(false);
         setFocusTraversable(false);
@@ -86,26 +77,19 @@ public final class Overview extends AnchorPane {
         return button;
     }
 
-    public void addButton(Node n) {
-        if (!nodes.contains(n)) {
-            nodes.add(n);
-        }
-    }
-
     public void addTab(Tab t) {
         if (!tabs.contains(t)) {
             tabs.add(t);
         }
     }
 
-    public Button createButton() {
-        return getExpandableButton(20);
-    }
-
-    public Tab createTab() {
-        final Tab t = new Tab();
-        t.setOnClosed(tabClosedEventHandler);
-        return t;
+    public void addButton(Button b) {
+        if (!buttons.contains(b)) {
+            buttons.add(b);
+            b.setBorder(SOLID_BOX);
+            b.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
+            b.setPrefHeight(20);
+        }
     }
 
     public Button getFootnoteButton() {
@@ -117,12 +101,15 @@ public final class Overview extends AnchorPane {
         showTabs();
     }
 
-    public void removeButton(Node n) {
-        nodes.remove(n);
+    public void removeButton(Button b) {
+        buttons.remove(b);
     }
 
     public void removeTab(Tab t) {
         tabs.remove(t);
+        if (tabs.size() == 0) {
+            showList();
+        }
     }
 
     public void showList() {

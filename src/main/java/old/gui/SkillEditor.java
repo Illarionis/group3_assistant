@@ -1,6 +1,7 @@
 package old.gui;
 
 
+import engine.Skill;
 import javafx.geometry.Insets;
 import javafx.scene.Node;
 import javafx.scene.control.*;
@@ -12,8 +13,9 @@ import javafx.scene.text.*;
 import java.util.ArrayList;
 import java.util.List;
 
-public class SkillEditor extends VBox {
+public class SkillEditor extends VBox implements Skill {
     private final Button deleteSkill, saveSkill;
+    private final List<Node> slots;
     private final List<TextField> slotFields;
     private final TextField questionField;
 
@@ -43,12 +45,14 @@ public class SkillEditor extends VBox {
         questionHolder.setSpacing(5);
 
         final VBox slotContent = new VBox();
+        slots = slotContent.getChildren();
+        addNewSlot();
+
         final ScrollPane slotHolder = new ScrollPane(slotContent);
         slotHolder.setBackground(Background.EMPTY);
         slotHolder.setBorder(Border.EMPTY);
         slotHolder.setFitToHeight(true);
         slotHolder.setFitToWidth(true);
-        addNewSlot(slotContent.getChildren());
 
         //adding the textflow for the help text
         HBox textBox=new HBox();
@@ -74,7 +78,22 @@ public class SkillEditor extends VBox {
         setSpacing(70);
     }
 
-    private void addNewSlot(List<Node> nodes) {
+    public SkillEditor(String s) {
+        this();
+
+        String[] segments = s.split("\r\n");
+        questionField.setText(segments[0]);
+
+        segments = segments[1].split("\n");
+        while (slotFields.size() < segments.length) {
+            addNewSlot();
+        }
+        for (int i = 0; i < segments.length; i++) {
+            slotFields.get(i).setText(segments[i]);
+        }
+    }
+
+    private void addNewSlot() {
         final HBox box = new HBox();
         box.setAlignment(Pos.CENTER);
         box.setSpacing(5);
@@ -85,42 +104,57 @@ public class SkillEditor extends VBox {
         slotField.setPromptText("Click to type...");
 
         final Button newSlotButton = new Button("+");
-        newSlotButton.setOnAction(e -> addNewSlot(nodes));
+        newSlotButton.setOnAction(e -> addNewSlot());
 
         final Button removeSlotButton = new Button("-");
         removeSlotButton.setOnAction(e -> {
-            if (nodes.size() > 1) {
-                nodes.remove(box);
+            if (slotFields.size() > 1) {
                 slotFields.remove(slotField);
+                slots.remove(box);
             }
         });
 
         box.getChildren().addAll(l, slotField, newSlotButton, removeSlotButton);
-        nodes.add(box);
+
         slotFields.add(slotField);
+        slots.add(box);
     }
 
-    public Button getDeleteSkillButton() {
+    public Button getDeleteButton() {
         return deleteSkill;
     }
 
-    public Button getSaveSkillButton() {
+    public Button getSaveButton() {
         return saveSkill;
     }
 
-    public TextField getQuestionField() {
-        return questionField;
+    public Button getTitleTracker() {
+        final Button b = new Button(questionField.getText());
+        questionField.textProperty().addListener((observable, oldValue, newValue) -> b.setText(newValue));
+        return b;
     }
 
-    public String getQuestion() {
+    @Override
+    public String getInput() {
         return questionField.getText();
     }
 
-    public String[] getSlots() {
+    @Override
+    public String[] getOutput() {
         String[] slots = new String[slotFields.size()];
         for (int i = 0; i < slotFields.size(); i++) {
             slots[i] = slotFields.get(i).getText();
         }
         return slots;
+    }
+
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder();
+        sb.append(getInput()).append("\r\n");
+        for (String s : getOutput()) {
+            sb.append(s).append("\n");
+        }
+        return sb.toString();
     }
 }
