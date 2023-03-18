@@ -82,6 +82,7 @@ public class MainApp extends Application {
                     for (String s : responses) {
                         c.newMessage(s, "Assistant");
                     }
+                    msgField.clear();
                 }
             }
         });

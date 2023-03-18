@@ -1,4 +1,4 @@
-package old.gui;
+package gui;
 //this is an attempt at implementing the AES Algorithm, because one guy on
 //stack overflow said that salting and pepepring passwords is not good enough
 //and we like to be good enough right

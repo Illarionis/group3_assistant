@@ -1,4 +1,4 @@
-package old.gui;
+package gui;
 
 
 import engine.Skill;

@@ -1,4 +1,4 @@
-package old.gui;
+package gui;
 
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
