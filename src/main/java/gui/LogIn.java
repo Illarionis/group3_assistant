@@ -1,118 +1,105 @@
-/**
-
 package gui;
-import javafx.application.Application;
-import javafx.scene.Scene;
-import javafx.scene.control.*;
-import javafx.scene.layout.*;
-import javafx.stage.Stage;
+
+import engine.AuthorizationHandler;
 import javafx.geometry.Pos;
-import javafx.scene.control.Button;
-import javafx.scene.control.TextField;
+import javafx.scene.Node;
+import javafx.scene.control.*;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
-import javafx.scene.control.Alert;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
 
 
-public class LogIn extends Application{
+public final class LogIn extends VBox {
+    public LogIn(AuthorizationHandler registrationHandler, AuthorizationHandler loginHandler) {
+        // Username related operations
+        final Label usernameLabel = getLabel("Username:");
+        final TextField usernameField = getUsernameField();
+        final HBox usernameBox = encapsulateHorizontally(usernameLabel, usernameField);
 
-    TextField password=new TextField();
-    PasswordField username=new PasswordField();
-    Label passw=new Label("Password: ");
-    Label usern=new Label("Username: ");
-    Button login=new Button("Log In");
-    VBox frame = new VBox();
+        // Password related operations
+        final Label passwordLabel = getLabel("Password:");
+        final TextField passwordField = getPasswordField();
+        final HBox passwordBox = encapsulateHorizontally(passwordLabel, passwordField);
 
-    public String[] getContent(){
-        String name = password.getText();
-        String password = username.getText();
-        String[] infos=new String[]{};
-        infos[0]=name;
-        infos[1]=password;
-        return infos;
-    }
+        // Buttons to register and login
+        final Button register = getButton("Sign-Up");
+        final Button login = getButton("Sign-In");
+        final HBox buttonBox = encapsulateHorizontally(register, login);
+        buttonBox.setPrefHeight(60);
+        buttonBox.setSpacing(30);
 
-    //Compare password entered and infos we have stored
-    public String Compare(){
-        //find user
-        //unsalt
-        //compare
-    }
+        // Configuring this object
+        getChildren().addAll(usernameBox, passwordBox, buttonBox);
+        setAlignment(Pos.CENTER);
+        setSpacing(5.0);
 
-    @Override
-    public void start(Stage primaryStage) throws Exception {
-        HBox passwordbox=new HBox();
-        passwordbox.getChildren().add(passw);
-        passwordbox.setAlignment(Pos.CENTER);
-        passwordbox.setSpacing(5);
-        passwordbox.getChildren().add(password);
+        // Defining alerts
+        final Alert usernameIsEmptyAlert = getErrorAlert("Username Error", "You did not provide a username.", "Please, type a username!");
+        final Alert passwordIsEmptyAlert = getErrorAlert("Password Error", "You did not provide a password.", "Please, type a password");
 
-
-        HBox usernamebox=new HBox();
-        usernamebox.getChildren().add(usern);
-        usernamebox.setAlignment(Pos.CENTER);
-        usernamebox.setSpacing(5);
-        usernamebox.getChildren().add(username);
-
-        frame.getChildren().add(usernamebox);
-        frame.setAlignment(Pos.CENTER);
-        frame.setSpacing(50);
-        frame.getChildren().add(passwordbox);
-        frame.setAlignment(Pos.CENTER);
-        frame.setSpacing(50);
-        frame.getChildren().add(login);
-
-        login.setOnAction(event -> {
-            if (password.getText().isEmpty()) {
-                Alert alert = new Alert(Alert.AlertType.ERROR);
-                alert.setTitle("Error");
-                alert.setHeaderText("No text entered");
-                alert.setContentText("Please enter some text.");
-                alert.showAndWait();
-            } else {
-                try (CSVWriter writer = new CSVWriter(new FileWriter("data.csv", true))) {
-                    String[] data = {text};
-                    writer.writeNext(data);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-
-                password.clear();
+        // Defining the registration event
+        register.setOnAction(event -> {
+            if (usernameField.getText().isBlank()) {
+                usernameIsEmptyAlert.showAndWait();
+            } else if (passwordField.getText().isBlank()) {
+                passwordIsEmptyAlert.showAndWait();
+            } else if (registrationHandler != null && registrationHandler.handle(usernameField.getText(), passwordField.getText())) {
+                usernameField.clear();
+                passwordField.clear();
             }
         });
 
+        // Defining the login event
         login.setOnAction(event -> {
-            if (username.getText().isEmpty()) {
-                Alert alert = new Alert(Alert.AlertType.ERROR);
-                alert.setTitle("Error");
-                alert.setHeaderText("No text entered");
-                alert.setContentText("Please enter some text.");
-                alert.showAndWait();
-            } else {
-                String text = username.getText();
-                try (CSVWriter writer = new CSVWriter(new FileWriter("data.csv", true))) {
-                    String[] data = {text};
-                    writer.writeNext(data);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-
-                username.clear();
+            if (usernameField.getText().isBlank()) {
+                usernameIsEmptyAlert.showAndWait();
+            } else if (passwordField.getText().isBlank()) {
+                passwordIsEmptyAlert.showAndWait();
+            } else if (loginHandler != null && loginHandler.handle(usernameField.getText(), passwordField.getText())) {
+                usernameField.clear();
+                passwordField.clear();
             }
         });
-
-        Scene scene = new Scene (frame, 300, 300);
-        primaryStage.setTitle("LogInPrompt");
-        primaryStage.setScene(scene);
-        primaryStage.show();
     }
 
-    public static void main(String[] args)
-    {
-        launch(args);
+    private HBox encapsulateHorizontally(Node... nodes) {
+        final HBox box = new HBox();
+        box.getChildren().addAll(nodes);
+        box.setAlignment(Pos.CENTER);
+        box.setPrefSize(300, 30);
+        box.setSpacing(1.0);
+        return box;
     }
 
+    private Alert getErrorAlert(String title, String header, String content) {
+        final Alert a = new Alert(Alert.AlertType.ERROR);
+        a.setTitle(title);
+        a.setHeaderText(header);
+        a.setContentText(content);
+        return a;
+    }
+
+    private Button getButton(String s) {
+        final Button b = new Button(s);
+        b.setPrefSize(90, 30);
+        return b;
+    }
+
+    private Label getLabel(String s) {
+        final Label l = new Label(s);
+        l.setAlignment(Pos.CENTER_RIGHT);
+        l.setPrefSize(90, 30);
+        return l;
+    }
+
+    private PasswordField getPasswordField() {
+        final PasswordField f = new PasswordField();
+        f.setPrefSize(210, 30);
+        return f;
+    }
+
+    private TextField getUsernameField() {
+        final TextField f = new TextField();
+        f.setPrefSize(210, 30);
+        return f;
+    }
 }
- **/
