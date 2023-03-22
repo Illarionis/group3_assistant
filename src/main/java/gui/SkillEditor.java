@@ -162,6 +162,7 @@ public class SkillEditor extends VBox implements Skill {
 
     public Button getTitleTracker() {
         final Button b = new Button(questionField.getText());
+        b.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
         questionField.textProperty().addListener((observable, oldValue, newValue) -> b.setText(newValue));
         return b;
     }
@@ -221,7 +222,7 @@ public class SkillEditor extends VBox implements Skill {
         sb.append("\r\n");
         sb.append(answerField.getText());
         System.out.println("-----------------------------STRING--------------------------------------------------");
-        System.out.println(sb.toString());
+        System.out.println(sb);
         return sb.toString();
     }
 }

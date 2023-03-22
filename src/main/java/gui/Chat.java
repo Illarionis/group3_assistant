@@ -101,6 +101,7 @@ public final class Chat extends AnchorPane {
 
     public Button getTitleTracker() {
         final Button b = new Button(getTitleField().getText());
+        b.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
         getTitleField().textProperty().addListener((observable, oldValue, newValue) -> b.setText(newValue));
         return b;
     }

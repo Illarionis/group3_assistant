@@ -66,7 +66,7 @@ public final class Overview extends AnchorPane {
         setFocused(false);
         setFocusTraversable(false);
         setStyle("-fx-focus-color : transparent; -fx-faint-focus-color : transparent;");
-        showList();
+        viewModeEventHandler.handle(listViewRequested);
     }
 
     private Button getExpandableButton(double h) {
@@ -77,46 +77,29 @@ public final class Overview extends AnchorPane {
         return button;
     }
 
-    public void addTab(Tab t) {
-        if (!tabs.contains(t)) {
-            tabs.add(t);
-        }
-    }
-
-    public void addButton(Button b) {
-        if (!buttons.contains(b)) {
-            buttons.add(b);
-            b.setBorder(SOLID_BOX);
-            b.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
-            b.setPrefHeight(20);
-        }
-    }
-
-    public Button getFootnoteButton() {
-        return (Button) getChildren().get(2);
-    }
-
-    public void openTab(Tab t) {
-        cursor.select(t);
-        showTabs();
-    }
-
-    public void removeButton(Button b) {
-        buttons.remove(b);
-    }
-
-    public void removeTab(Tab t) {
-        tabs.remove(t);
-        if (tabs.size() == 0) {
-            showList();
-        }
-    }
-
-    public void showList() {
+    private void showList() {
         viewModeEventHandler.handle(listViewRequested);
     }
 
-    public void showTabs() {
+    private void showTabs() {
         viewModeEventHandler.handle(tabViewRequested);
+    }
+
+    public EventHandler<ActionEvent> add(Node n, Button b) {
+        Tab t = new Tab("", n);
+        tabs.add(t);
+        buttons.add(b);
+        b.setOnAction(event -> {
+            cursor.select(t);
+            showTabs();
+        });
+        return event -> {
+            tabs.remove(t);
+            buttons.remove(b);
+        };
+    }
+
+    public void setEventHandler(EventHandler<ActionEvent> handler) {
+        ((Button) getChildren().get(2)).setOnAction(handler);
     }
 }
