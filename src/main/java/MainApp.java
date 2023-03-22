@@ -25,6 +25,7 @@ public class MainApp extends Application {
     private static final String SKILL_DIRECTORY = "data/skills";
     private final DataReader dataReader = new DataReader();
     private final DataWriter dataWriter = new DataWriter();
+    private final DirectoryGenerator directoryGenerator = new DirectoryGenerator();
     private final DirectoryReader directoryReader = new DirectoryReader();
 
 
@@ -35,7 +36,6 @@ public class MainApp extends Application {
     @Override
     public void start(Stage primaryStage) {
         // Preparing directories.
-        final DirectoryGenerator directoryGenerator = new DirectoryGenerator();
         directoryGenerator.generate(ACCOUNT_DIRECTORY);
         directoryGenerator.generate(CHAT_DIRECTORY);
         directoryGenerator.generate(SKILL_DIRECTORY);
@@ -251,6 +251,8 @@ public class MainApp extends Application {
      **/
     private void loadChats(String accountId, Assistant a, Overview o) {
         final String chatDirectoryOfAccount = Path.of(CHAT_DIRECTORY, accountId).toString();
+        directoryGenerator.generate(chatDirectoryOfAccount);
+
         for (File f : directoryReader.getFiles(chatDirectoryOfAccount)) {
             final String s = dataReader.read(f);
             final Chat c = new Chat(s);
@@ -268,6 +270,8 @@ public class MainApp extends Application {
      **/
     private void loadSkills(String accountId, Assistant a, Overview o) {
         final String skillDirectoryOfAccount = Path.of(SKILL_DIRECTORY, accountId).toString();
+        directoryGenerator.generate(skillDirectoryOfAccount);
+
         for (File f : directoryReader.getFiles(skillDirectoryOfAccount)) {
             final String s = dataReader.read(f);
             final SkillEditor e = new SkillEditor(s);
