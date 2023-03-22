@@ -14,5 +14,7 @@ public interface Skill {
     /**
      * Obtains the output associated with the skill.
      **/
+
     String[] getOutput();
+    String[] getOutput(String inputParam);
 }

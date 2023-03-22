@@ -47,7 +47,7 @@ public class MainApp extends Application {
         });
 
         final Overview skillOverview = new Overview("SKILLS", "EDIT");
-        skillOverview.setPrefSize(300, 600);
+        skillOverview.setPrefSize(600, 600);
         final Data skillData = new Data(new File("data/skills"));
         final File[] skillFiles = skillData.read(GUEST);
         for (File f : skillFiles) {

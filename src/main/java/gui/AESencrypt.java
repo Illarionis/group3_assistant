@@ -1,8 +1,4 @@
 package gui;
-//this is an attempt at implementing the AES Algorithm, because one guy on
-//stack overflow said that salting and pepepring passwords is not good enough
-//and we like to be good enough right
-//praise kink right there
 import javax.crypto.*;
 import javax.crypto.spec.IvParameterSpec;
 import java.security.InvalidAlgorithmParameterException;
@@ -41,7 +37,7 @@ public class AESencrypt {
 
     //Test
     public static void main(String[] args) throws Exception {
-        String input = "baeldung";
+        String input = "test123";
         SecretKey key = generateKey(128);
         IvParameterSpec ivParameterSpec = generateIv();
         String algorithm = "AES/CBC/PKCS5Padding";

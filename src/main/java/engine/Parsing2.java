@@ -22,7 +22,6 @@ public class Parsing2 {
 
 
     public static String chatSkill(String input) {
-
         for (int i=0; i<patterns.size(); i++) { //patterns : "which class do I have on *?"
             final Pattern p = Pattern.compile(patterns.get(i));
             Matcher m = p.matcher(input);
