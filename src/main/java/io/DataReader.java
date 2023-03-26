@@ -4,7 +4,16 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 
+/**
+ * Provides a tool that reads an entire file to a single string.
+ **/
 public final class DataReader {
+    /**
+     * Reads the entirety of a file to a string.
+     *
+     * @param f The file that should be read.
+     * @return A string representing all the data the file contains.
+     **/
     public String read(File f) {
         if (!f.exists()) {
             throw new IllegalArgumentException("Can not read non-existing file " + f.getPath());
