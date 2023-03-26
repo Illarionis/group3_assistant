@@ -1,6 +1,7 @@
-package engine;
+package io;
 
 import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
 
 public final class DataReader {
@@ -9,7 +10,7 @@ public final class DataReader {
             throw new IllegalArgumentException("Can not read non-existing file " + f.getPath());
         }
         try {
-            final java.io.FileReader r = new java.io.FileReader(f);
+            final FileReader r = new FileReader(f);
             final char[] buffer = new char[(int) f.length()];
             final boolean failed = r.read(buffer) != buffer.length;
             r.close();
