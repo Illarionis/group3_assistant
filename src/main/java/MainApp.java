@@ -3,6 +3,11 @@ import gui.Chat;
 import gui.LogIn;
 import gui.Overview;
 import gui.SkillEditor;
+import io.DataReader;
+import io.DataWriter;
+import io.DirectoryGenerator;
+import io.DirectoryReader;
+
 import javafx.application.Application;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
@@ -11,10 +16,6 @@ import javafx.scene.Scene;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.HBox;
 import javafx.stage.Stage;
-import io.DataReader;
-import io.DataWriter;
-import io.DirectoryGenerator;
-import io.DirectoryReader;
 
 import java.io.File;
 import java.nio.file.Path;
@@ -120,6 +121,7 @@ public class MainApp extends Application {
                     return;
                 }
                 c.newMessage(input, accountId);
+                inputField.clear();
 
                 final String[] responses = a.respond(input);
                 for (String s : responses) {
@@ -142,7 +144,7 @@ public class MainApp extends Application {
 
         // Defining how the chat gets deleted
         c.getDeleteButton().setOnAction(event -> {
-            if (f.delete()) {
+            if (f.delete() || !f.exists()) {
                 chatRemovalHandler.handle(event);
             }
         });
@@ -290,6 +292,7 @@ public class MainApp extends Application {
      * @param accountId    The id of the account for which the session should be loaded.
      **/
     private void loadUserSession(Stage primaryStage, String accountId) {
+
         // Defining an assistant that is used globally during user session.
         final Assistant a = new Assistant();
         System.out.println("-------------Assistant loaded------------");
@@ -297,15 +300,13 @@ public class MainApp extends Application {
         // Creating and configuring the chat overview.
         final Overview chatOverview = new Overview("CONVERSATIONS", "CHAT");
         chatOverview.setEventHandler(getNewChatEventHandler(accountId, a, chatOverview));
-        chatOverview.setPrefSize(640, 960);
-
+        chatOverview.setPrefSize(1920, 1080);
         System.out.println("-------------chat overview------------");
 
         // Creating and configuring the skill overview
         final Overview skillOverview = new Overview("SKILL LIST", "SKILL EDITOR");
         skillOverview.setEventHandler(getNewSkillEventHandler(accountId, a, skillOverview));
-        skillOverview.setPrefSize(640, 960);
-
+        skillOverview.setPrefSize(1920, 1080);
         System.out.println("-------------skill overview------------");
 
         // Loading existing data
@@ -314,20 +315,19 @@ public class MainApp extends Application {
         loadSkills(accountId, a, skillOverview);
         System.out.println("-------------skills loaded------------");
 
-
         // Preparing the scene root (aka user session)
         final HBox root = new HBox();
         root.getChildren().addAll(skillOverview, chatOverview);
         root.setAlignment(Pos.CENTER);
 
         System.out.println("-------------scene loaded------------");
-
         final Scene s = new Scene(root, 1280, 960);
         primaryStage.setScene(s);
         primaryStage.centerOnScreen();
         if (!primaryStage.isShowing()) {
             primaryStage.show();
         }
+        primaryStage.setMaximized(true);
         System.out.println("-------------scene shown------------");
     }
 }

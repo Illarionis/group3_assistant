@@ -66,7 +66,7 @@ public final class Overview extends AnchorPane {
         setFocused(false);
         setFocusTraversable(false);
         setStyle("-fx-focus-color : transparent; -fx-faint-focus-color : transparent;");
-        viewModeEventHandler.handle(listViewRequested);
+        viewModeEventHandler.handle(tabViewRequested);
     }
 
     private Button getExpandableButton(double h) {

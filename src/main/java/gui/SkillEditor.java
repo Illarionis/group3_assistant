@@ -10,12 +10,11 @@ import javafx.geometry.Pos;
 import javafx.scene.paint.*;
 import javafx.scene.text.*;
 
-import javax.swing.*;
-import java.util.ArrayList;
 import java.util.List;
 
 public class SkillEditor extends VBox implements Skill {
     private final Button deleteSkill, saveSkill;
+    private final Label nquestionLabel, nanswerLabel, slotLabel;
     private final List<Node> slots;
     private final TextField questionField;
     private final TextField answerField;
@@ -25,10 +24,8 @@ public class SkillEditor extends VBox implements Skill {
 
 
     public SkillEditor() {
-
         questionslots = 1;
         answerslots = 1;
-
 
         deleteSkill = new Button("DELETE");
         deleteSkill.setPrefSize(120, 30);
@@ -42,28 +39,37 @@ public class SkillEditor extends VBox implements Skill {
         buttonHolder.setAlignment(Pos.CENTER);
         buttonHolder.setSpacing(5);
 
-        final Label nquestionLabel = new Label("n slots question: " + questionslots);
+        nquestionLabel = new Label("# input placeholders: " + questionslots);
         final Button newQSlotButton = new Button("+");
-        newQSlotButton.setOnAction(e -> questionslots++);
+        newQSlotButton.setOnAction(e -> {
+            questionslots++;
+            nquestionLabel.setText("# input placeholders: " + questionslots);
+        });
 
         final Button removeQSlotButton = new Button("-");
         removeQSlotButton.setOnAction(e -> {
             if (questionslots > 1) {
-                questionslots-=1;
+                questionslots -=1;
+                nquestionLabel.setText("# input placeholders: " + questionslots);
             }
         });
 
 
-        final Label nanswerLabel = new Label("n slots answer: " + answerslots);
+        nanswerLabel = new Label("# output placeholders: " + answerslots);
         final Button newASlotButton = new Button("+");
-        newASlotButton.setOnAction(e -> answerslots++);
+        newASlotButton.setOnAction(e -> {
+            answerslots++;
+            nanswerLabel.setText("# output placeholders: " + answerslots);
+        });
 
         final Button removeASlotButton = new Button("-");
         removeASlotButton.setOnAction(e -> {
             if (answerslots > 1) {
                 answerslots -= 1;
+                nanswerLabel.setText("# output placeholders: " + answerslots);
             }
         });
+
         final HBox SlotbuttonHolder = new HBox();
         SlotbuttonHolder.getChildren().add(nquestionLabel);
         SlotbuttonHolder.getChildren().add(newQSlotButton);
@@ -77,46 +83,73 @@ public class SkillEditor extends VBox implements Skill {
         questionField = new TextField();
         questionField.setPromptText("Click to type...");
 
-        final Label questionLabel = new Label("Question:");
+        final Label questionLabel = new Label("Sentence/Question:");
         final HBox questionHolder = new HBox();
         questionHolder.getChildren().addAll(questionLabel, questionField);
         questionHolder.setAlignment(Pos.CENTER);
         questionHolder.setSpacing(5);
         final VBox slotContent = new VBox();
         slots =  slotContent.getChildren();
-        addNewSlot();
-
 
         answerField = new TextField();
-        final Label answerLabel = new Label("Answer:");
+        final Label answerLabel = new Label("Response:");
         final HBox answerHolder = new HBox();
         answerHolder.getChildren().addAll(answerLabel, answerField);
         answerHolder.setAlignment(Pos.CENTER);
         answerHolder.setSpacing(5);
 
 
+        slotLabel = new Label("Slots: 0");
+        final Button newSlotButton = new Button("+");
+        newSlotButton.setOnAction(e -> addNewSlot());
+
+        final HBox slotHolderTitle = new HBox();
+        slotHolderTitle.getChildren().addAll(slotLabel, newSlotButton);
+        slotHolderTitle.setAlignment(Pos.CENTER);
+        slotHolderTitle.setSpacing(5);
 
         final ScrollPane slotHolder = new ScrollPane(slotContent);
         slotHolder.setBackground(Background.EMPTY);
         slotHolder.setBorder(Border.EMPTY);
         slotHolder.setFitToHeight(true);
         slotHolder.setFitToWidth(true);
+
+        final VBox slotHolderParent =  new VBox();
+        slotHolderParent.getChildren().addAll(slotHolderTitle, slotHolder);
+
         //adding the textflow for the help text
         HBox textBox=new HBox();
         TextFlow text_flow = new TextFlow();
         Text help = new Text("HELP\n");
         help.setFill(Color.RED);
         help.setFont(Font.font("Times New Roman", FontPosture.ITALIC,25));
-
-        Text helptext = new Text("Through this Skill Editor you have the possibility to define new skills. Said skills are loaded and saved into a text file ");
-        helptext.setFill(Color.BLACK);
-        helptext.setFont(Font.font("Helvetica", 15));
-
         text_flow.getChildren().add(help);
-        text_flow.getChildren().add(helptext);
+
+        final String[] sentences = {
+                "Through this editor you can define skills that can be saved and loaded to the assistant.\n",
+                "Clicking the save button will add the skill to the assistant and make a local file to store its state.\n",
+                "Making changes to a skill after its initial save, requires the save button to be re-pressed in order to store the changes locally.\n",
+                "A sentence, question or an response (template) is allowed to contain a placeholder for each word that can be substituted by another.\n",
+                "A placeholder is denoted by the dollar sign ($) in the sentence/question.\n",
+                "Here is an example of a skill that is defined by a template sentence with 2 placeholders:\n",
+                "Sentence: \"$ I feel $\"\n",
+                "Prompt variables: \"Today\" \"good\"\n",
+                "Prompt answer: \"sure\"\n",
+                "Response: \"Are you $?\"\n",
+                "Message the assistant requires would be: \"Today I feel good\"\n",
+                "The assistant response to the message would be: \"Are you sure?\""
+        };
+        final Font f = Font.font("Helvetica", 15);
+        final Color c = Color.BLACK;
+        for (String s : sentences) {
+            Text helptext = new Text(s);
+            helptext.setFill(c);
+            helptext.setFont(f);
+            text_flow.getChildren().add(helptext);
+        }
         textBox.getChildren().add(text_flow);
 
-        getChildren().addAll(questionHolder, SlotbuttonHolder, slotHolder,answerHolder, buttonHolder, textBox);
+        getChildren().addAll(questionHolder, SlotbuttonHolder, slotHolderParent,answerHolder, buttonHolder, textBox);
         setAlignment(Pos.CENTER);
         setFocused(false);
         setFocusTraversable(false);
@@ -130,16 +163,16 @@ public class SkillEditor extends VBox implements Skill {
 
         String[] segments = s.split("\r\n");
 
-
         questionField.setText(segments[0]);
-
-
         answerField.setText(segments[2]);
 
         segments = segments[1].split("\n");
         questionslots = segments[0].split(",").length;
         answerslots = segments[1].split(",").length;
-        slots.remove(0);
+
+        nquestionLabel.setText("# input placeholders: " + questionslots);
+        nanswerLabel.setText("# output placeholders: " + answerslots);
+
         while (slots.size() < segments.length/2) {
             addNewSlot();
         }
@@ -149,7 +182,7 @@ public class SkillEditor extends VBox implements Skill {
             String[] QSegments = segments[i].split(",");
                 for (int j = 0; j < questionslots; j++) {
                     HBox Qbox = (HBox) slots.get(i/2);
-                    Qbox = (HBox) Qbox.getChildren().get(1);
+                    Qbox = (HBox) Qbox.getChildren().get(0);
                     TextField Qfield = (TextField) Qbox.getChildren().get(j);
                     System.out.println(Qfield.getText());
                     Qfield.setText(QSegments[j]);
@@ -157,7 +190,7 @@ public class SkillEditor extends VBox implements Skill {
             String[] ASegments = segments[i+1].split(",");
             for (int j = 0; j < answerslots; j++) {
                 HBox Abox = (HBox) slots.get(i/2);
-                Abox = (HBox) Abox.getChildren().get(2);
+                Abox = (HBox) Abox.getChildren().get(1);
                 TextField Afield = (TextField) Abox.getChildren().get(j);
                 Afield.setText(ASegments[j]);
             }
@@ -165,15 +198,12 @@ public class SkillEditor extends VBox implements Skill {
     }
 
     private void addNewSlot() {
-
         System.out.println(questionslots);
         System.out.println(answerslots);
 
         final HBox box = new HBox();
         box.setAlignment(Pos.CENTER);
         box.setSpacing(5);
-
-        final Label l = new Label("Slot: ");
 
         final HBox slotFieldsPrompt = new HBox();
         for(int i =0; i<questionslots; i++) {
@@ -189,21 +219,17 @@ public class SkillEditor extends VBox implements Skill {
             slotFieldsAnswer.getChildren().add(slotAnswer);
         }
 
-        final Button newSlotButton = new Button("+");
-        newSlotButton.setOnAction(e -> addNewSlot());
-
         final Button removeSlotButton = new Button("-");
         removeSlotButton.setOnAction(e -> {
-            if (slots.size() > 1) {
+            if (slots.size() > 0) {
                 slots.remove(box);
+                slotLabel.setText("Slots: " + slots.size());
             }
         });
 
-        box.getChildren().addAll(l, slotFieldsPrompt, slotFieldsAnswer, newSlotButton, removeSlotButton);
-
+        box.getChildren().addAll(slotFieldsPrompt, slotFieldsAnswer, removeSlotButton);
         slots.add(box);
-
-
+        slotLabel.setText("Slots: " + slots.size());
     }
 
     public Button getDeleteButton() {
@@ -223,15 +249,9 @@ public class SkillEditor extends VBox implements Skill {
 
     @Override
     public String getInput() {
-
         String target = "$";
         String replacement = "([a-zA-Z0-9]*)"; //Regex for a word, which can contains lower or upper case or numbers
-        String inputProcessed = questionField.getText().replace(target, replacement);
-        questionField.setText(inputProcessed);
-
-
-
-        return inputProcessed;
+        return questionField.getText().replace(target, replacement);
     }
 
     @Override
@@ -248,15 +268,15 @@ public class SkillEditor extends VBox implements Skill {
     public String[] getOutput(String[] inputParam) {
         System.out.println("-----------------------------GETOUTPUT----------------------------------------------------");
         String[] outputParam= new String[answerslots];
-        Boolean found = false;
-        Boolean corr = true;
+        boolean found = false;
+        boolean corr;
         for (int i =0; i< slots.size();i++) {
             corr = true;
             if(!found) {
                 int j = 0;
                 for (; j < questionslots; j++) {
                     HBox Qbox = (HBox) slots.get(i);
-                    Qbox = (HBox) Qbox.getChildren().get(1);
+                    Qbox = (HBox) Qbox.getChildren().get(0);
                     TextField Qfield = (TextField) Qbox.getChildren().get(j);
                     System.out.println(Qfield.getText());
                     if (!inputParam[j].equals(Qfield.getText())) {
@@ -271,7 +291,7 @@ public class SkillEditor extends VBox implements Skill {
                     found = true;
                     for (int k = 0; k < answerslots; k++) {
                         HBox Abox = (HBox) slots.get(i);
-                        Abox = (HBox) Abox.getChildren().get(2);
+                        Abox = (HBox) Abox.getChildren().get(1);
                         TextField Afield = (TextField) Abox.getChildren().get(k);
                         outputParam[k] = Afield.getText();
                         System.out.println(Afield.getText());
@@ -298,11 +318,11 @@ public class SkillEditor extends VBox implements Skill {
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder();
-        sb.append(getInput()).append("\r\n");
+        sb.append(questionField.getText()).append("\r\n");
         for (int i =0; i< slots.size();i++) {
             for(int j =0; j< questionslots;j++) {
                 HBox Qbox = (HBox)slots.get(i);
-                Qbox = (HBox) Qbox.getChildren().get(1);
+                Qbox = (HBox) Qbox.getChildren().get(0);
                 TextField Qfield = (TextField) Qbox.getChildren().get(j);
                 sb.append(Qfield.getText()).append(",");
             }
@@ -310,7 +330,7 @@ public class SkillEditor extends VBox implements Skill {
             sb.append("\n");
             for(int j =0; j< answerslots;j++) {
                 HBox Abox = (HBox)slots.get(i);
-                Abox = (HBox) Abox.getChildren().get(2);
+                Abox = (HBox) Abox.getChildren().get(1);
                 TextField Afield = (TextField) Abox.getChildren().get(j);
                 sb.append(Afield.getText()).append(",");
             }
