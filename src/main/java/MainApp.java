@@ -169,7 +169,7 @@ public class MainApp extends Application {
 
         // Defining how the skill (editor) gets deleted
         e.getDeleteButton().setOnAction(event -> {
-            if (f.delete()) {
+            if (f.delete() || !f.exists()) {
                 a.removeSkill(e);
                 skillRemovalHandler.handle(event);
             }
