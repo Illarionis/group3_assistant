@@ -34,7 +34,7 @@ public final class Message extends HBox {
 
     public Message(String s) {
         this();
-        final String[] segments = s.split("\t\r\n");
+        final String[] segments = s.split("<;>");
         content = segments[0];
         senderId = segments[1];
         onConstructionFinished();
@@ -58,6 +58,6 @@ public final class Message extends HBox {
 
     @Override
     public String toString() {
-        return content + "\t\r\n" + senderId;
+        return content + "<;>" + senderId;
     }
 }

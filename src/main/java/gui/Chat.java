@@ -65,7 +65,7 @@ public final class Chat extends AnchorPane {
     public Chat(String s) {
         this();
 
-        final String[] segments = s.split("\t\n");
+        final String[] segments = s.split("\n");
         getTitleField().setText(segments[0]);
 
         for (int i = 1; i < segments.length; i++) {
@@ -113,9 +113,9 @@ public final class Chat extends AnchorPane {
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder();
-        sb.append(getTitleField().getText()).append("\t\n");
+        sb.append(getTitleField().getText()).append("\n");
         for (Node n : messages) {
-            sb.append(n).append("\t\n");
+            sb.append(n).append("\n");
         }
         return sb.toString();
     }
