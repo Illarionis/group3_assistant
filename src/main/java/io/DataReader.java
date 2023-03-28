@@ -26,7 +26,8 @@ public final class DataReader {
             if (failed) {
                 throw new IllegalStateException("Failed to fully read the file " + f.getPath());
             }
-            return String.valueOf(buffer);
+            final String encrypted = String.valueOf(buffer);
+            return DataSecurity.decrypt(encrypted);
         } catch (IOException e) {
             throw new IllegalStateException("Could not retrieve data due to exception " + e);
         }

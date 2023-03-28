@@ -30,8 +30,9 @@ public final class DataWriter {
             createFile(f);
         }
         try {
+            final String encrypted = DataSecurity.encrypt(s);
             final FileWriter w = new FileWriter(f);
-            w.write(s);
+            w.write(encrypted);
             w.close();
         } catch (IOException e) {
             throw new IllegalStateException("Could not store data due to exception " + e);
