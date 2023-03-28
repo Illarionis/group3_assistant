@@ -292,25 +292,35 @@ public class MainApp extends Application {
     private void loadUserSession(Stage primaryStage, String accountId) {
         // Defining an assistant that is used globally during user session.
         final Assistant a = new Assistant();
+        System.out.println("-------------Assistant loaded------------");
 
         // Creating and configuring the chat overview.
         final Overview chatOverview = new Overview("CONVERSATIONS", "CHAT");
         chatOverview.setEventHandler(getNewChatEventHandler(accountId, a, chatOverview));
         chatOverview.setPrefSize(640, 960);
 
+        System.out.println("-------------chat overview------------");
+
         // Creating and configuring the skill overview
         final Overview skillOverview = new Overview("SKILL LIST", "SKILL EDITOR");
         skillOverview.setEventHandler(getNewSkillEventHandler(accountId, a, skillOverview));
         skillOverview.setPrefSize(640, 960);
 
+        System.out.println("-------------skill overview------------");
+
         // Loading existing data
         loadChats(accountId, a, chatOverview);
+        System.out.println("-------------chats loaded------------");
         loadSkills(accountId, a, skillOverview);
+        System.out.println("-------------skills loaded------------");
+
 
         // Preparing the scene root (aka user session)
         final HBox root = new HBox();
         root.getChildren().addAll(skillOverview, chatOverview);
         root.setAlignment(Pos.CENTER);
+
+        System.out.println("-------------scene loaded------------");
 
         final Scene s = new Scene(root, 1280, 960);
         primaryStage.setScene(s);
@@ -318,5 +328,6 @@ public class MainApp extends Application {
         if (!primaryStage.isShowing()) {
             primaryStage.show();
         }
+        System.out.println("-------------scene shown------------");
     }
 }

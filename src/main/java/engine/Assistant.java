@@ -26,16 +26,30 @@ public final class Assistant {
             final Pattern p = Pattern.compile(s.getInput());
             Matcher m = p.matcher(msg);
             if (m.find()) {
-                try{
-
-                String test = m.group(1); //group 1 = first thing entre parenthese dans la phrase (first placeheolder)
-                System.out.println(test);
-                return s.getOutput(test);}
-                catch(Exception e){
+                System.out.println(m.group(0));
+                Boolean foundAll = false;
+                ArrayList<String> test = new ArrayList<>();
+                try {
+                    test.add(m.group(1)); //group 1 = first thing entre parenthese dans la phrase (first placeheolder)
+                }catch(Exception e){
                     e.printStackTrace();
                     System.out.println("-----------------------------ERROR----------------------------------------------------");
                     return s.getOutput();
                 }
+                System.out.println(test.get(0));
+                int i = 2;
+                while(!foundAll){
+                    try {
+                        test.add(m.group(i)); //group 1 = first thing entre parenthese dans la phrase (first placeheolder)
+                        System.out.println(m.group(i));
+                        i++;
+                    }catch(Exception e){
+                        foundAll = true;
+                        String[] testArray = test.toArray(new String[0]);
+                        return s.getOutput(testArray);
+                    }
+                }
+
 
             }
 

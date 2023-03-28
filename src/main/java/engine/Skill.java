@@ -16,5 +16,5 @@ public interface Skill {
      **/
 
     String[] getOutput();
-    String[] getOutput(String inputParam);
+    String[] getOutput(String[] inputParam);
 }

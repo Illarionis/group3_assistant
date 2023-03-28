@@ -10,21 +10,25 @@ import javafx.geometry.Pos;
 import javafx.scene.paint.*;
 import javafx.scene.text.*;
 
+import javax.swing.*;
 import java.util.ArrayList;
 import java.util.List;
 
 public class SkillEditor extends VBox implements Skill {
     private final Button deleteSkill, saveSkill;
     private final List<Node> slots;
-    private final List<TextField> slotFieldsPrompt;
-    private final List<TextField> slotFieldsAnswer;
     private final TextField questionField;
     private final TextField answerField;
+    private  int questionslots;
+    private  int answerslots;
+
 
 
     public SkillEditor() {
-        slotFieldsPrompt = new ArrayList<>();
-        slotFieldsAnswer = new ArrayList<>();
+
+        questionslots = 1;
+        answerslots = 1;
+
 
         deleteSkill = new Button("DELETE");
         deleteSkill.setPrefSize(120, 30);
@@ -38,6 +42,38 @@ public class SkillEditor extends VBox implements Skill {
         buttonHolder.setAlignment(Pos.CENTER);
         buttonHolder.setSpacing(5);
 
+        final Label nquestionLabel = new Label("n slots question: " + questionslots);
+        final Button newQSlotButton = new Button("+");
+        newQSlotButton.setOnAction(e -> questionslots++);
+
+        final Button removeQSlotButton = new Button("-");
+        removeQSlotButton.setOnAction(e -> {
+            if (questionslots > 1) {
+                questionslots-=1;
+            }
+        });
+
+
+        final Label nanswerLabel = new Label("n slots answer: " + answerslots);
+        final Button newASlotButton = new Button("+");
+        newASlotButton.setOnAction(e -> answerslots++);
+
+        final Button removeASlotButton = new Button("-");
+        removeASlotButton.setOnAction(e -> {
+            if (answerslots > 1) {
+                answerslots -= 1;
+            }
+        });
+        final HBox SlotbuttonHolder = new HBox();
+        SlotbuttonHolder.getChildren().add(nquestionLabel);
+        SlotbuttonHolder.getChildren().add(newQSlotButton);
+        SlotbuttonHolder.getChildren().add(removeQSlotButton);
+        SlotbuttonHolder.getChildren().add(nanswerLabel);
+        SlotbuttonHolder.getChildren().add(newASlotButton);
+        SlotbuttonHolder.getChildren().add(removeASlotButton);
+        SlotbuttonHolder.setAlignment(Pos.CENTER);
+        SlotbuttonHolder.setSpacing(5);
+
         questionField = new TextField();
         questionField.setPromptText("Click to type...");
 
@@ -47,7 +83,7 @@ public class SkillEditor extends VBox implements Skill {
         questionHolder.setAlignment(Pos.CENTER);
         questionHolder.setSpacing(5);
         final VBox slotContent = new VBox();
-        slots = slotContent.getChildren();
+        slots =  slotContent.getChildren();
         addNewSlot();
 
 
@@ -60,13 +96,11 @@ public class SkillEditor extends VBox implements Skill {
 
 
 
-
         final ScrollPane slotHolder = new ScrollPane(slotContent);
         slotHolder.setBackground(Background.EMPTY);
         slotHolder.setBorder(Border.EMPTY);
         slotHolder.setFitToHeight(true);
         slotHolder.setFitToWidth(true);
-
         //adding the textflow for the help text
         HBox textBox=new HBox();
         TextFlow text_flow = new TextFlow();
@@ -82,7 +116,7 @@ public class SkillEditor extends VBox implements Skill {
         text_flow.getChildren().add(helptext);
         textBox.getChildren().add(text_flow);
 
-        getChildren().addAll(questionHolder, slotHolder,answerHolder, buttonHolder, textBox);
+        getChildren().addAll(questionHolder, SlotbuttonHolder, slotHolder,answerHolder, buttonHolder, textBox);
         setAlignment(Pos.CENTER);
         setFocused(false);
         setFocusTraversable(false);
@@ -103,52 +137,72 @@ public class SkillEditor extends VBox implements Skill {
         answerField.setText(segments[2]);
 
         segments = segments[1].split("\n");
-        while (slotFieldsPrompt.size() < segments.length/2) {
+        questionslots = segments[0].split(",").length;
+        answerslots = segments[1].split(",").length;
+        slots.remove(0);
+        while (slots.size() < segments.length/2) {
             addNewSlot();
         }
-        System.out.println("-----------------------------ERRORR---------------------------------------------------");
-
+        System.out.println("segments size" + segments.length);
+        System.out.println("slots size" + slots.size());
         for (int i = 0; i < segments.length; i+=2) {
-            slotFieldsPrompt.get(i/2).setText(segments[i]);
-            slotFieldsAnswer.get(i/2).setText(segments[i+1]);
+            String[] QSegments = segments[i].split(",");
+                for (int j = 0; j < questionslots; j++) {
+                    HBox Qbox = (HBox) slots.get(i/2);
+                    Qbox = (HBox) Qbox.getChildren().get(1);
+                    TextField Qfield = (TextField) Qbox.getChildren().get(j);
+                    System.out.println(Qfield.getText());
+                    Qfield.setText(QSegments[j]);
+                }
+            String[] ASegments = segments[i+1].split(",");
+            for (int j = 0; j < answerslots; j++) {
+                HBox Abox = (HBox) slots.get(i/2);
+                Abox = (HBox) Abox.getChildren().get(2);
+                TextField Afield = (TextField) Abox.getChildren().get(j);
+                Afield.setText(ASegments[j]);
+            }
         }
     }
 
     private void addNewSlot() {
+
+        System.out.println(questionslots);
+        System.out.println(answerslots);
+
         final HBox box = new HBox();
         box.setAlignment(Pos.CENTER);
         box.setSpacing(5);
 
         final Label l = new Label("Slot: ");
 
-        final TextField slotFieldPrompt = new TextField();
-        slotFieldPrompt.setPromptText("Prompt variable");
+        final HBox slotFieldsPrompt = new HBox();
+        for(int i =0; i<questionslots; i++) {
+            final TextField slotPrompt = new TextField();
+            slotPrompt.setPromptText("Prompt variable");
+            slotFieldsPrompt.getChildren().add(slotPrompt);
+        }
 
-        final TextField slotFieldAnswer = new TextField();
-        slotFieldAnswer.setPromptText("corresponding answer");
+        final HBox slotFieldsAnswer = new HBox();
+        for(int i =0; i<answerslots; i++) {
+            final TextField slotAnswer = new TextField();
+            slotAnswer.setPromptText("corresponding answer");
+            slotFieldsAnswer.getChildren().add(slotAnswer);
+        }
 
         final Button newSlotButton = new Button("+");
         newSlotButton.setOnAction(e -> addNewSlot());
 
         final Button removeSlotButton = new Button("-");
         removeSlotButton.setOnAction(e -> {
-            if (slotFieldsPrompt.size() > 1) {
-                slotFieldsPrompt.remove(slotFieldPrompt);
-                slotFieldsAnswer.remove(slotFieldAnswer);
+            if (slots.size() > 1) {
                 slots.remove(box);
             }
         });
 
-        box.getChildren().addAll(l, slotFieldPrompt, slotFieldAnswer, newSlotButton, removeSlotButton);
+        box.getChildren().addAll(l, slotFieldsPrompt, slotFieldsAnswer, newSlotButton, removeSlotButton);
 
-        slotFieldsPrompt.add(slotFieldPrompt);
-        slotFieldsAnswer.add(slotFieldAnswer);
         slots.add(box);
 
-        System.out.println("-----------------------------LENGTH--------------------------------------------------");
-        System.out.println(slotFieldsPrompt.size());
-        System.out.println(slotFieldsAnswer.size());
-        System.out.println(slots.size());
 
     }
 
@@ -170,7 +224,7 @@ public class SkillEditor extends VBox implements Skill {
     @Override
     public String getInput() {
 
-        String target = "*";
+        String target = "$";
         String replacement = "([a-zA-Z0-9]*)"; //Regex for a word, which can contains lower or upper case or numbers
         String inputProcessed = questionField.getText().replace(target, replacement);
         questionField.setText(inputProcessed);
@@ -182,7 +236,7 @@ public class SkillEditor extends VBox implements Skill {
 
     @Override
     public String[] getOutput() {
-        String target = "*";
+        String target = "$";
         String outputProcessed = answerField.getText().replace(target, "%s");
         String[] slots = new String[1];
         slots[0] = outputProcessed;
@@ -191,32 +245,77 @@ public class SkillEditor extends VBox implements Skill {
     }
 
     @Override
-    public String[] getOutput(String inputParam) {
-        String outputParam= slotFieldsAnswer.get(0).getText();
-        for (int i = 0; i < slotFieldsPrompt.size(); i++) {
-            if (inputParam.equals(slotFieldsPrompt.get(i).getText())){
-                outputParam = slotFieldsAnswer.get(i).getText();
-                break;
+    public String[] getOutput(String[] inputParam) {
+        System.out.println("-----------------------------GETOUTPUT----------------------------------------------------");
+        String[] outputParam= new String[answerslots];
+        Boolean found = false;
+        Boolean corr = true;
+        for (int i =0; i< slots.size();i++) {
+            corr = true;
+            if(!found) {
+                int j = 0;
+                for (; j < questionslots; j++) {
+                    HBox Qbox = (HBox) slots.get(i);
+                    Qbox = (HBox) Qbox.getChildren().get(1);
+                    TextField Qfield = (TextField) Qbox.getChildren().get(j);
+                    System.out.println(Qfield.getText());
+                    if (!inputParam[j].equals(Qfield.getText())) {
+                        corr = false;
+                        System.out.println("-----------------------------Not all params correspond----------------------------------------------------");
+                        break;
+                    }
 
+                }
+
+                if (corr) {
+                    found = true;
+                    for (int k = 0; k < answerslots; k++) {
+                        HBox Abox = (HBox) slots.get(i);
+                        Abox = (HBox) Abox.getChildren().get(2);
+                        TextField Afield = (TextField) Abox.getChildren().get(k);
+                        outputParam[k] = Afield.getText();
+                        System.out.println(Afield.getText());
+
+                    }
+
+                } else if(i == (slots.size() - 1)) {
+                    String[] rslots = new String[1];
+                    rslots[0] = "not recognising input, perhaps a misspell?";
+                    return rslots;
+                }
             }
         }
-        String target = "*";
+        String target = "$";
         String outputProcessed = answerField.getText().replace(target, "%s");
-        String[] slots = new String[1];
-        slots[0] = String.format(outputProcessed, outputParam);
+        String[] rslots = new String[1];
+        rslots[0] = String.format(outputProcessed, (Object[]) outputParam);
         System.out.println("-----------------------------INSERT----------------------------------------------------");
-        System.out.println(outputParam);
-        System.out.println(slots[0]);
-        return slots;
+        System.out.println(outputParam[0]);
+        System.out.println(rslots[0]);
+        return rslots;
     }
 
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder();
         sb.append(getInput()).append("\r\n");
-        for (int i =0; i< slotFieldsPrompt.size();i++) {
-            sb.append(slotFieldsPrompt.get(i).getText()).append("\n");
-            sb.append(slotFieldsAnswer.get(i).getText()).append("\n");
+        for (int i =0; i< slots.size();i++) {
+            for(int j =0; j< questionslots;j++) {
+                HBox Qbox = (HBox)slots.get(i);
+                Qbox = (HBox) Qbox.getChildren().get(1);
+                TextField Qfield = (TextField) Qbox.getChildren().get(j);
+                sb.append(Qfield.getText()).append(",");
+            }
+            sb.delete(sb.lastIndexOf(","), sb.length());
+            sb.append("\n");
+            for(int j =0; j< answerslots;j++) {
+                HBox Abox = (HBox)slots.get(i);
+                Abox = (HBox) Abox.getChildren().get(2);
+                TextField Afield = (TextField) Abox.getChildren().get(j);
+                sb.append(Afield.getText()).append(",");
+            }
+            sb.delete(sb.lastIndexOf(","), sb.length());
+            sb.append("\n");
         }
         sb.delete(sb.lastIndexOf("\n"), sb.length());
         sb.append("\r\n");
