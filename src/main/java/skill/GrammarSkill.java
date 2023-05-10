@@ -1,9 +1,6 @@
 package skill;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 
 /**
  * <p>
@@ -128,6 +125,11 @@ public final class GrammarSkill implements Skill {
         final String out = map.get(s);
         if (out != null) return out;
         throw new IllegalArgumentException("String " + s + " is not mapped to an output!");
+    }
+
+    @Override
+    public Map<String, String> getAssociations() {
+        return map;
     }
 
     public static void main(String[] args) {

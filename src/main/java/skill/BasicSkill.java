@@ -1,6 +1,7 @@
 package skill;
 
 import java.util.HashMap;
+import java.util.Map;
 
 /**
  * <p>
@@ -48,6 +49,11 @@ public final class BasicSkill implements Skill {
      **/
     public String remove(String input) {
         return map.remove(input);
+    }
+
+    @Override
+    public Map<String, String> getAssociations() {
+        return map;
     }
 
     @Override

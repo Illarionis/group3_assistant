@@ -1,5 +1,7 @@
 package skill;
 
+import java.util.Map;
+
 /**
  * <p>
  *     <b>Definition</b><br>
@@ -23,4 +25,11 @@ public interface Skill {
      * @throws IllegalArgumentException Thrown when the input string does not activate the skill.
      **/
     String activate(String s);
+
+    /**
+     * Obtains all registered (input, output) associations.
+     *
+     * @return A map containing all (input, output) associations that have been registered to the skill.
+     **/
+    Map<String, String> getAssociations();
 }

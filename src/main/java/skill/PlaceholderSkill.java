@@ -1,6 +1,7 @@
 package skill;
 
 import java.util.HashMap;
+import java.util.Map;
 
 /**
  * <p>
@@ -100,5 +101,10 @@ public final class PlaceholderSkill implements Skill {
         final String out = map.get(s);
         if (out != null) return out;
         throw new IllegalArgumentException("String " + s + " is not mapped to an output!");
+    }
+
+    @Override
+    public Map<String, String> getAssociations() {
+        return map;
     }
 }
