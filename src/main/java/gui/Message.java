@@ -1,7 +1,6 @@
 package gui;
 
 import javafx.geometry.Insets;
-import javafx.geometry.Pos;
 import javafx.scene.layout.Background;
 import javafx.scene.layout.HBox;
 import javafx.scene.paint.Color;
@@ -10,54 +9,36 @@ import javafx.scene.text.TextAlignment;
 import javafx.scene.text.TextFlow;
 
 public final class Message extends HBox {
-    private final Text contentHolder;
-    private final TextFlow contentFlow;
+    private static final Color[] BACKGROUND_COLORS = {
+            Color.rgb(255, 255, 255),
+            Color.rgb(220, 248, 198)
+    };
 
-    private String content, senderId;
-    private Message() {
-        contentHolder = new Text();
-        contentHolder.setTextAlignment(TextAlignment.CENTER);
+    private static final TextAlignment[] TEXT_ALIGNMENTS = {
+            TextAlignment.LEFT,
+            TextAlignment.RIGHT
+    };
 
-        contentFlow = new TextFlow();
-        contentFlow.getChildren().add(contentHolder);
-        contentFlow.setPadding(new Insets(5, 5, 5, 5));
+    /**
+     * Creates a new message that can be displayed in the chat.
+     *
+     * @param senderId 0, if the message is sent by the assistant. <br>
+     *                 1, if the message is sent by the user.
+     * @param content The content that should be displayed.
+     **/
+    public Message(int senderId, String content) {
+        final var text = new Text();
+        text.setTextAlignment(TextAlignment.CENTER);
+        text.setText(content);
 
-        getChildren().add(contentFlow);
-    }
+        final var textBackground = Background.fill(BACKGROUND_COLORS[senderId]);
+        final var textSpacing = new Insets(5, 5, 5, 5);
+        final var textFlow = new TextFlow();
+        textFlow.getChildren().add(text);
+        textFlow.setBackground(textBackground);
+        textFlow.setPadding(textSpacing);
+        textFlow.setTextAlignment(TEXT_ALIGNMENTS[senderId]);
 
-    public Message(String content, String senderId) {
-        this();
-        this.content = content;
-        this.senderId = senderId;
-        onConstructionFinished();
-    }
-
-    public Message(String s) {
-        this();
-        final String[] segments = s.split("<;>");
-        content = segments[0];
-        senderId = segments[1];
-        onConstructionFinished();
-    }
-
-    private void onConstructionFinished() {
-        final boolean fromUser = !senderId.equals("Assistant");
-        final Color c;
-        if (fromUser) {
-            c = Color.rgb(220, 248, 198);
-            contentFlow.setTextAlignment(TextAlignment.RIGHT);
-            setAlignment(Pos.CENTER_RIGHT);
-        } else {
-            c = Color.rgb(255, 255, 255);
-            contentFlow.setTextAlignment(TextAlignment.LEFT);
-            setAlignment(Pos.CENTER_LEFT);
-        }
-        contentFlow.setBackground(Background.fill(c));
-        contentHolder.setText(content);
-    }
-
-    @Override
-    public String toString() {
-        return content + "<;>" + senderId;
+        getChildren().add(textFlow);
     }
 }
