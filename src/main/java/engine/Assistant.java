@@ -14,7 +14,7 @@ public final class Assistant {
     }
 
     public void add(Skill s) {
-        skills.add(s);
+        if (!skills.contains(s)) skills.add(s);
     }
 
     public void remove(Skill s) {
