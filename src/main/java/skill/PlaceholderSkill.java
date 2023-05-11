@@ -24,6 +24,16 @@ public final class PlaceholderSkill implements Skill {
     private final String inputPlaceholder, outputPlaceholder;
     private final String inputTemplate, outputTemplate;
 
+    /**
+     * Creates a new empty placeholder skill.
+     *
+     * @param inputPlaceholderCount The number of placeholders present in the input template.
+     * @param inputPlaceholder The placeholder character sequence that is present in the input template.
+     * @param inputTemplate The input template the skill should use for all its inputs.
+     * @param outputPlaceholderCount The number of placeholders present in the output template.
+     * @param outputPlaceholder The placeholder character sequence that is present in the output template.
+     * @param outputTemplate The output template the skill should use for all its outputs.
+     **/
     public PlaceholderSkill(int inputPlaceholderCount, String inputPlaceholder, String inputTemplate, int outputPlaceholderCount, String outputPlaceholder, String outputTemplate) {
         this.inputPlaceholderCount = inputPlaceholderCount;
         this.inputPlaceholder = inputPlaceholder;
