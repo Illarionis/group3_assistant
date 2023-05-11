@@ -1,5 +1,7 @@
 package skill;
 
+import engine.PlaceholderReplacer;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -20,89 +22,59 @@ import java.util.Map;
  **/
 public final class PlaceholderSkill implements Skill {
     private final HashMap<String, String> map;
+    private final String inputTemplate, inputPlaceholder, outputTemplate, outputPlaceholder;
     private final int inputPlaceholderCount, outputPlaceholderCount;
-    private final String inputPlaceholder, outputPlaceholder;
-    private final String inputTemplate, outputTemplate;
 
     /**
-     * Creates a new empty placeholder skill.
+     * Creates an empty placeholder skill.
      *
-     * @param inputPlaceholderCount The number of placeholders present in the input template.
-     * @param inputPlaceholder The placeholder character sequence that is present in the input template.
-     * @param inputTemplate The input template the skill should use for all its inputs.
-     * @param outputPlaceholderCount The number of placeholders present in the output template.
-     * @param outputPlaceholder The placeholder character sequence that is present in the output template.
-     * @param outputTemplate The output template the skill should use for all its outputs.
+     * @param inputTemplate          The template the skill should use to derive all its inputs from.
+     * @param inputPlaceholder       The placeholder symbols used in the input template.
+     * @param inputPlaceholderCount  The number of placeholders used in the input template.
+     * @param outputTemplate         The template the skill should use to derive all its outputs from.
+     * @param outputPlaceholder      The placeholder symbols used in the output template.
+     * @param outputPlaceholderCount The number of placeholders used in the output template.
      **/
-    public PlaceholderSkill(int inputPlaceholderCount, String inputPlaceholder, String inputTemplate, int outputPlaceholderCount, String outputPlaceholder, String outputTemplate) {
-        this.inputPlaceholderCount = inputPlaceholderCount;
-        this.inputPlaceholder = inputPlaceholder;
+    public PlaceholderSkill(String inputTemplate, String inputPlaceholder, int inputPlaceholderCount, String outputTemplate, String outputPlaceholder, int outputPlaceholderCount) {
         this.inputTemplate = inputTemplate;
-        this.outputPlaceholderCount = outputPlaceholderCount;
-        this.outputPlaceholder = outputPlaceholder;
+        this.inputPlaceholder = inputPlaceholder;
+        this.inputPlaceholderCount = inputPlaceholderCount;
         this.outputTemplate = outputTemplate;
+        this.outputPlaceholder = outputPlaceholder;
+        this.outputPlaceholderCount = outputPlaceholderCount;
         map = new HashMap<>();
     }
 
-    private String buildInput(String[] inputVariables) {
-        String input = inputTemplate;
-        for (String s : inputVariables)
-            input = input.replaceFirst(inputPlaceholder, s);
-        return input;
-    }
-
-    private String buildOutput(String[] outputVariables) {
-        String output = outputTemplate;
-        for (String s : outputVariables)
-            output = output.replaceFirst(outputPlaceholder, s);
-        return output;
-    }
-
-    private void validateInputVariables(String[] inputVariables) {
-        if (inputVariables.length > inputPlaceholderCount)
-            throw new IllegalArgumentException("Detected more input variables than placeholders in input template!");
-        else if (inputVariables.length < inputPlaceholderCount)
-            throw new IllegalArgumentException("Detected less input variables than placeholders in input template!");
-    }
-
-    private void validateOutputVariables(String[] outputVariables) {
-        if (outputVariables.length > outputPlaceholderCount)
-            throw new IllegalArgumentException("Detected more output variables than placeholders in output template!");
-        else if (outputVariables.length < outputPlaceholderCount)
-            throw new IllegalArgumentException("Detected less output variables than placeholders in output template!");
-    }
-
     /**
-     * Adds a (input, output) association to the skill.
+     * Adds a (input, output) associations to the skill.
      *
-     * @param inputVariables  The input variables leading to the input that should be mapped.
-     * @param outputVariables The output variables leading to the output that should be associated with the input.
-     * @return The output previously associated with the input, if the input was mapped.<br>
+     * @param inputs  The inputs that should substitute the placeholders in the input template.
+     * @param outputs The outputs that should substitute the placeholders in the output template.
+     * @return The output previously associated with the input, if the input was mapped. <br>
      *         Null, otherwise.
-     * @throws IllegalArgumentException Thrown whenever the number of input variables is not equal to the number of
-     *                                  placeholders in the input template.<br>
-     *                                  -or- the number of output variables is not equal to the number of placeholders
-     *                                  in the output template.
      **/
-    public String map(String[] inputVariables, String[] outputVariables) {
-        validateInputVariables(inputVariables);
-        validateOutputVariables(outputVariables);
-        final String input = buildInput(inputVariables);
-        final String output = buildOutput(outputVariables);
+    public String map(String[] inputs, String[] outputs) {
+        if (inputs.length != inputPlaceholderCount)
+            throw new IllegalArgumentException("Mismatch between number of inputs and number of placeholders in input template!");
+        else if (outputs.length != outputPlaceholderCount)
+            throw new IllegalArgumentException("Mismatch between number of outputs and number of placeholders in output template!");
+        final String input = PlaceholderReplacer.replacePlaceholders(inputTemplate, inputPlaceholder, inputs);
+        final String output = PlaceholderReplacer.replacePlaceholders(outputTemplate, outputPlaceholder, outputs);
+        System.out.println(output);
         return map.put(input, output);
     }
 
     /**
-     * Removes a (input, output) association from the skill using input variables.
+     * Removes a (input, output) association from the skill.
      *
-     * @param inputVariables The input variables leading to an input for which the mapping should be removed.
-     * @return The output associated with the input, if the input was mapped.
-     * @throws IllegalArgumentException Thrown whenever the number of input variables is not equal to the number of
-     *                                  placeholders in the input template.<br>
+     * @param inputs The inputs that should substitute the placeholders in the input template.
+     * @return The output associated with the input, if the input was mapped. <br>
+     *         Null, otherwise.
      **/
-    public String remove(String[] inputVariables) {
-        validateInputVariables(inputVariables);
-        final String input = buildInput(inputVariables);
+    public String remove(String[] inputs) {
+        if (inputs.length != inputPlaceholderCount)
+            throw new IllegalArgumentException("Mismatch between number of inputs and number of placeholders in input template!");
+        final String input = PlaceholderReplacer.replacePlaceholders(inputTemplate, inputPlaceholder, inputs);
         return map.remove(input);
     }
 
