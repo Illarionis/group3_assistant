@@ -1,6 +1,7 @@
 package gui;
 
 import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.layout.Background;
 import javafx.scene.layout.HBox;
 import javafx.scene.paint.Color;
@@ -14,9 +15,9 @@ public final class Message extends HBox {
             Color.rgb(220, 248, 198)
     };
 
-    private static final TextAlignment[] TEXT_ALIGNMENTS = {
-            TextAlignment.LEFT,
-            TextAlignment.RIGHT
+    private static final Pos[] POS_ALIGNMENTS = {
+            Pos.CENTER_LEFT,
+            Pos.CENTER_RIGHT
     };
 
     /**
@@ -37,8 +38,9 @@ public final class Message extends HBox {
         textFlow.getChildren().add(text);
         textFlow.setBackground(textBackground);
         textFlow.setPadding(textSpacing);
-        textFlow.setTextAlignment(TEXT_ALIGNMENTS[senderId]);
+        textFlow.setMaxWidth(180.0);
 
         getChildren().add(textFlow);
+        setAlignment(POS_ALIGNMENTS[senderId]);
     }
 }
