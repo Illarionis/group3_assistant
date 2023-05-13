@@ -95,6 +95,7 @@ public final class GrammarSkill implements Skill {
                         if (rules.containsKey(nt)) {
                             List<String[]> alternatives = rules.get(nt);
                             for (String[] a : alternatives) {
+                                if (a.length == 1) continue;
                                 String b = a[0];
                                 String c = a[1];
                                 int bIndex = nonTerminals.indexOf(b);
