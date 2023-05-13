@@ -44,7 +44,7 @@ public final class Assistant {
                  * */
                 int count = Math.min(input.length(), s.length());
                 int matches = 0;
-                for (int i = 0; i < s.length(); i++) {
+                for (int i = 0; i < count; i++) {
                     if (s.charAt(i) == input.charAt(i)) matches++;
                 }
                 double percentage = 100.0 * matches / input.length();
