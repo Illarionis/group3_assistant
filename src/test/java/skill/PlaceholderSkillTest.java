@@ -48,7 +48,6 @@ final class PlaceholderSkillTest {
 
         assert skill.map(inputs, outputs) == null;
         final String s= skill.remove(inputs);
-        System.out.println(s);
         assert s.equals(expected);
     }
 }
