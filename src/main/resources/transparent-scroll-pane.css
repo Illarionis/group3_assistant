@@ -1,0 +1,11 @@
+ .scroll-pane {
+    -fx-background-color:transparent;
+    -fx-border-color:transparent;
+    -fx-fit-to-width: true;
+    -fx-fit-to-height: true;
+ }
+
+ .scroll-pane > .viewport {
+    -fx-background-color: inherit;
+    -fx-border-color: inherit;
+ }

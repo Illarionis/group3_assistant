@@ -1,0 +1,13 @@
+.text-input {
+    -fx-text-inner-color: black;
+    -fx-text-fill: -fx-text-inner-color;
+    -fx-highlight-text-fill: -fx-text-inner-color;
+    -fx-highlight-fill: derive(-fx-control-inner-background,+20%);
+    -fx-prompt-text-fill: derive(-fx-control-inner-background,+30%);
+}
+
+.text-input:focused {
+    -fx-highlight-fill: -fx-accent;
+    -fx-highlight-text-fill: black;
+    -fx-prompt-text-fill: transparent;
+}
