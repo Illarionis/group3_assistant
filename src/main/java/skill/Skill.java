@@ -18,15 +18,6 @@ import java.util.Map;
  **/
 public interface Skill {
     /**
-     * Activates the skill.
-     *
-     * @param s A string that should have been mapped.
-     * @return The output string associated with the input string.
-     * @throws IllegalArgumentException Thrown when the input string does not activate the skill.
-     **/
-    String activate(String s);
-
-    /**
      * Obtains all registered (input, output) associations.
      *
      * @return A map containing all (input, output) associations that have been registered to the skill.

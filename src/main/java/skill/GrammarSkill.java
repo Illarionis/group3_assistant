@@ -166,13 +166,6 @@ public final class GrammarSkill implements Skill {
     }
 
     @Override
-    public String activate(String s) {
-        final String out = map.get(s);
-        if (out != null) return out;
-        throw new IllegalArgumentException("String " + s + " is not mapped to an output!");
-    }
-
-    @Override
     public Map<String, String> getAssociations() {
         return map;
     }
