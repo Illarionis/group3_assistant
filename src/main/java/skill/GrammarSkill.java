@@ -117,8 +117,6 @@ public final class GrammarSkill implements Skill {
             }
         }
         return false;
-
-    throw new IllegalArgumentException("Input " + input + " does not belong to the grammar.");
     }
 
     public void addRule(String leftSide, String... rightSide) {
