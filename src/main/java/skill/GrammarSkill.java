@@ -176,36 +176,4 @@ public final class GrammarSkill implements Skill {
     public Map<String, String> getAssociations() {
         return map;
     }
-
-    public static void main(String[] args) {
-        /* *
-         * Sentence "It is raining outside"
-         * Non-Terminals = {Noun, Verb, Adverb, Location}
-         * Terminals = {it, is, raining, outside}
-         * Rules:
-         *        S -> Noun Verb
-         *     Verb -> Verb Adverb.
-         *   Adverb -> Adverb Location
-         *     Noun -> it
-         *     Verb -> is
-         *   Adverb -> raining
-         * Location -> outside
-         * */
-
-        String[] nonTerminals = {"Noun", "Verb", "Adverb", "Location"};
-        String[] terminals = {"it", "is", "raining", "outside"};
-        String startSymbol = "S";
-
-        var skill = new GrammarSkill(Arrays.asList(nonTerminals), Arrays.asList(terminals), startSymbol);
-        skill.addRule("S", "Noun", "Verb");
-        skill.addRule("Verb", "Verb", "Adverb");
-        skill.addRule("Adverb", "Adverb", "Location");
-        skill.addRule("Noun", "it");
-        skill.addRule("Verb", "is");
-        skill.addRule("Adverb", "raining");
-        skill.addRule("Location", "outside");
-
-        skill.map("It is raining outside", "Take a umbrella");
-        System.out.println(skill.activate("It is raining outside"));
-    }
 }
