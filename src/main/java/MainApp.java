@@ -71,15 +71,20 @@ public final class MainApp extends Application {
 
     @Override
     public void start(Stage primaryStage) {
+        // Accessing CSS files
         final var scrollPaneCSS = getClass().getResource("/transparent-scroll-pane.css");
         final var brighterInputCSS = getClass().getResource("/brighter-input.css");
         final var darkerInputCSS = getClass().getResource("/darker-input.css");
         if (scrollPaneCSS == null) throw new IllegalStateException("Failed to fetch Scroll Pane CSS file!");
         else if (brighterInputCSS == null) throw new IllegalStateException("Failed to fetch Brighter Input CSS file!");
         else if (darkerInputCSS == null) throw new IllegalStateException("Failed to fetch Darker Input CSS file!");
-        final String brighterInput = brighterInputCSS.toExternalForm();
-        final String darkerInput = darkerInputCSS.toExternalForm();
 
+        // Preparing CSS
+        final String scrollPaneStyle = scrollPaneCSS.toExternalForm();
+        final String brighterInputStyle = brighterInputCSS.toExternalForm();
+        final String darkerInputStyle = darkerInputCSS.toExternalForm();
+
+        // Preparing title bar
         final Button minimizeStage  = createButton(Character.toString(8212));
         final Button closeStage     = createButton(Character.toString(10005));
         final HBox   stageControls  = encapsulateHorizontally(minimizeStage, closeStage);
@@ -88,36 +93,59 @@ public final class MainApp extends Application {
         final HBox   colorControls  = encapsulateHorizontally(switchColor, placeHolder);
         final Button titleHolder    = createButton("Digital Assistant");
         final HBox   titleBar       = encapsulateHorizontally(colorControls, titleHolder, stageControls);
-        minimizeStage.setOnAction(event -> primaryStage.setIconified(true));
-        closeStage.setOnAction(event -> primaryStage.close());
-        HBox.setHgrow(titleHolder, Priority.ALWAYS);
-        setMouseHighlightEvent(highlightBackgrounds[0], minimizeStage, switchColor);
-        setMouseHighlightEvent(highlightBackgrounds[1], closeStage);
-        relocateOnDrag(primaryStage, titleHolder, placeHolder);
 
+        // Preparing chat
         final var assistant = new Assistant();
         final VBox chatHistory = new VBox();
         final ScrollPane chatViewport = new ScrollPane(chatHistory);
         final TextField chatInput = createChatInputField(chatHistory, assistant);
         final VBox chatPanel = encapsulateVertically(titleBar, chatViewport, chatInput);
         final Scene chatScene = new Scene(chatPanel, 360, 720);
-        chatViewport.getStylesheets().add(scrollPaneCSS.toExternalForm());
-        VBox.setVgrow(chatViewport, Priority.ALWAYS);
-        chatHistory.setPadding(defaultPadding);
-        chatHistory.setSpacing(5.0);
-        setTransparent(chatPanel, chatPanel);
 
+        // Todo 1: Preparing skill editor
+
+        // Todo 2: Preparing authorization processes
+
+        // Preparing day-night theme functionality
         final EventHandler<ActionEvent> changeColorHandler = (event -> {
             switchBackground(titleBar, chatInput);
             switchFill(chatScene);
             switchFont(minimizeStage, closeStage, switchColor, titleHolder);
-            switchFontColor(brighterInput, darkerInput, chatInput);
+            switchFontColor(brighterInputStyle, darkerInputStyle, chatInput);
             if (Objects.equals(switchColor.getText(), colorModeSymbols[0])) switchColor.setText(colorModeSymbols[1]);
             else switchColor.setText(colorModeSymbols[0]);
         });
+
+        // Assigning button actions
+        minimizeStage.setOnAction(event -> primaryStage.setIconified(true));
+        closeStage.setOnAction(event -> primaryStage.close());
         switchColor.setOnAction(changeColorHandler);
+
+        // Assigning button highlight events
+        setMouseHighlightEvent(highlightBackgrounds[0], minimizeStage, switchColor);
+        setMouseHighlightEvent(highlightBackgrounds[1], closeStage);
+
+        // Setting properties for resizeable priority components
+        HBox.setHgrow(titleHolder, Priority.ALWAYS);
+        VBox.setVgrow(chatViewport, Priority.ALWAYS);
+
+        // Assigning stage relocation functionality
+        relocateOnDrag(primaryStage, titleHolder, placeHolder);
+
+        // Assigning stylesheets
+        chatViewport.getStylesheets().add(scrollPaneStyle);
+
+        // Completing configurations-decorations
+        chatHistory.setPadding(defaultPadding);
+        chatHistory.setSpacing(5.0);
+
+        // Setting components transparent
+        setTransparent(chatPanel, chatPanel);
+
+        // Painting the application to night-mode
         changeColorHandler.handle(null);
 
+        // Configuring the application
         primaryStage.initStyle(StageStyle.UNDECORATED);
         primaryStage.setTitle("Digital Assistant");
         primaryStage.setScene(chatScene);
@@ -240,11 +268,11 @@ public final class MainApp extends Application {
         }
     }
 
-    private void switchFontColor(String brighterInput, String darkerInput, TextField... f) {
+    private void switchFontColor(String brighterInputStyle, String darkerInputStyle, TextField... f) {
         for (var field : f) {
             final var styles = field.getStylesheets();
-            if (styles.remove(brighterInput)) styles.add(darkerInput);
-            else styles.add(brighterInput);
+            if (styles.remove(brighterInputStyle)) styles.add(darkerInputStyle);
+            else styles.add(brighterInputStyle);
         }
     }
 }
