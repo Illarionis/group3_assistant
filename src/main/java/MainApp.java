@@ -7,6 +7,7 @@ import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.control.ComboBox;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
@@ -27,8 +28,8 @@ public final class MainApp extends Application {
     };
 
     final Color[] fontColors = {
-            Color.color(0.8, 0.8, 0.8),
-            Color.color(0.2, 0.2, 0.2)
+            Color.WHITE,
+            Color.BLACK
     };
 
     final Color[] highlightColors = {
@@ -69,28 +70,39 @@ public final class MainApp extends Application {
             Character.toString(127769)  // Moon Symbol
     };
 
+    final String[] sceneSelectorItems = {
+            "Chat",
+            "Editor"
+    };
+
     @Override
     public void start(Stage primaryStage) {
         // Accessing CSS files
-        final var scrollPaneCSS = getClass().getResource("/transparent-scroll-pane.css");
-        final var brighterInputCSS = getClass().getResource("/brighter-input.css");
-        final var darkerInputCSS = getClass().getResource("/darker-input.css");
-        if (scrollPaneCSS == null) throw new IllegalStateException("Failed to fetch Scroll Pane CSS file!");
-        else if (brighterInputCSS == null) throw new IllegalStateException("Failed to fetch Brighter Input CSS file!");
-        else if (darkerInputCSS == null) throw new IllegalStateException("Failed to fetch Darker Input CSS file!");
+        final var scrollPaneCSS       = getClass().getResource("/transparent-scroll-pane.css");
+        final var brighterInputCSS    = getClass().getResource("/brighter-input.css");
+        final var darkerInputCSS      = getClass().getResource("/darker-input.css");
+        final var brighterBoxInputCSS = getClass().getResource("/brighter-box-input.css");
+        final var darkerBoxInputCSS   = getClass().getResource("/darker-box-input.css");
+        if      (scrollPaneCSS       == null) throw new IllegalStateException("Failed to fetch Scroll Pane CSS file!");
+        else if (brighterInputCSS    == null) throw new IllegalStateException("Failed to fetch Brighter Input CSS file!");
+        else if (darkerInputCSS      == null) throw new IllegalStateException("Failed to fetch Darker Input CSS file!");
+        else if (brighterBoxInputCSS == null) throw new IllegalStateException("Failed to fetch Brighter Box CSS file!");
+        else if (darkerBoxInputCSS   == null) throw new IllegalStateException("Failed to fetch Darker Box CSS file!");
 
         // Preparing CSS
-        final String scrollPaneStyle = scrollPaneCSS.toExternalForm();
-        final String brighterInputStyle = brighterInputCSS.toExternalForm();
-        final String darkerInputStyle = darkerInputCSS.toExternalForm();
+        final String scrollPaneStyle        = scrollPaneCSS.toExternalForm();
+        final String brighterInputStyle     = brighterInputCSS.toExternalForm();
+        final String darkerInputStyle       = darkerInputCSS.toExternalForm();
+        final String brighterBoxInputStyle  = brighterBoxInputCSS.toExternalForm();
+        final String darkerBoxInputStyle    = darkerBoxInputCSS.toExternalForm();
 
         // Preparing title bar
         final Button minimizeStage  = createButton(Character.toString(8212));
         final Button closeStage     = createButton(Character.toString(10005));
         final HBox   stageControls  = encapsulateHorizontally(minimizeStage, closeStage);
         final Button switchColor    = createButton(colorModeSymbols[0]);
-        final Button placeHolder    = createButton("");
-        final HBox   colorControls  = encapsulateHorizontally(switchColor, placeHolder);
+        final var    sceneSelector  = createCombobox();
+        final HBox   colorControls  = encapsulateHorizontally(switchColor, sceneSelector);
         final Button titleHolder    = createButton("Digital Assistant");
         final HBox   titleBar       = encapsulateHorizontally(colorControls, titleHolder, stageControls);
 
@@ -103,15 +115,18 @@ public final class MainApp extends Application {
         final Scene chatScene = new Scene(chatPanel, 360, 720);
 
         // Todo 1: Preparing skill editor
+        final VBox editorPanel = encapsulateVertically();
+        final Scene editorScene = new Scene(editorPanel, 720, 720);
 
         // Todo 2: Preparing authorization processes
 
         // Preparing day-night theme functionality
         final EventHandler<ActionEvent> changeColorHandler = (event -> {
             switchBackground(titleBar, chatInput);
-            switchFill(chatScene);
+            switchFill(chatScene, editorScene);
             switchFont(minimizeStage, closeStage, switchColor, titleHolder);
             switchFontColor(brighterInputStyle, darkerInputStyle, chatInput);
+            switchFontColor(brighterBoxInputStyle, darkerBoxInputStyle, sceneSelector);
             if (Objects.equals(switchColor.getText(), colorModeSymbols[0])) switchColor.setText(colorModeSymbols[1]);
             else switchColor.setText(colorModeSymbols[0]);
         });
@@ -125,12 +140,28 @@ public final class MainApp extends Application {
         setMouseHighlightEvent(highlightBackgrounds[0], minimizeStage, switchColor);
         setMouseHighlightEvent(highlightBackgrounds[1], closeStage);
 
+        // Configuring how scenes are switched using the combo box
+        sceneSelector.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
+            if (oldValue.equals(newValue)) return;
+            else if (newValue.equals("Chat")) {
+                editorPanel.getChildren().remove(titleBar);
+                chatPanel.getChildren().add(0, titleBar);
+                primaryStage.setScene(chatScene);
+            }
+            else {
+                chatPanel.getChildren().remove(titleBar);
+                editorPanel.getChildren().add(0, titleBar);
+                primaryStage.setScene(editorScene);
+            }
+            primaryStage.centerOnScreen();
+        });
+
         // Setting properties for resizeable priority components
         HBox.setHgrow(titleHolder, Priority.ALWAYS);
         VBox.setVgrow(chatViewport, Priority.ALWAYS);
 
         // Assigning stage relocation functionality
-        relocateOnDrag(primaryStage, titleHolder, placeHolder);
+        relocateOnDrag(primaryStage, titleHolder);
 
         // Assigning stylesheets
         chatViewport.getStylesheets().add(scrollPaneStyle);
@@ -140,7 +171,7 @@ public final class MainApp extends Application {
         chatHistory.setSpacing(5.0);
 
         // Setting components transparent
-        setTransparent(chatPanel, chatPanel);
+        setTransparent(sceneSelector, chatPanel, editorPanel);
 
         // Painting the application to night-mode
         changeColorHandler.handle(null);
@@ -173,10 +204,17 @@ public final class MainApp extends Application {
             p.getChildren().add(userMessage);
 
             final String assistantOutput = a.respond(userInput);
-            final var assistantMessage = createAssistantMessage(assistantOutput);
+            final var assistantMessage = createSystemMessage(assistantOutput);
             p.getChildren().add(assistantMessage);
         });
         return field;
+    }
+
+    private ComboBox<String> createCombobox() {
+        final var box = new ComboBox<String>();
+        box.getItems().addAll(sceneSelectorItems);
+        box.setValue(sceneSelectorItems[0]);
+        return box;
     }
 
     private TextFlow createMessageFlow(String s) {
@@ -187,7 +225,7 @@ public final class MainApp extends Application {
         return flow;
     }
 
-    private HBox createAssistantMessage(String s) {
+    private HBox createSystemMessage(String s) {
         final var flow = createMessageFlow(s);
         flow.setBackground(messageBackgrounds[0]);
 
@@ -274,5 +312,11 @@ public final class MainApp extends Application {
             if (styles.remove(brighterInputStyle)) styles.add(darkerInputStyle);
             else styles.add(brighterInputStyle);
         }
+    }
+
+    private void switchFontColor(String brightBoxInputStyle, String darkBoxInputStyle, ComboBox<String> box) {
+        final var styles = box.getStylesheets();
+        if (styles.remove(brightBoxInputStyle)) styles.add(darkBoxInputStyle);
+        else styles.add(brightBoxInputStyle);
     }
 }
