@@ -44,4 +44,18 @@ public final class Assistant {
     public String removeAssociation(String in) {
         return associations.remove(in);
     }
+
+    /**
+     * Requests the assistant to respond to an input from the user.
+     *
+     * @param in The input to which the assistant should respond to.
+     * @return The response the assistant has to the input.
+     **/
+    public String respond(String in) {
+        final String out = getAssociation(in);
+        if (out != null) return out;
+        // Todo: Check for spelling mistakes
+        // Todo: Check whether input belongs to a grammar
+        return "Apologies, could not recognize your message.";
+    }
 }
