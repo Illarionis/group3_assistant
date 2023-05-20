@@ -13,6 +13,7 @@ public final class NodeGenerator {
     public HBox createHorizontalBox(double spacing, Insets padding, Pos alignment, Node... children) {
         final var hbox = new HBox(children);
         hbox.setAlignment(alignment);
+        hbox.setFillHeight(true);
         hbox.setPadding(padding);
         hbox.setSpacing(spacing);
         return hbox;
@@ -43,6 +44,7 @@ public final class NodeGenerator {
     public VBox createVerticalBox(double spacing, Insets padding, Pos alignment, Node... children) {
         final var vbox = new VBox(children);
         vbox.setAlignment(alignment);
+        vbox.setFillWidth(true);
         vbox.setPadding(padding);
         vbox.setSpacing(spacing);
         return vbox;
