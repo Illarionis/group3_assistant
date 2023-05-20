@@ -4,6 +4,7 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.Label;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
@@ -21,6 +22,16 @@ public final class NodeGenerator {
         final var label = new Label(text);
         label.setAlignment(alignment);
         return label;
+    }
+
+    public ScrollPane createScrollPane(String stylesheet, Node content) {
+        final var scrollPane = new ScrollPane(content);
+        scrollPane.getStylesheets().add(stylesheet);
+        scrollPane.setFitToHeight(true);
+        scrollPane.setFitToWidth(true);
+        scrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+        scrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+        return scrollPane;
     }
 
     public TextField createTextField(String promptText) {
