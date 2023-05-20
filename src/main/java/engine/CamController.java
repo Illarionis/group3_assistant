@@ -2,7 +2,6 @@ package engine;
 
 import org.bytedeco.javacv.*;
 import org.bytedeco.opencv.opencv_core.IplImage;
-import org.checkerframework.checker.units.qual.C;
 
 import static org.bytedeco.opencv.helper.opencv_imgcodecs.cvSaveImage;
 
