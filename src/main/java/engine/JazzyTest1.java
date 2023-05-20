@@ -24,7 +24,7 @@ public class JazzyTest1 implements SpellCheckListener {
     }
 
     private void createDictionary() {
-        File dict = new File("resources/english.0");
+        File dict = new File("src/main/resources/english.0");
         try {
             checker = new SpellChecker(new SpellDictionaryHashMap(dict));
         } catch (FileNotFoundException e) {
