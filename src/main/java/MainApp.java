@@ -1,5 +1,5 @@
 import engine.Assistant;
-import gui.NodeGenerator;
+import gui.NodeFactory;
 import gui.RegionDesigner;
 import javafx.application.Application;
 import javafx.event.ActionEvent;
@@ -47,10 +47,8 @@ public final class MainApp extends Application {
         final String textStyleDarkMode   = "-fx-font: 14 arial; -fx-text-fill: rgb(180, 180, 180); -fx-prompt-text-fill: -fx-text-fill;";
         final String textStyleWarning    = "-fx-text-fill: rgb(255, 120, 150);";
 
-        // Back-end variables
+        // Assistant
         final var assistant   = new Assistant();
-        final var ruleHolders = new ArrayList<RuleHolder>();
-        final var ruleDeleteHandlers = new ArrayList<EventHandler<ActionEvent>>();
 
         // Insets
         final Insets padding = new Insets(5, 5, 5, 5);
@@ -143,19 +141,23 @@ public final class MainApp extends Application {
 
         // Utilities to reduce the number of duplicated lines when designing the GUI
         final var designer = new RegionDesigner();
-        final var generator = new NodeGenerator();
+        final var factory  = new NodeFactory();
 
-        // Building the modifiable title bar
+        /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+         *                                               Title Bar                                                   *
+         * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+
+        // Building the title bar
         final Button buttonCloseStage    = new Button(symbolMultiplication);
         final Button buttonMinimizeStage = new Button(symbolDash);
         final Button buttonSwitchScene   = new Button(symbolMemo);
         final Button buttonSwitchTheme   = new Button(symbolMoon);
-        final Label  title               = generator.createLabel("DIGITAL ASSISTANT", Pos.CENTER);
-        final HBox   stageControls       = generator.createHorizontalBox(0, Insets.EMPTY, Pos.CENTER, buttonMinimizeStage, buttonCloseStage);
-        final HBox   appControls         = generator.createHorizontalBox(0, Insets.EMPTY, Pos.CENTER, buttonSwitchTheme, buttonSwitchScene);
-        final HBox   titleBar            = generator.createHorizontalBox(0, Insets.EMPTY, Pos.CENTER, appControls, title, stageControls);
+        final Label  title               = factory.createLabel("DIGITAL ASSISTANT", Pos.CENTER);
+        final HBox   stageControls       = factory.createHorizontalBox(0, Insets.EMPTY, Pos.CENTER, buttonMinimizeStage, buttonCloseStage);
+        final HBox   appControls         = factory.createHorizontalBox(0, Insets.EMPTY, Pos.CENTER, buttonSwitchTheme, buttonSwitchScene);
+        final HBox   titleBar            = factory.createHorizontalBox(0, Insets.EMPTY, Pos.CENTER, appControls, title, stageControls);
 
-        // Completing the design of the title bar
+        // Completing the design
         designer.setBackground(Background.EMPTY, buttonCloseStage, buttonMinimizeStage, buttonSwitchScene, buttonSwitchTheme);
         designer.setMaxWidth(Double.MAX_VALUE, buttonCloseStage, buttonMinimizeStage, buttonSwitchScene, buttonSwitchTheme, title);
         designer.setPrefWidth(50, buttonCloseStage, buttonMinimizeStage, buttonSwitchScene, buttonSwitchTheme);
@@ -163,28 +165,28 @@ public final class MainApp extends Application {
         designer.setPrefHeight(50, buttonCloseStage, buttonMinimizeStage, buttonSwitchScene, buttonSwitchTheme, title);
         HBox.setHgrow(title, Priority.ALWAYS);
 
-        // Assigning visual effects to the title bar buttons
+        // Assigning visual effects
         designer.setOnMouseEntered(handlerButtonRedHighlight, buttonCloseStage);
         designer.setOnMouseEntered(handlerButtonDefaultHighlight, buttonMinimizeStage, buttonSwitchScene, buttonSwitchTheme);
         designer.setOnMouseExited(handlerButtonResetHighlight, buttonCloseStage, buttonMinimizeStage, buttonSwitchScene, buttonSwitchTheme);
 
-        // Providing support for a bright mode title bar
+        // Providing bright mode support
         actionsBrightModeSwitch.add(() -> {
             designer.setBorder(borderBrightMode, titleBar);
             designer.setStyle(textStyleBrightMode, buttonCloseStage, buttonMinimizeStage, buttonSwitchScene, buttonSwitchTheme, title);
         });
 
-        // Providing support for a dark mode title bar
+        // Providing dark mode support
         actionsDarkModeSwitch.add(() -> {
             designer.setBorder(borderDarkMode, titleBar);
             designer.setStyle(textStyleDarkMode, buttonCloseStage, buttonMinimizeStage, buttonSwitchScene, buttonSwitchTheme, title);
         });
 
-        // Assigning stage relocation on title drag
+        // Providing stage relocation support
         title.setOnMousePressed(handlerStartRelocation);
         title.setOnMouseDragged(handlerCompleteRelocation);
 
-        // Assigning click event handlers to the title bar buttons
+        // Assigning click event handlers
         buttonCloseStage.setOnAction(event -> {
             // Todo; If needed, log-out (safely) once the authorization are completed
             primaryStage.close();
@@ -215,29 +217,32 @@ public final class MainApp extends Application {
             }
         });
 
-        // Building the chat
-        final VBox       chatHistory  = generator.createVerticalBox(5, padding, Pos.TOP_CENTER);
-        final ScrollPane viewportChat = generator.createScrollPane(scrollPaneStylesheet, chatHistory);
-        final TextField  chatInput    = generator.createTextField("Click to type...");
-        sceneRoots[1]                 = generator.createVerticalBox(3, padding, Pos.CENTER, viewportChat, chatInput);
+        /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+         *                                                   Chat                                                    *
+         * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-        // Completing the design of the chat
+        // Building the chat
+        final VBox       chatHistory  = factory.createVerticalBox(5, padding, Pos.TOP_CENTER);
+        final ScrollPane viewportChat = factory.createScrollPane(scrollPaneStylesheet, chatHistory);
+        final TextField  chatInput    = factory.createTextField("Click to type...");
+
+        // Completing the design
         designer.setBackground(Background.EMPTY, chatInput);
         VBox.setVgrow(viewportChat, Priority.ALWAYS);
 
-        // Providing support for bright mode chat
+        // Providing bright mode support
         actionsBrightModeSwitch.add(() -> {
-            designer.setBorder(borderBrightMode, viewportChat, chatInput, sceneRoots[1]);
+            designer.setBorder(borderBrightMode, viewportChat, chatInput);
             designer.setStyle(textStyleBrightMode, chatInput);
         });
 
-        // Providing support for dark mode chat
+        // Providing dark mode support
         actionsDarkModeSwitch.add(() -> {
-            designer.setBorder(borderDarkMode, viewportChat, chatInput, sceneRoots[1]);
+            designer.setBorder(borderDarkMode, viewportChat, chatInput);
             designer.setStyle(textStyleDarkMode, chatInput);
         });
 
-        // Assigning functionality to the chat input text field
+        // Assigning text field functionality
         chatInput.setOnKeyPressed(event -> {
             if (event.getCode() != KeyCode.ENTER) return;
 
@@ -250,8 +255,8 @@ public final class MainApp extends Application {
             final Text     outputText     = new Text(output);
             final TextFlow inputTextFlow  = new TextFlow(inputText);
             final TextFlow outputTextFlow = new TextFlow(outputText);
-            final HBox     inputBox       = generator.createHorizontalBox(0, Insets.EMPTY, Pos.CENTER_RIGHT, inputTextFlow);
-            final HBox     outputBox      = generator.createHorizontalBox(0, Insets.EMPTY, Pos.CENTER_LEFT, outputTextFlow);
+            final HBox     inputBox       = factory.createHorizontalBox(0, Insets.EMPTY, Pos.CENTER_RIGHT, inputTextFlow);
+            final HBox     outputBox      = factory.createHorizontalBox(0, Insets.EMPTY, Pos.CENTER_LEFT, outputTextFlow);
 
             // Completing message designs
             designer.setBackground(backgroundAssistantMessage,  outputTextFlow);
@@ -266,61 +271,95 @@ public final class MainApp extends Application {
             // Todo?: Provide support for bright and dark themed messages
         });
 
+        /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+         *                                                  Overview                                                 *
+         * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+
+
+        // Todo: Complete input-output list and grammar list
+
+        // Todo: Create a basic editor which directly associates (input, output)
+
+        // Todo: Add a placeholder editor (phase 1) if time over
+
         // Todo: Create editor panel (aka sceneRoots[2])
-        // Building the rule section of the grammar editor
-        final Button     buttonNewRule = new Button("+");
-        final VBox       viewportRulesContent = generator.createVerticalBox(5, padding, Pos.TOP_CENTER);
-        final ScrollPane viewportRules = generator.createScrollPane(scrollPaneStylesheet, viewportRulesContent);
 
-        // Completing the design of the rule section
-        designer.setBackground(Background.EMPTY, buttonNewRule);
-        designer.setMaxWidth(Double.MAX_VALUE, buttonNewRule);
+
+        /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+         *                                                 Grammar                                                   *
+         * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+
+        // Building buttons
+        final Button buttonNewRule       = new Button("+");
+        final Button buttonDeleteGrammar = new Button("DELETE");
+        final Button buttonSaveGrammar   = new Button("SAVE");
+
+        // Building labels
+        final Label labelGrammarEditor = factory.createLabel("Editor: Grammar", Pos.CENTER);
+        final Label labelStartSymbol   = factory.createLabel("Start-Symbol ", Pos.CENTER);
+        final Label labelArrow         = factory.createLabel(symbolRightArrow, Pos.CENTER);
+
+        // Building text fields
+        final TextField textFieldStartSymbol = factory.createTextField("1 non-terminal");
+
+        // Building horizontal boxes
+        final HBox boxStartSymbol       = factory.createHorizontalBox(5, Insets.EMPTY, Pos.CENTER, labelStartSymbol, labelArrow, textFieldStartSymbol);
+        final HBox boxGrammarButtons    = factory.createHorizontalBox(3, Insets.EMPTY, Pos.CENTER, buttonDeleteGrammar, buttonSaveGrammar);
+
+        // Building section of rules
+        final VBox viewportRulesContent = factory.createVerticalBox(5, padding, Pos.TOP_CENTER);
+        final ScrollPane viewportRules  = factory.createScrollPane(scrollPaneStylesheet, viewportRulesContent);
+
+        // Building the editor
+        final VBox grammarEditor  = factory.createVerticalBox(3, padding, Pos.CENTER, labelGrammarEditor, viewportRules, buttonNewRule, boxGrammarButtons);
+
+        // Completing the design
+        designer.setBackground(Background.EMPTY, buttonNewRule, buttonDeleteGrammar, buttonSaveGrammar, textFieldStartSymbol);
+        designer.setMaxWidth(Double.MAX_VALUE, buttonNewRule, buttonDeleteGrammar, buttonSaveGrammar, labelGrammarEditor);
+        designer.setPrefHeight(30, labelGrammarEditor);
+        designer.setMaxWidth(120, textFieldStartSymbol);
+        HBox.setHgrow(buttonDeleteGrammar, Priority.ALWAYS);
+        HBox.setHgrow(buttonSaveGrammar, Priority.ALWAYS);
         VBox.setVgrow(viewportRules, Priority.ALWAYS);
+        VBox.setVgrow(grammarEditor, Priority.ALWAYS);
+        viewportRulesContent.getChildren().add(boxStartSymbol);
+        textFieldStartSymbol.setAlignment(Pos.CENTER);
 
-        // Providing support for bright mode editing
+        // Providing bright mode support
         actionsBrightModeSwitch.add(() -> {
-            designer.setBorder(borderBrightMode, buttonNewRule, viewportRules);
-            designer.setStyle(textStyleBrightMode, buttonNewRule);
+            designer.setBorder(borderBrightMode, buttonNewRule, buttonDeleteGrammar, buttonSaveGrammar);
+            designer.setBorder(borderBrightMode, labelGrammarEditor, textFieldStartSymbol);
+            designer.setBorder(borderBrightMode, viewportRules, grammarEditor);
+            designer.setStyle(textStyleBrightMode, buttonNewRule, buttonDeleteGrammar, buttonSaveGrammar);
+            designer.setStyle(textStyleBrightMode, labelGrammarEditor, labelStartSymbol, labelArrow);
+            designer.setStyle(textStyleBrightMode, textFieldStartSymbol);
         });
 
-        // Providing support for dark mode editing
+        // Providing dark mode support
         actionsDarkModeSwitch.add(() -> {
-            designer.setBorder(borderDarkMode, buttonNewRule, viewportRules);
-            designer.setStyle(textStyleDarkMode, buttonNewRule);
+            designer.setBorder(borderDarkMode, buttonNewRule, buttonDeleteGrammar, buttonSaveGrammar);
+            designer.setBorder(borderDarkMode, labelGrammarEditor, textFieldStartSymbol);
+            designer.setBorder(borderDarkMode, viewportRules, grammarEditor);
+            designer.setStyle(textStyleDarkMode, buttonNewRule, buttonDeleteGrammar, buttonSaveGrammar);
+            designer.setStyle(textStyleDarkMode, labelGrammarEditor, labelStartSymbol, labelArrow);
+            designer.setStyle(textStyleDarkMode, textFieldStartSymbol);
         });
 
-        // Assigning visual effects to the new rule button
-        designer.setOnMouseEntered(handlerButtonGreenHighlight, buttonNewRule);
-        designer.setOnMouseExited(handlerButtonResetHighlight, buttonNewRule);
+        // Assigning visual effects
+        designer.setOnMouseEntered(handlerButtonGreenHighlight, buttonNewRule, buttonSaveGrammar);
+        designer.setOnMouseEntered(handlerButtonRedHighlight, buttonDeleteGrammar);
+        designer.setOnMouseExited(handlerButtonResetHighlight, buttonNewRule, buttonDeleteGrammar, buttonSaveGrammar);
 
         // Defining how new ruleHolders are generated
         final RuleGenerator ruleGenerator = (lhs, rhs) -> {
             // Building a new front-end rule
             final Button buttonDeleteRule = new Button(symbolMultiplication);
-            final Label  labelWarning     = generator.createLabel("", Pos.CENTER);
-            final Label  labelImplication = generator.createLabel(symbolRightArrow, Pos.CENTER);
-            final TextField textFieldLHS  = generator.createTextField("1 non-terminal");
-            final TextField textFieldRHS  = generator.createTextField("1 terminal or 2 non-terminals");
-            final HBox ruleBox = generator.createHorizontalBox(5, Insets.EMPTY, Pos.CENTER, textFieldLHS, labelImplication, textFieldRHS, buttonDeleteRule);
-            final VBox finalBox = generator.createVerticalBox(0, Insets.EMPTY, Pos.CENTER, labelWarning, ruleBox);
-
-            // Building the respective back-end rule
-            final var ruleHolder = new RuleHolder() {
-                @Override
-                public String getLeftSide() {
-                    return textFieldLHS.getText();
-                }
-
-                @Override
-                public String getRightSide() {
-                    return textFieldRHS.getText();
-                }
-
-                @Override
-                public void setWarning(String s) {
-                    labelWarning.setText(s);
-                }
-            };
+            final Label  labelWarning     = factory.createLabel("", Pos.CENTER);
+            final Label  labelImplication = factory.createLabel(symbolRightArrow, Pos.CENTER);
+            final TextField textFieldLHS  = factory.createTextField("1 non-terminal");
+            final TextField textFieldRHS  = factory.createTextField("1 terminal or up to 2 non-terminals");
+            final HBox ruleBox  = factory.createHorizontalBox(5, Insets.EMPTY, Pos.CENTER, textFieldLHS, labelImplication, textFieldRHS, buttonDeleteRule);
+            final VBox finalBox = factory.createVerticalBox(0, Insets.EMPTY, Pos.CENTER, labelWarning, ruleBox);
 
             // Completing the rule design
             designer.setBackground(Background.EMPTY, buttonDeleteRule, textFieldLHS, textFieldRHS);
@@ -330,42 +369,37 @@ public final class MainApp extends Application {
             textFieldLHS.setText(lhs);
             textFieldRHS.setText(rhs);
 
-            // Adding both the back-end and front-end rule to the list
-            ruleHolders.add(ruleHolder);
-            viewportRulesContent.getChildren().add(finalBox);
-
-            // Providing support for ruleHolders in bright mode
+            // Providing bright mode support
             final Action brightModeRuleAction = () -> {
                 designer.setBorder(borderBrightMode, buttonDeleteRule, textFieldLHS, textFieldRHS);
                 designer.setStyle(textStyleBrightMode, buttonDeleteRule, textFieldLHS, textFieldRHS, labelImplication);
             };
             actionsBrightModeSwitch.add(brightModeRuleAction);
 
-            // Providing support for ruleHolders in dark mode
+            // Providing dark mode support
             final Action darkModeRuleAction = () -> {
                 designer.setBorder(borderDarkMode, buttonDeleteRule, textFieldLHS, textFieldRHS);
                 designer.setStyle(textStyleDarkMode, buttonDeleteRule, textFieldLHS, textFieldRHS, labelImplication);
             };
             actionsDarkModeSwitch.add(darkModeRuleAction);
 
-            // Assigning visual effects to the delete rule button
+            // Assigning visual effects
             designer.setOnMouseEntered(handlerButtonRedHighlight, buttonDeleteRule);
             designer.setOnMouseExited(handlerButtonResetHighlight, buttonDeleteRule);
 
-            // Applying current color scheme to rule design
+            // Applying current color scheme
             if (themeEventHistory[0] == eventEnterBrightMode) brightModeRuleAction.execute();
             else darkModeRuleAction.execute();
 
+            // Adding rule to the editor
+            viewportRulesContent.getChildren().add(finalBox);
+
             // Creating event handler to delete rule
             final EventHandler<ActionEvent> handlerDeleteRule = event -> {
-                ruleHolders.remove(ruleHolder);
                 viewportRulesContent.getChildren().remove(finalBox);
                 actionsBrightModeSwitch.remove(brightModeRuleAction);
                 actionsDarkModeSwitch.remove(darkModeRuleAction);
             };
-
-            // Adding delete event handler to the list (so we can externally remove the rule)
-            ruleDeleteHandlers.add(handlerDeleteRule);
 
             // Assigning functionality to delete rule button
             buttonDeleteRule.setOnAction(handlerDeleteRule);
@@ -382,77 +416,52 @@ public final class MainApp extends Application {
                 if (segments.length > 1) labelWarning.setText("Warning: Right-handed sided text field should NOT contain MORE THAN 1 space");
                 else labelWarning.setText("");
             });
+
+            return handlerDeleteRule;
         };
 
         // Assigning functionality to the new rule button
-        buttonNewRule.setOnAction(newRuleEvent -> ruleGenerator.generate("", ""));
-
-        // Completing the grammar editor
-        final Button buttonDeleteGrammar = new Button("DELETE");
-        final Button buttonSaveGrammar   = new Button("SAVE");
-        final Label labelGrammarEditor = generator.createLabel("Editor: Grammar", Pos.CENTER);
-        final Label labelStartSymbol   = generator.createLabel("Start-Symbol ", Pos.CENTER);
-        final Label labelArrow         = generator.createLabel(symbolRightArrow, Pos.CENTER);
-        final TextField textFieldStartSymbol = generator.createTextField("1 non-terminal");
-        final HBox boxStartSymbol = generator.createHorizontalBox(5, Insets.EMPTY, Pos.CENTER, labelStartSymbol, labelArrow, textFieldStartSymbol);
-        final HBox buttonBoxGrammar = generator.createHorizontalBox(3, Insets.EMPTY, Pos.CENTER, buttonDeleteGrammar, buttonSaveGrammar);
-        final VBox grammarEditor    = generator.createVerticalBox(3, padding, Pos.CENTER, labelGrammarEditor, viewportRules, buttonNewRule, buttonBoxGrammar);
-
-        // Completing design of the grammar editor
-        designer.setBackground(Background.EMPTY, buttonDeleteGrammar, buttonSaveGrammar, textFieldStartSymbol);
-        designer.setMaxWidth(Double.MAX_VALUE, labelGrammarEditor, buttonDeleteGrammar, buttonSaveGrammar);
-        designer.setPrefHeight(30, labelGrammarEditor);
-        designer.setMaxWidth(120, textFieldStartSymbol);
-        HBox.setHgrow(buttonDeleteGrammar, Priority.ALWAYS);
-        HBox.setHgrow(buttonSaveGrammar, Priority.ALWAYS);
-        viewportRulesContent.getChildren().add(boxStartSymbol);
-        textFieldStartSymbol.setAlignment(Pos.CENTER);
-
-        // Assigning visual effects to the buttons
-        designer.setOnMouseEntered(handlerButtonGreenHighlight, buttonSaveGrammar);
-        designer.setOnMouseEntered(handlerButtonRedHighlight, buttonDeleteGrammar);
-        designer.setOnMouseExited(handlerButtonResetHighlight, buttonDeleteGrammar, buttonSaveGrammar);
-
-        // Providing support for bright mode
-        actionsBrightModeSwitch.add(() -> {
-            designer.setBorder(borderBrightMode, textFieldStartSymbol, labelGrammarEditor, buttonDeleteGrammar, buttonSaveGrammar, grammarEditor);
-            designer.setStyle(textStyleBrightMode, labelGrammarEditor, labelStartSymbol, labelArrow, textFieldStartSymbol, buttonDeleteGrammar, buttonSaveGrammar);
-        });
-
-        // Providing support for dark mode
-        actionsDarkModeSwitch.add(() -> {
-            designer.setBorder(borderDarkMode, textFieldStartSymbol, labelGrammarEditor, buttonDeleteGrammar, buttonSaveGrammar, grammarEditor);
-            designer.setStyle(textStyleDarkMode, labelGrammarEditor, labelStartSymbol, labelArrow, textFieldStartSymbol, buttonDeleteGrammar, buttonSaveGrammar);
+        final List<EventHandler<ActionEvent>> deleteRuleHandlers = new ArrayList<>();
+        buttonNewRule.setOnAction(newRuleEvent -> {
+            ruleGenerator.generate("", "");
         });
 
         // Todo: Complete assigning functionality to buttons
         buttonDeleteGrammar.setOnAction(event -> {
-            for (var eventHandler : ruleDeleteHandlers) eventHandler.handle(null);
-            ruleDeleteHandlers.clear();
+
         });
 
         buttonSaveGrammar.setOnAction(event -> {
             // Todo: Complete save functionality by adding grammar to the assistant
         });
 
-        // Todo: Add content to the editor panel (aka sceneRoots[2])
-        // Building the editor panel
-        sceneRoots[2] = generator.createVerticalBox(3, padding, Pos.CENTER, grammarEditor);
-
-        // Completing the design of the editor panel
-        VBox.setVgrow(grammarEditor, Priority.ALWAYS);
-
-        // Providing support for the editor panel in bright mode
-        actionsBrightModeSwitch.add(() -> designer.setBorder(borderBrightMode, sceneRoots[2]));
-
-        // Providing support for the editor panel in dark mode
-        actionsBrightModeSwitch.add(() -> designer.setBorder(borderDarkMode, sceneRoots[2]));
+        /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+         *                                                  Start                                                    *
+         * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
         // Todo: Create authorization panel (aka sceneRoots[0])
 
-        // Completing design of scene roots
-        // Todo: Complete design of every scene
+        /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+         *                                                  Roots                                                    *
+         * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+
+        // Building the scene roots
+        sceneRoots[1] = factory.createVerticalBox(3, padding, Pos.CENTER, viewportChat, chatInput);
+        sceneRoots[2] = factory.createVerticalBox(3, padding, Pos.CENTER, grammarEditor);
+
+        // Completing the design
         designer.setBackground(Background.EMPTY, sceneRoots[1], sceneRoots[2]);
+
+        // Providing bright mode support
+        actionsBrightModeSwitch.add(() -> designer.setBorder(borderBrightMode, sceneRoots[1], sceneRoots[2]));
+
+        // Providing dark mode support
+        actionsBrightModeSwitch.add(() -> designer.setBorder(borderDarkMode, sceneRoots[1], sceneRoots[2]));
+
+
+        /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+         *                                                  Scene                                                    *
+         * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
         // Creating scenes
         // Todo: Create every scene
@@ -479,6 +488,10 @@ public final class MainApp extends Application {
         // Todo: Remove statement below if authorization panel will contain the title bar
         sceneRoots[1].getChildren().add(0, titleBar);
 
+        /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+         *                                                  Stage                                                     *
+         * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+
         // Preparing the stage
         primaryStage.initStyle(StageStyle.UNDECORATED);
         primaryStage.setTitle("Digital Assistant");
@@ -495,13 +508,7 @@ public final class MainApp extends Application {
         void execute();
     }
 
-    private interface RuleHolder {
-        String getLeftSide();
-        String getRightSide();
-        void setWarning(String s);
-    }
-
     private interface RuleGenerator {
-        void generate(String lhs, String rhs);
+        EventHandler<ActionEvent> generate(String lhs, String rhs);
     }
 }

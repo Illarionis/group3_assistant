@@ -9,7 +9,7 @@ import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 
-public final class NodeGenerator {
+public final class NodeFactory {
     public HBox createHorizontalBox(double spacing, Insets padding, Pos alignment, Node... children) {
         final var hbox = new HBox(children);
         hbox.setAlignment(alignment);
