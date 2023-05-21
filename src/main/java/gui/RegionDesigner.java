@@ -24,6 +24,10 @@ public final class RegionDesigner {
         for (var region : regions) region.setMaxWidth(d);
     }
 
+    public void setMinWidth(double d, Region... regions) {
+        for (var region : regions) region.setMinWidth(d);
+    }
+
     public void setOnMouseEntered(EventHandler<MouseEvent> handler, Region... regions) {
         for (var region : regions) region.setOnMouseEntered(handler);
     }
