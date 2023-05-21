@@ -6,7 +6,6 @@ import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -21,9 +20,7 @@ import javafx.scene.text.TextFlow;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public final class MainApp extends Application {
     @Override
@@ -55,7 +52,7 @@ public final class MainApp extends Application {
         // Scene sizes (width x height)
         final int[] startSceneSize  = {360, 360};
         final int[] chatSceneSize   = {360, 720};
-        final int[] editorSceneSize = {1200, 720};
+        final int[] editorSceneSize = {1600, 720};
 
         // Symbols
         final String multiplicationSymbol = Character.toString(10005);
@@ -321,7 +318,7 @@ public final class MainApp extends Application {
 
         // Building the labels
         final Label basicLabel       = factory.createLabel("Basic Editor", Pos.CENTER);
-        final Label errorLabel       = factory.createLabel("", Pos.CENTER);
+        final Label basicErrorLabel  = factory.createLabel("", Pos.CENTER);
         final Label inputLabel       = factory.createLabel("Input", Pos.CENTER_RIGHT);
         final Label outputLabel      = factory.createLabel("Output", Pos.CENTER_RIGHT);
         final Label inputArrowLabel  = factory.createLabel(rightArrowSymbol, Pos.CENTER);
@@ -334,18 +331,18 @@ public final class MainApp extends Application {
         // Building the boxes
         final HBox inputBox  = factory.createHorizontalBox(5, Insets.EMPTY, Pos.CENTER, inputLabel, inputArrowLabel, inputTextField);
         final HBox outputBox = factory.createHorizontalBox(5, Insets.EMPTY, Pos.CENTER, outputLabel, outputArrowLabel, outputTextField);
-        final VBox basicBox  = factory.createVerticalBox(5, Insets.EMPTY, Pos.CENTER, errorLabel, inputBox, outputBox);
+        final VBox basicBox  = factory.createVerticalBox(5, Insets.EMPTY, Pos.CENTER, basicErrorLabel, inputBox, outputBox);
 
         // Building the editor
         final VBox basicEditor = factory.createVerticalBox(3, padding, Pos.CENTER, basicLabel, basicBox, saveBasicButton);
 
         // Completing the design
         designer.setBackground(Background.EMPTY, saveBasicButton, inputTextField, outputTextField);
-        designer.setMaxWidth(Double.MAX_VALUE, saveBasicButton, inputTextField, outputTextField, basicLabel, errorLabel);
+        designer.setMaxWidth(Double.MAX_VALUE, saveBasicButton, inputTextField, outputTextField, basicLabel, basicErrorLabel);
         designer.setPrefHeight(30, basicLabel);
         designer.setPrefWidth(60, inputLabel, outputLabel);
         designer.setPrefWidth(240, inputTextField, outputTextField);
-        designer.setStyle(warningTextStyle, errorLabel);
+        designer.setStyle(warningTextStyle, basicErrorLabel);
         VBox.setVgrow(basicBox, Priority.ALWAYS);
 
         // Assigning visual effects
@@ -374,12 +371,12 @@ public final class MainApp extends Application {
 
         // Assigning text field functionality
         inputTextField.textProperty().addListener((observable, oldValue, newValue) -> {
-            if (newValue.isBlank()) errorLabel.setText("Warning: Blank input detected!");
-            else errorLabel.setText("");
+            if (newValue.isBlank()) basicErrorLabel.setText("Warning: Blank input detected!");
+            else basicErrorLabel.setText("");
         });
         outputTextField.textProperty().addListener((observable, oldValue, newValue) -> {
-            if (newValue.isBlank()) errorLabel.setText("Warning: Blank output detected!");
-            else errorLabel.setText("");
+            if (newValue.isBlank()) basicErrorLabel.setText("Warning: Blank output detected!");
+            else basicErrorLabel.setText("");
         });
 
         // Assigning button functionality
@@ -390,13 +387,13 @@ public final class MainApp extends Application {
 
             // Validating input and output
             if (input.isBlank()) {
-                errorLabel.setText("Error: Can not save blank input!");
+                basicErrorLabel.setText("Error: Can not save blank input!");
                 return;
             } else if (output.isBlank()) {
-                errorLabel.setText("Error: Can not save blank output!");
+                basicErrorLabel.setText("Error: Can not save blank output!");
                 return;
             } else if (assistant.getAssociation(input) != null) {
-                errorLabel.setText("Error: Input already exists!");
+                basicErrorLabel.setText("Error: Input already exists!");
                 return;
             }
 
@@ -406,7 +403,7 @@ public final class MainApp extends Application {
             // Clearing the fields
             inputTextField.clear();
             outputTextField.clear();
-            errorLabel.setText("");
+            basicErrorLabel.setText("");
 
             // Building buttons
             final Button openSkill   = new Button(input);
@@ -467,26 +464,34 @@ public final class MainApp extends Application {
          *                                                   Rules                                                   *
          * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
+        // Defining a utility list
+        final List<Rule> rules = new ArrayList<>();
+
         // Building the box to contain rules
         final VBox ruleHolder = factory.createVerticalBox(5, padding, Pos.TOP_CENTER);
 
         // Providing how graphically displayable rules are generated
-        final RuleGenerator generator = (lhs, rhs) -> {
+        final RuleGenerator ruleGenerator = (lhs, rhs) -> {
+            // Providing a constant memory reference (required for deleting the rule)
+            final Rule[] arr = new Rule[1];
+
             // Building a displayable rule
             final Button deleteRuleButton = new Button(multiplicationSymbol);
-            final Label  warningLabel     = factory.createLabel("", Pos.CENTER);
+            final Label  ruleWarningLabel = factory.createLabel("", Pos.CENTER);
             final Label  arrowLabel       = factory.createLabel(rightArrowSymbol, Pos.CENTER);
             final TextField lhsTextField  = factory.createTextField("1 non-terminal");
             final TextField rhsTextField  = factory.createTextField("1 terminal or up to 2 non-terminals");
             final HBox ruleBox  = factory.createHorizontalBox(5, Insets.EMPTY, Pos.CENTER, lhsTextField, arrowLabel, rhsTextField, deleteRuleButton);
-            final VBox finalBox = factory.createVerticalBox(0, Insets.EMPTY, Pos.CENTER, warningLabel, ruleBox);
+            final VBox finalBox = factory.createVerticalBox(0, Insets.EMPTY, Pos.CENTER, ruleWarningLabel, ruleBox);
 
             // Completing the rule design
             designer.setBackground(Background.EMPTY, deleteRuleButton, lhsTextField, rhsTextField);
             designer.setPrefWidth(120, lhsTextField);
             designer.setPrefWidth(240, rhsTextField);
-            designer.setStyle(warningTextStyle, warningLabel);
+            designer.setStyle(warningTextStyle, ruleWarningLabel);
+            lhsTextField.setAlignment(Pos.CENTER);
             lhsTextField.setText(lhs);
+            rhsTextField.setAlignment(Pos.CENTER);
             rhsTextField.setText(rhs);
 
             // Providing bright mode support
@@ -514,25 +519,56 @@ public final class MainApp extends Application {
             // Adding rule to the editor
             ruleHolder.getChildren().add(finalBox);
 
-            // Assigning functionality to delete rule button
-            deleteRuleButton.setOnAction(deleteRuleEvent -> {
+            // Defining the rule delete event handler
+            EventHandler<ActionEvent> deleteRuleHandler = deleteRuleEvent -> {
+                rules.remove(arr[0]);
                 ruleHolder.getChildren().remove(finalBox);
                 brightModeSwitchActions.remove(brightModeSwitchAction);
                 darkModeSwitchActions.remove(darkModeSwitchAction);
-            });
+            };
+
+            // Assigning functionality to delete rule button
+            deleteRuleButton.setOnAction(deleteRuleHandler);
 
             // Assigning pre-processing functionality to lhs text field
             lhsTextField.textProperty().addListener((observable, oldValue, newValue) -> {
-                if (newValue.contains(" ")) warningLabel.setText("Warning: Left-hand sided text field should NOT contain spaces!");
-                else warningLabel.setText("");
+                if (newValue.contains(" ")) ruleWarningLabel.setText("Warning: Left-hand sided text field should NOT contain spaces!");
+                else ruleWarningLabel.setText("");
             });
 
             // Assigning pre-processing functionality to rhs text field
             rhsTextField.textProperty().addListener((observable, oldValue, newValue) -> {
                 final String[] segments = newValue.split(" ");
-                if (segments.length > 1) warningLabel.setText("Warning: Right-handed sided text field should NOT contain MORE THAN 1 space");
-                else warningLabel.setText("");
+                if (segments.length > 2) ruleWarningLabel.setText("Warning: Right-handed sided text field should NOT contain MORE THAN 1 space");
+                else ruleWarningLabel.setText("");
             });
+
+
+            // Defining the back-end access point of data located in the front-end
+            arr[0] = new Rule() {
+                @Override
+                public void delete() {
+                    deleteRuleHandler.handle(null);
+                }
+
+                @Override
+                public String getLeftHandSide() {
+                    return lhsTextField.getText();
+                }
+
+                @Override
+                public String getRightHandSide() {
+                    return rhsTextField.getText();
+                }
+
+                @Override
+                public void setWarning(String s) {
+                    ruleWarningLabel.setText(s);
+                }
+            };
+
+            // Updating the utility list
+            rules.add(arr[0]);
         };
 
         /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
@@ -545,14 +581,6 @@ public final class MainApp extends Application {
 
         // Building labels
         final Label grammarEditorLabel = factory.createLabel("Grammar Editor", Pos.CENTER);
-        final Label startSymbolLabel   = factory.createLabel("Start-Symbol ", Pos.CENTER);
-        final Label arrowLabel         = factory.createLabel(rightArrowSymbol, Pos.CENTER);
-
-        // Building text fields
-        final TextField startSymbolTextField = factory.createTextField("1 non-terminal");
-
-        // Building horizontal boxes
-        final HBox startSymbolBox       = factory.createHorizontalBox(5, Insets.EMPTY, Pos.CENTER, startSymbolLabel, arrowLabel, startSymbolTextField);
 
         // Building the scroll pane to browse rules
         final ScrollPane ruleViewport  = factory.createScrollPane(scrollPaneStylesheet, ruleHolder);
@@ -561,34 +589,29 @@ public final class MainApp extends Application {
         final VBox grammarEditor  = factory.createVerticalBox(3, padding, Pos.CENTER, grammarEditorLabel, ruleViewport, newRuleButton, saveGrammarButton);
 
         // Completing the design
-        designer.setBackground(Background.EMPTY, newRuleButton, saveGrammarButton, startSymbolTextField);
+        designer.setBackground(Background.EMPTY, newRuleButton, saveGrammarButton);
         designer.setMaxWidth(Double.MAX_VALUE, newRuleButton, saveGrammarButton, grammarEditorLabel);
         designer.setPrefHeight(30, grammarEditorLabel);
-        designer.setMaxWidth(120, startSymbolTextField);
         HBox.setHgrow(saveGrammarButton, Priority.ALWAYS);
         VBox.setVgrow(ruleViewport, Priority.ALWAYS);
         VBox.setVgrow(grammarEditor, Priority.ALWAYS);
-        ruleHolder.getChildren().add(startSymbolBox);
-        startSymbolTextField.setAlignment(Pos.CENTER);
 
         // Providing bright mode support
         brightModeSwitchActions.add(() -> {
             designer.setBorder(brightModeBorder, newRuleButton, saveGrammarButton);
-            designer.setBorder(brightModeBorder, grammarEditorLabel, startSymbolTextField);
+            designer.setBorder(brightModeBorder, grammarEditorLabel);
             designer.setBorder(brightModeBorder, ruleViewport);
             designer.setStyle(brightModeTextStyle, newRuleButton, saveGrammarButton);
-            designer.setStyle(brightModeTextStyle, grammarEditorLabel, startSymbolLabel, arrowLabel);
-            designer.setStyle(brightModeTextStyle, startSymbolTextField);
+            designer.setStyle(brightModeTextStyle, grammarEditorLabel);
         });
 
         // Providing dark mode support
         darkModeSwitchActions.add(() -> {
             designer.setBorder(darkModeBorder, newRuleButton, saveGrammarButton);
-            designer.setBorder(darkModeBorder, grammarEditorLabel, startSymbolTextField);
+            designer.setBorder(darkModeBorder, grammarEditorLabel);
             designer.setBorder(darkModeBorder, ruleViewport);
             designer.setStyle(darkModeTextStyle, newRuleButton, saveGrammarButton);
-            designer.setStyle(darkModeTextStyle, grammarEditorLabel, startSymbolLabel, arrowLabel);
-            designer.setStyle(darkModeTextStyle, startSymbolTextField);
+            designer.setStyle(darkModeTextStyle, grammarEditorLabel);
         });
 
         // Assigning visual effects
@@ -596,11 +619,117 @@ public final class MainApp extends Application {
         designer.setOnMouseExited(removeHighlightHandler, newRuleButton, saveGrammarButton);
 
         // Assigning functionality to the new rule button
-        newRuleButton.setOnAction(newRuleEvent -> generator.generate("", ""));
+        newRuleButton.setOnAction(newRuleEvent -> ruleGenerator.generate("", ""));
 
-        // Todo: Complete assigning functionality to buttons
+        // Assigning functionality to the save grammar button
         saveGrammarButton.setOnAction(event -> {
-            // Todo: Complete saving rules as grammar
+            // Validating every rule
+            for (var rule : rules) {
+                // Left hand side validation
+                final String lhs = rule.getLeftHandSide();
+                if (lhs.isBlank()) {
+                    rule.setWarning("Error: Left-hand sided text field is blank!");
+                    return;
+                } else if (lhs.contains(" ")) {
+                    rule.setWarning("Error: Left-hand sided text field contains one or more spaces!");
+                    return;
+                }
+
+                // Right hand side validation
+                final String rhs = rule.getRightHandSide();
+                if (rhs.isBlank()) {
+                    rule.setWarning("Error: Right-hand sided text field is blank!");
+                    return;
+                }
+                final String[] segments = rhs.split(" ");
+                if (segments.length > 2) {
+                    rule.setWarning("Error: Right-hand sided text field contains more than two or more spaces!");
+                    return;
+                }
+            }
+
+            // Creating a map to store all rules (aka grammar)
+            final Map<String, List<String[]>> ruleMap = new HashMap<>();
+
+            // Browsing through every rule again...
+            for (var rule : rules) {
+                // Accessing both sides of the rule
+                final String lhs = rule.getLeftHandSide();
+                final String[] rhs = rule.getRightHandSide().split(" ");
+
+                // Accessing map entry, if there is no map entry yet, create a new one
+                final List<String[]> options = ruleMap.computeIfAbsent(lhs, k -> new ArrayList<>());
+
+                // Adding the substitution options (aka right hand side values) to the entry
+                options.add(rhs);
+            }
+
+            // Clearing all rules registered to the editor
+            for (int i = 0; i < rules.size(); i++) {
+                rules.get(0).delete();
+            }
+
+
+            // Building buttons
+            final Button openGrammarButton   = new Button("GRAMMAR");
+            final Button deleteGrammarButton = new Button(multiplicationSymbol);
+
+            // Building the grammar representation
+            final HBox grammarBox = factory.createHorizontalBox(3, Insets.EMPTY, Pos.CENTER, openGrammarButton, deleteGrammarButton);
+
+            // Completing the design
+            designer.setBackground(Background.EMPTY, openGrammarButton, deleteGrammarButton);
+            designer.setMaxWidth(Double.MAX_VALUE, openGrammarButton);
+            HBox.setHgrow(openGrammarButton, Priority.ALWAYS);
+
+            // Adding the grammar box
+            grammarHolder.getChildren().add(grammarBox);
+
+            // Assigning visual effects
+            designer.setOnMouseEntered(redHighlightHandler, deleteGrammarButton);
+            designer.setOnMouseEntered(greenHighlightHandler, openGrammarButton);
+            designer.setOnMouseExited(removeHighlightHandler, deleteGrammarButton, openGrammarButton);
+
+            // Providing bright mode support
+            final Action brightModeSwitchAction = () -> {
+                designer.setBorder(brightModeBorder, openGrammarButton, deleteGrammarButton);
+                designer.setStyle(brightModeTextStyle, openGrammarButton, deleteGrammarButton);
+            };
+            brightModeSwitchActions.add(brightModeSwitchAction);
+
+            // Providing dark mode support
+            final Action darkModeSwitchAction = () -> {
+                designer.setBorder(darkModeBorder, openGrammarButton, deleteGrammarButton);
+                designer.setStyle(darkModeTextStyle, openGrammarButton, deleteGrammarButton);
+            };
+            darkModeSwitchActions.add(darkModeSwitchAction);
+
+            // Assigning functionality
+            deleteGrammarButton.setOnAction(deleteSkillEvent -> {
+                grammarHolder.getChildren().remove(grammarBox);
+                brightModeSwitchActions.remove(brightModeSwitchAction);
+                darkModeSwitchActions.remove(darkModeSwitchAction);
+            });
+            openGrammarButton.setOnAction(openSkillEvent -> {
+                // Clearing all rules registered to the editor
+                for (int i = 0; i < rules.size(); i++) {
+                    rules.get(0).delete();
+                }
+
+                // Reading every entry in the rule map to re-generate the rules on the editor
+                for (var mapEntry : ruleMap.entrySet()) {
+                    final String lhs = mapEntry.getKey();
+                    for (String[] rhs : mapEntry.getValue()) {
+                        final StringBuilder sb = new StringBuilder(rhs[0]);
+                        for (int i = 1; i < rhs.length; i++) sb.append(' ').append(rhs[i]);
+                        ruleGenerator.generate(lhs, sb.toString());
+                    }
+                }
+            });
+
+            // Applying current color theme
+            if (colorThemeHistory[0] == enterBrightModeEvent) brightModeSwitchAction.execute();
+            else darkModeSwitchAction.execute();
         });
 
         /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
@@ -611,6 +740,8 @@ public final class MainApp extends Application {
         final HBox editor = factory.createHorizontalBox(0, Insets.EMPTY, Pos.CENTER, skillOverview, basicEditor, grammarEditor, grammarOverview);
 
         // Completing the design
+        designer.setMinWidth(200, skillOverview, grammarOverview);
+        designer.setMinWidth(500, basicEditor, grammarEditor);
         HBox.setHgrow(skillOverview, Priority.ALWAYS);
         HBox.setHgrow(basicEditor, Priority.ALWAYS);
         HBox.setHgrow(grammarEditor, Priority.ALWAYS);
@@ -696,7 +827,13 @@ public final class MainApp extends Application {
         void execute();
     }
 
-    // Todo: If needed, update interface to have the assistant support grammar (classes)
+    private interface Rule {
+        void delete();
+        String getLeftHandSide();
+        String getRightHandSide();
+        void setWarning(String s);
+    }
+
     private interface RuleGenerator {
         void generate(String lhs, String rhs);
     }
