@@ -11,22 +11,18 @@ public final class Grammar {
     private final Map<String, List<String[]>> rules = new HashMap<>();
     private String startSymbol;
 
-    public void addRule(String lhs, String rhs) {
-        final String[] arr = rhs.split(" ");
-        if (lhs.contains(" ")) throw new IllegalArgumentException("Left-hand side of rule is NOT allowed to contain spaces!");
-        else if (arr.length > 2) throw new IllegalArgumentException("Right-hand side of rule is NOT allowed to contain more than 1 space!");
-
+    public void addRule(String lhs, String[] rhs) {
         if (!nonTerminals.contains(lhs)) {
             nonTerminals.add(lhs);
             rules.put(lhs, new ArrayList<>());
         }
 
-        if (arr.length == 1 && !terminals.contains(arr[0])) {
-            terminals.add(arr[0]);
+        if (rhs.length == 1 && !terminals.contains(rhs[0])) {
+            terminals.add(rhs[0]);
         }
 
         List<String[]> options = rules.get(lhs);
-        options.add(arr);
+        options.add(rhs);
     }
 
     public Map<String, List<String[]>> getRules() {
