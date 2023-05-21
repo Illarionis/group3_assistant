@@ -6,6 +6,7 @@ import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -60,7 +61,7 @@ public final class MainApp extends Application {
         // Scene sizes (width x height)
         final int[] sizeStartScene  = {360, 360};
         final int[] sizeChatScene   = {360, 720};
-        final int[] sizeEditorScene = {720, 720};
+        final int[] sizeEditorScene = {1200, 720};
 
         // Symbols
         final String symbolMultiplication = Character.toString(10005);
@@ -275,84 +276,56 @@ public final class MainApp extends Application {
          *                                                  Overview                                                 *
          * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
+        // Building labels to identify overviews
+        final Label labelSkill   = factory.createLabel("Skill", Pos.CENTER);
+        final Label labelGrammar = factory.createLabel("Grammar", Pos.CENTER);
 
-        // Todo: Complete input-output list and grammar list
+        // Building content holders
+        final VBox skillHolder   = factory.createVerticalBox(5, padding, Pos.TOP_CENTER);
+        final VBox grammarHolder = factory.createVerticalBox(5, padding, Pos.TOP_CENTER);
+
+        // Building scroll panes
+        final ScrollPane viewportSkillList   = factory.createScrollPane(scrollPaneStylesheet, skillHolder);
+        final ScrollPane viewportGrammarList = factory.createScrollPane(scrollPaneStylesheet, grammarHolder);
+
+        // Building overviews
+        final VBox skillOverview   = factory.createVerticalBox(3, padding, Pos.CENTER, labelSkill, viewportSkillList);
+        final VBox grammarOverview = factory.createVerticalBox(3, padding, Pos.CENTER, labelGrammar, viewportGrammarList);
+
+        // Completing the design
+        designer.setMaxWidth(Double.MAX_VALUE, labelSkill, labelGrammar);
+        designer.setPrefHeight(30, labelSkill, labelGrammar);
+        VBox.setVgrow(viewportSkillList, Priority.ALWAYS);
+        VBox.setVgrow(viewportGrammarList, Priority.ALWAYS);
+
+        // Providing bright mode support
+        actionsBrightModeSwitch.add(() -> {
+            designer.setBorder(borderBrightMode, labelSkill, labelGrammar);
+            designer.setBorder(borderBrightMode, viewportSkillList, viewportGrammarList);
+            designer.setStyle(textStyleBrightMode, labelSkill, labelGrammar);
+        });
+
+        // Providing dark mode support
+        actionsDarkModeSwitch.add(() -> {
+            designer.setBorder(borderDarkMode, labelSkill, labelGrammar);
+            designer.setBorder(borderDarkMode, viewportSkillList, viewportGrammarList);
+            designer.setStyle(textStyleDarkMode, labelSkill, labelGrammar);
+        });
 
         // Todo: Create a basic editor which directly associates (input, output)
 
         // Todo: Add a placeholder editor (phase 1) if time over
 
-        // Todo: Create editor panel (aka sceneRoots[2])
-
-
         /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
-         *                                                 Grammar                                                   *
+         *                                                   Rules                                                   *
          * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-        // Building buttons
-        final Button buttonNewRule       = new Button("+");
-        final Button buttonDeleteGrammar = new Button("DELETE");
-        final Button buttonSaveGrammar   = new Button("SAVE");
-
-        // Building labels
-        final Label labelGrammarEditor = factory.createLabel("Editor: Grammar", Pos.CENTER);
-        final Label labelStartSymbol   = factory.createLabel("Start-Symbol ", Pos.CENTER);
-        final Label labelArrow         = factory.createLabel(symbolRightArrow, Pos.CENTER);
-
-        // Building text fields
-        final TextField textFieldStartSymbol = factory.createTextField("1 non-terminal");
-
-        // Building horizontal boxes
-        final HBox boxStartSymbol       = factory.createHorizontalBox(5, Insets.EMPTY, Pos.CENTER, labelStartSymbol, labelArrow, textFieldStartSymbol);
-        final HBox boxGrammarButtons    = factory.createHorizontalBox(3, Insets.EMPTY, Pos.CENTER, buttonDeleteGrammar, buttonSaveGrammar);
-
-        // Building section of rules
+        // Building the box to contain rules
         final VBox viewportRulesContent = factory.createVerticalBox(5, padding, Pos.TOP_CENTER);
-        final ScrollPane viewportRules  = factory.createScrollPane(scrollPaneStylesheet, viewportRulesContent);
 
-        // Building the editor
-        final VBox grammarEditor  = factory.createVerticalBox(3, padding, Pos.CENTER, labelGrammarEditor, viewportRules, buttonNewRule, boxGrammarButtons);
-
-        // Completing the design
-        designer.setBackground(Background.EMPTY, buttonNewRule, buttonDeleteGrammar, buttonSaveGrammar, textFieldStartSymbol);
-        designer.setMaxWidth(Double.MAX_VALUE, buttonNewRule, buttonDeleteGrammar, buttonSaveGrammar, labelGrammarEditor);
-        designer.setPrefHeight(30, labelGrammarEditor);
-        designer.setMaxWidth(120, textFieldStartSymbol);
-        HBox.setHgrow(buttonDeleteGrammar, Priority.ALWAYS);
-        HBox.setHgrow(buttonSaveGrammar, Priority.ALWAYS);
-        VBox.setVgrow(viewportRules, Priority.ALWAYS);
-        VBox.setVgrow(grammarEditor, Priority.ALWAYS);
-        viewportRulesContent.getChildren().add(boxStartSymbol);
-        textFieldStartSymbol.setAlignment(Pos.CENTER);
-
-        // Providing bright mode support
-        actionsBrightModeSwitch.add(() -> {
-            designer.setBorder(borderBrightMode, buttonNewRule, buttonDeleteGrammar, buttonSaveGrammar);
-            designer.setBorder(borderBrightMode, labelGrammarEditor, textFieldStartSymbol);
-            designer.setBorder(borderBrightMode, viewportRules, grammarEditor);
-            designer.setStyle(textStyleBrightMode, buttonNewRule, buttonDeleteGrammar, buttonSaveGrammar);
-            designer.setStyle(textStyleBrightMode, labelGrammarEditor, labelStartSymbol, labelArrow);
-            designer.setStyle(textStyleBrightMode, textFieldStartSymbol);
-        });
-
-        // Providing dark mode support
-        actionsDarkModeSwitch.add(() -> {
-            designer.setBorder(borderDarkMode, buttonNewRule, buttonDeleteGrammar, buttonSaveGrammar);
-            designer.setBorder(borderDarkMode, labelGrammarEditor, textFieldStartSymbol);
-            designer.setBorder(borderDarkMode, viewportRules, grammarEditor);
-            designer.setStyle(textStyleDarkMode, buttonNewRule, buttonDeleteGrammar, buttonSaveGrammar);
-            designer.setStyle(textStyleDarkMode, labelGrammarEditor, labelStartSymbol, labelArrow);
-            designer.setStyle(textStyleDarkMode, textFieldStartSymbol);
-        });
-
-        // Assigning visual effects
-        designer.setOnMouseEntered(handlerButtonGreenHighlight, buttonNewRule, buttonSaveGrammar);
-        designer.setOnMouseEntered(handlerButtonRedHighlight, buttonDeleteGrammar);
-        designer.setOnMouseExited(handlerButtonResetHighlight, buttonNewRule, buttonDeleteGrammar, buttonSaveGrammar);
-
-        // Defining how new ruleHolders are generated
-        final RuleGenerator ruleGenerator = (lhs, rhs) -> {
-            // Building a new front-end rule
+        // Providing how graphically displayable rules are generated
+        final RuleGenerator generator = (lhs, rhs) -> {
+            // Building a displayable rule
             final Button buttonDeleteRule = new Button(symbolMultiplication);
             final Label  labelWarning     = factory.createLabel("", Pos.CENTER);
             final Label  labelImplication = factory.createLabel(symbolRightArrow, Pos.CENTER);
@@ -420,20 +393,102 @@ public final class MainApp extends Application {
             return handlerDeleteRule;
         };
 
+        /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+         *                                                 Grammar                                                   *
+         * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+
+        // Building buttons
+        final Button buttonNewRule       = new Button("+");
+        final Button buttonDeleteGrammar = new Button("DELETE");
+        final Button buttonSaveGrammar   = new Button("SAVE");
+
+        // Building labels
+        final Label labelGrammarEditor = factory.createLabel("Editor: Grammar", Pos.CENTER);
+        final Label labelStartSymbol   = factory.createLabel("Start-Symbol ", Pos.CENTER);
+        final Label labelArrow         = factory.createLabel(symbolRightArrow, Pos.CENTER);
+
+        // Building text fields
+        final TextField textFieldStartSymbol = factory.createTextField("1 non-terminal");
+
+        // Building horizontal boxes
+        final HBox boxStartSymbol       = factory.createHorizontalBox(5, Insets.EMPTY, Pos.CENTER, labelStartSymbol, labelArrow, textFieldStartSymbol);
+        final HBox boxGrammarButtons    = factory.createHorizontalBox(2, Insets.EMPTY, Pos.CENTER, buttonDeleteGrammar, buttonSaveGrammar);
+
+        // Building the scroll pane to browse rules
+        final ScrollPane viewportRules  = factory.createScrollPane(scrollPaneStylesheet, viewportRulesContent);
+
+        // Building the editor
+        final VBox grammarEditor  = factory.createVerticalBox(3, padding, Pos.CENTER, labelGrammarEditor, viewportRules, buttonNewRule, boxGrammarButtons);
+
+        // Completing the design
+        designer.setBackground(Background.EMPTY, buttonNewRule, buttonDeleteGrammar, buttonSaveGrammar, textFieldStartSymbol);
+        designer.setMaxWidth(Double.MAX_VALUE, buttonNewRule, buttonDeleteGrammar, buttonSaveGrammar, labelGrammarEditor);
+        designer.setPrefHeight(30, labelGrammarEditor);
+        designer.setMaxWidth(120, textFieldStartSymbol);
+        HBox.setHgrow(buttonDeleteGrammar, Priority.ALWAYS);
+        HBox.setHgrow(buttonSaveGrammar, Priority.ALWAYS);
+        VBox.setVgrow(viewportRules, Priority.ALWAYS);
+        VBox.setVgrow(grammarEditor, Priority.ALWAYS);
+        viewportRulesContent.getChildren().add(boxStartSymbol);
+        textFieldStartSymbol.setAlignment(Pos.CENTER);
+
+        // Providing bright mode support
+        actionsBrightModeSwitch.add(() -> {
+            designer.setBorder(borderBrightMode, buttonNewRule, buttonDeleteGrammar, buttonSaveGrammar);
+            designer.setBorder(borderBrightMode, labelGrammarEditor, textFieldStartSymbol);
+            designer.setBorder(borderBrightMode, viewportRules);
+            designer.setStyle(textStyleBrightMode, buttonNewRule, buttonDeleteGrammar, buttonSaveGrammar);
+            designer.setStyle(textStyleBrightMode, labelGrammarEditor, labelStartSymbol, labelArrow);
+            designer.setStyle(textStyleBrightMode, textFieldStartSymbol);
+        });
+
+        // Providing dark mode support
+        actionsDarkModeSwitch.add(() -> {
+            designer.setBorder(borderDarkMode, buttonNewRule, buttonDeleteGrammar, buttonSaveGrammar);
+            designer.setBorder(borderDarkMode, labelGrammarEditor, textFieldStartSymbol);
+            designer.setBorder(borderDarkMode, viewportRules);
+            designer.setStyle(textStyleDarkMode, buttonNewRule, buttonDeleteGrammar, buttonSaveGrammar);
+            designer.setStyle(textStyleDarkMode, labelGrammarEditor, labelStartSymbol, labelArrow);
+            designer.setStyle(textStyleDarkMode, textFieldStartSymbol);
+        });
+
+        // Assigning visual effects
+        designer.setOnMouseEntered(handlerButtonGreenHighlight, buttonNewRule, buttonSaveGrammar);
+        designer.setOnMouseEntered(handlerButtonRedHighlight, buttonDeleteGrammar);
+        designer.setOnMouseExited(handlerButtonResetHighlight, buttonNewRule, buttonDeleteGrammar, buttonSaveGrammar);
+
         // Assigning functionality to the new rule button
         final List<EventHandler<ActionEvent>> deleteRuleHandlers = new ArrayList<>();
-        buttonNewRule.setOnAction(newRuleEvent -> {
-            ruleGenerator.generate("", "");
-        });
+        buttonNewRule.setOnAction(newRuleEvent -> deleteRuleHandlers.add(generator.generate("", "")));
 
         // Todo: Complete assigning functionality to buttons
         buttonDeleteGrammar.setOnAction(event -> {
-
+            for (var handler : deleteRuleHandlers) handler.handle(null);
+            deleteRuleHandlers.clear();
         });
 
         buttonSaveGrammar.setOnAction(event -> {
-            // Todo: Complete save functionality by adding grammar to the assistant
+            // Todo: Complete saving rules as grammar
         });
+
+        /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+         *                                            Complete Editor                                                *
+         * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+
+        // Building the complete editor
+        final HBox editor = factory.createHorizontalBox(0, Insets.EMPTY, Pos.CENTER, skillOverview, grammarEditor, grammarOverview);
+
+        // Completing the design
+        HBox.setHgrow(skillOverview, Priority.ALWAYS);
+        HBox.setHgrow(grammarEditor, Priority.ALWAYS);
+        HBox.setHgrow(grammarOverview, Priority.ALWAYS);
+        VBox.setVgrow(editor, Priority.ALWAYS);
+
+        // Providing bright mode support
+        actionsBrightModeSwitch.add(() -> designer.setBorder(borderBrightMode, editor));
+
+        // Providing dark mode support
+        actionsDarkModeSwitch.add(() -> designer.setBorder(borderDarkMode, editor));
 
         /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
          *                                                  Start                                                    *
@@ -447,7 +502,7 @@ public final class MainApp extends Application {
 
         // Building the scene roots
         sceneRoots[1] = factory.createVerticalBox(3, padding, Pos.CENTER, viewportChat, chatInput);
-        sceneRoots[2] = factory.createVerticalBox(3, padding, Pos.CENTER, grammarEditor);
+        sceneRoots[2] = factory.createVerticalBox(3, padding, Pos.CENTER, editor);
 
         // Completing the design
         designer.setBackground(Background.EMPTY, sceneRoots[1], sceneRoots[2]);
@@ -508,6 +563,7 @@ public final class MainApp extends Application {
         void execute();
     }
 
+    // Todo: If needed, update interface to have the assistant support grammar (classes)
     private interface RuleGenerator {
         EventHandler<ActionEvent> generate(String lhs, String rhs);
     }
