@@ -152,6 +152,7 @@ public final class MainApp extends Application {
         // Completing the design
         designer.setBackground(Background.EMPTY, closeStageButton, minimizeStageButton, switchSceneButton, switchThemeButton);
         designer.setMaxWidth(Double.MAX_VALUE, closeStageButton, minimizeStageButton, switchSceneButton, switchThemeButton, titleLabel);
+        designer.setMinHeight(50, titleBar);
         designer.setPrefWidth(50, closeStageButton, minimizeStageButton, switchSceneButton, switchThemeButton);
         designer.setPrefWidth(100, stageControls, appControls);
         designer.setPrefHeight(50, closeStageButton, minimizeStageButton, switchSceneButton, switchThemeButton, titleLabel);
@@ -591,7 +592,7 @@ public final class MainApp extends Application {
         // Completing the design
         designer.setBackground(Background.EMPTY, newRuleButton, saveGrammarButton);
         designer.setMaxWidth(Double.MAX_VALUE, newRuleButton, saveGrammarButton, grammarEditorLabel);
-        designer.setPrefHeight(30, grammarEditorLabel);
+        designer.setMinHeight(30, grammarEditorLabel);
         HBox.setHgrow(saveGrammarButton, Priority.ALWAYS);
         VBox.setVgrow(ruleViewport, Priority.ALWAYS);
         VBox.setVgrow(grammarEditor, Priority.ALWAYS);
