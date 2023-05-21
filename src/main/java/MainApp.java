@@ -48,8 +48,9 @@ public final class MainApp extends Application {
         final String textStyleWarning    = "-fx-text-fill: rgb(255, 120, 150);";
 
         // Back-end variables
-        final var assistant = new Assistant();
-        final var rules     = new ArrayList<Rule>();
+        final var assistant   = new Assistant();
+        final var ruleHolders = new ArrayList<RuleHolder>();
+        final var ruleDeleteHandlers = new ArrayList<EventHandler<ActionEvent>>();
 
         // Insets
         final Insets padding = new Insets(5, 5, 5, 5);
@@ -266,36 +267,33 @@ public final class MainApp extends Application {
         });
 
         // Todo: Create editor panel (aka sceneRoots[2])
-        // Building the rules panel of the editor
+        // Building the rule section of the grammar editor
         final Button     buttonNewRule = new Button("+");
-        final Label      ruleLabel     = generator.createLabel("Rules in Chomsky-Normal Form", Pos.CENTER);
-        final VBox       ruleHolder    = generator.createVerticalBox(5, padding, Pos.TOP_CENTER);
-        final ScrollPane viewportRules = generator.createScrollPane(scrollPaneStylesheet, ruleHolder);
-        final VBox       rulePanel     = generator.createVerticalBox(3, padding, Pos.CENTER, ruleLabel, viewportRules, buttonNewRule);
+        final VBox       viewportRulesContent = generator.createVerticalBox(5, padding, Pos.TOP_CENTER);
+        final ScrollPane viewportRules = generator.createScrollPane(scrollPaneStylesheet, viewportRulesContent);
 
-        // Completing the design of the rule panel
+        // Completing the design of the rule section
         designer.setBackground(Background.EMPTY, buttonNewRule);
-        designer.setMaxWidth(Double.MAX_VALUE, buttonNewRule, ruleLabel);
-        designer.setPrefHeight(30, ruleLabel);
+        designer.setMaxWidth(Double.MAX_VALUE, buttonNewRule);
         VBox.setVgrow(viewportRules, Priority.ALWAYS);
 
         // Providing support for bright mode editing
         actionsBrightModeSwitch.add(() -> {
-            designer.setBorder(borderBrightMode, buttonNewRule, viewportRules, ruleLabel, rulePanel);
-            designer.setStyle(textStyleBrightMode, buttonNewRule, ruleLabel);
+            designer.setBorder(borderBrightMode, buttonNewRule, viewportRules);
+            designer.setStyle(textStyleBrightMode, buttonNewRule);
         });
 
         // Providing support for dark mode editing
         actionsDarkModeSwitch.add(() -> {
-            designer.setBorder(borderDarkMode, buttonNewRule, viewportRules, ruleLabel, rulePanel);
-            designer.setStyle(textStyleDarkMode, buttonNewRule, ruleLabel);
+            designer.setBorder(borderDarkMode, buttonNewRule, viewportRules);
+            designer.setStyle(textStyleDarkMode, buttonNewRule);
         });
 
         // Assigning visual effects to the new rule button
         designer.setOnMouseEntered(handlerButtonGreenHighlight, buttonNewRule);
         designer.setOnMouseExited(handlerButtonResetHighlight, buttonNewRule);
 
-        // Defining how new rules are generated
+        // Defining how new ruleHolders are generated
         final RuleGenerator ruleGenerator = (lhs, rhs) -> {
             // Building a new front-end rule
             final Button buttonDeleteRule = new Button(symbolMultiplication);
@@ -307,7 +305,7 @@ public final class MainApp extends Application {
             final VBox finalBox = generator.createVerticalBox(0, Insets.EMPTY, Pos.CENTER, labelWarning, ruleBox);
 
             // Building the respective back-end rule
-            final var rule = new Rule() {
+            final var ruleHolder = new RuleHolder() {
                 @Override
                 public String getLeftSide() {
                     return textFieldLHS.getText();
@@ -316,6 +314,11 @@ public final class MainApp extends Application {
                 @Override
                 public String getRightSide() {
                     return textFieldRHS.getText();
+                }
+
+                @Override
+                public void setWarning(String s) {
+                    labelWarning.setText(s);
                 }
             };
 
@@ -328,17 +331,17 @@ public final class MainApp extends Application {
             textFieldRHS.setText(rhs);
 
             // Adding both the back-end and front-end rule to the list
-            rules.add(rule);
-            ruleHolder.getChildren().add(finalBox);
+            ruleHolders.add(ruleHolder);
+            viewportRulesContent.getChildren().add(finalBox);
 
-            // Providing support for rules in bright mode
+            // Providing support for ruleHolders in bright mode
             final Action brightModeRuleAction = () -> {
                 designer.setBorder(borderBrightMode, buttonDeleteRule, textFieldLHS, textFieldRHS);
                 designer.setStyle(textStyleBrightMode, buttonDeleteRule, textFieldLHS, textFieldRHS, labelImplication);
             };
             actionsBrightModeSwitch.add(brightModeRuleAction);
 
-            // Providing support for rules in dark mode
+            // Providing support for ruleHolders in dark mode
             final Action darkModeRuleAction = () -> {
                 designer.setBorder(borderDarkMode, buttonDeleteRule, textFieldLHS, textFieldRHS);
                 designer.setStyle(textStyleDarkMode, buttonDeleteRule, textFieldLHS, textFieldRHS, labelImplication);
@@ -353,13 +356,19 @@ public final class MainApp extends Application {
             if (themeEventHistory[0] == eventEnterBrightMode) brightModeRuleAction.execute();
             else darkModeRuleAction.execute();
 
-            // Assigning functionality to delete rule button
-            buttonDeleteRule.setOnAction(deleteRuleEvent -> {
-                rules.remove(rule);
-                ruleHolder.getChildren().remove(finalBox);
+            // Creating event handler to delete rule
+            final EventHandler<ActionEvent> handlerDeleteRule = event -> {
+                ruleHolders.remove(ruleHolder);
+                viewportRulesContent.getChildren().remove(finalBox);
                 actionsBrightModeSwitch.remove(brightModeRuleAction);
                 actionsDarkModeSwitch.remove(darkModeRuleAction);
-            });
+            };
+
+            // Adding delete event handler to the list (so we can externally remove the rule)
+            ruleDeleteHandlers.add(handlerDeleteRule);
+
+            // Assigning functionality to delete rule button
+            buttonDeleteRule.setOnAction(handlerDeleteRule);
 
             // Assigning pre-processing functionality to lhs text field
             textFieldLHS.textProperty().addListener((observable, oldValue, newValue) -> {
@@ -378,12 +387,60 @@ public final class MainApp extends Application {
         // Assigning functionality to the new rule button
         buttonNewRule.setOnAction(newRuleEvent -> ruleGenerator.generate("", ""));
 
+        // Completing the grammar editor
+        final Button buttonDeleteGrammar = new Button("DELETE");
+        final Button buttonSaveGrammar   = new Button("SAVE");
+        final Label labelGrammarEditor = generator.createLabel("Editor: Grammar", Pos.CENTER);
+        final Label labelStartSymbol   = generator.createLabel("Start-Symbol ", Pos.CENTER);
+        final Label labelArrow         = generator.createLabel(symbolRightArrow, Pos.CENTER);
+        final TextField textFieldStartSymbol = generator.createTextField("1 non-terminal");
+        final HBox boxStartSymbol = generator.createHorizontalBox(5, Insets.EMPTY, Pos.CENTER, labelStartSymbol, labelArrow, textFieldStartSymbol);
+        final HBox buttonBoxGrammar = generator.createHorizontalBox(3, Insets.EMPTY, Pos.CENTER, buttonDeleteGrammar, buttonSaveGrammar);
+        final VBox grammarEditor    = generator.createVerticalBox(3, padding, Pos.CENTER, labelGrammarEditor, viewportRules, buttonNewRule, buttonBoxGrammar);
+
+        // Completing design of the grammar editor
+        designer.setBackground(Background.EMPTY, buttonDeleteGrammar, buttonSaveGrammar, textFieldStartSymbol);
+        designer.setMaxWidth(Double.MAX_VALUE, labelGrammarEditor, buttonDeleteGrammar, buttonSaveGrammar);
+        designer.setPrefHeight(30, labelGrammarEditor);
+        designer.setMaxWidth(120, textFieldStartSymbol);
+        HBox.setHgrow(buttonDeleteGrammar, Priority.ALWAYS);
+        HBox.setHgrow(buttonSaveGrammar, Priority.ALWAYS);
+        viewportRulesContent.getChildren().add(boxStartSymbol);
+        textFieldStartSymbol.setAlignment(Pos.CENTER);
+
+        // Assigning visual effects to the buttons
+        designer.setOnMouseEntered(handlerButtonGreenHighlight, buttonSaveGrammar);
+        designer.setOnMouseEntered(handlerButtonRedHighlight, buttonDeleteGrammar);
+        designer.setOnMouseExited(handlerButtonResetHighlight, buttonDeleteGrammar, buttonSaveGrammar);
+
+        // Providing support for bright mode
+        actionsBrightModeSwitch.add(() -> {
+            designer.setBorder(borderBrightMode, textFieldStartSymbol, labelGrammarEditor, buttonDeleteGrammar, buttonSaveGrammar, grammarEditor);
+            designer.setStyle(textStyleBrightMode, labelGrammarEditor, labelStartSymbol, labelArrow, textFieldStartSymbol, buttonDeleteGrammar, buttonSaveGrammar);
+        });
+
+        // Providing support for dark mode
+        actionsDarkModeSwitch.add(() -> {
+            designer.setBorder(borderDarkMode, textFieldStartSymbol, labelGrammarEditor, buttonDeleteGrammar, buttonSaveGrammar, grammarEditor);
+            designer.setStyle(textStyleDarkMode, labelGrammarEditor, labelStartSymbol, labelArrow, textFieldStartSymbol, buttonDeleteGrammar, buttonSaveGrammar);
+        });
+
+        // Todo: Complete assigning functionality to buttons
+        buttonDeleteGrammar.setOnAction(event -> {
+            for (var eventHandler : ruleDeleteHandlers) eventHandler.handle(null);
+            ruleDeleteHandlers.clear();
+        });
+
+        buttonSaveGrammar.setOnAction(event -> {
+            // Todo: Complete save functionality by adding grammar to the assistant
+        });
+
         // Todo: Add content to the editor panel (aka sceneRoots[2])
         // Building the editor panel
-        sceneRoots[2] = generator.createVerticalBox(3, padding, Pos.CENTER, rulePanel);
+        sceneRoots[2] = generator.createVerticalBox(3, padding, Pos.CENTER, grammarEditor);
 
         // Completing the design of the editor panel
-        VBox.setVgrow(rulePanel, Priority.ALWAYS);
+        VBox.setVgrow(grammarEditor, Priority.ALWAYS);
 
         // Providing support for the editor panel in bright mode
         actionsBrightModeSwitch.add(() -> designer.setBorder(borderBrightMode, sceneRoots[2]));
@@ -438,9 +495,10 @@ public final class MainApp extends Application {
         void execute();
     }
 
-    private interface Rule {
+    private interface RuleHolder {
         String getLeftSide();
         String getRightSide();
+        void setWarning(String s);
     }
 
     private interface RuleGenerator {
