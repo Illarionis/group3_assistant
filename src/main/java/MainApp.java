@@ -43,12 +43,13 @@ public final class MainApp extends Application {
         final String scrollPaneStylesheet = scrollPaneCSS.toExternalForm();
 
         // Inline stylesheets
-        final String textStyleBrightMode = "-fx-text-fill: rgb(30, 30, 30); -fx-prompt-text-fill: -fx-text-fill;";
-        final String textStyleDarkMode   = "-fx-text-fill: rgb(180, 180, 180); -fx-prompt-text-fill: -fx-text-fill;";
+        final String textStyleBrightMode = "-fx-font: 14 arial; -fx-text-fill: rgb(30, 30, 30); -fx-prompt-text-fill: -fx-text-fill;";
+        final String textStyleDarkMode   = "-fx-font: 14 arial; -fx-text-fill: rgb(180, 180, 180); -fx-prompt-text-fill: -fx-text-fill;";
         final String textStyleWarning    = "-fx-text-fill: rgb(255, 120, 150);";
 
-        // Assistant
+        // Back-end variables
         final var assistant = new Assistant();
+        final var rules     = new ArrayList<Rule>();
 
         // Insets
         final Insets padding = new Insets(5, 5, 5, 5);
@@ -94,12 +95,16 @@ public final class MainApp extends Application {
         final ActionEvent eventEnterBrightMode = new ActionEvent();
         final ActionEvent eventEnterDarkMode   = new ActionEvent();
 
+        // Reference to keep track what the current theme is
+        final ActionEvent[] themeEventHistory = new ActionEvent[1];
+
         // Event handler to switch color themes
         final EventHandler<ActionEvent> handlerSwitchColorTheme = event -> {
             final List<Action> actions;
             if (event == eventEnterBrightMode) actions = actionsBrightModeSwitch;
             else                               actions = actionsDarkModeSwitch;
             for (var action : actions) action.execute();
+            themeEventHistory[0] = event;
         };
 
         // Event handlers to highlight buttons
@@ -162,6 +167,22 @@ public final class MainApp extends Application {
         designer.setOnMouseEntered(handlerButtonDefaultHighlight, buttonMinimizeStage, buttonSwitchScene, buttonSwitchTheme);
         designer.setOnMouseExited(handlerButtonResetHighlight, buttonCloseStage, buttonMinimizeStage, buttonSwitchScene, buttonSwitchTheme);
 
+        // Providing support for a bright mode title bar
+        actionsBrightModeSwitch.add(() -> {
+            designer.setBorder(borderBrightMode, titleBar);
+            designer.setStyle(textStyleBrightMode, buttonCloseStage, buttonMinimizeStage, buttonSwitchScene, buttonSwitchTheme, title);
+        });
+
+        // Providing support for a dark mode title bar
+        actionsDarkModeSwitch.add(() -> {
+            designer.setBorder(borderDarkMode, titleBar);
+            designer.setStyle(textStyleDarkMode, buttonCloseStage, buttonMinimizeStage, buttonSwitchScene, buttonSwitchTheme, title);
+        });
+
+        // Assigning stage relocation on title drag
+        title.setOnMousePressed(handlerStartRelocation);
+        title.setOnMouseDragged(handlerCompleteRelocation);
+
         // Assigning click event handlers to the title bar buttons
         buttonCloseStage.setOnAction(event -> {
             // Todo; If needed, log-out (safely) once the authorization are completed
@@ -171,7 +192,7 @@ public final class MainApp extends Application {
         buttonSwitchScene.setOnAction(event -> {
             if (primaryStage.getScene() == scenes[1]) {
                 sceneRoots[1].getChildren().remove(titleBar);
-                sceneRoots[2].getChildren().add(0, title);
+                sceneRoots[2].getChildren().add(0, titleBar);
                 primaryStage.setScene(scenes[2]);
                 buttonSwitchScene.setText(symbolSpeechBubble);
             } else if (primaryStage.getScene() == scenes[2]) {
@@ -193,31 +214,27 @@ public final class MainApp extends Application {
             }
         });
 
-        // Assigning stage relocation on title drag
-        title.setOnMousePressed(handlerStartRelocation);
-        title.setOnMouseDragged(handlerCompleteRelocation);
-
-        // Providing support for a bright mode title bar
-        actionsBrightModeSwitch.add(() -> {
-            designer.setBorder(borderBrightMode, titleBar);
-            designer.setStyle(textStyleBrightMode, buttonCloseStage, buttonMinimizeStage, buttonSwitchScene, buttonSwitchTheme, title);
-        });
-
-        // Providing support for a dark mode title bar
-        actionsDarkModeSwitch.add(() -> {
-            designer.setBorder(borderDarkMode, titleBar);
-            designer.setStyle(textStyleDarkMode, buttonCloseStage, buttonMinimizeStage, buttonSwitchScene, buttonSwitchTheme, title);
-        });
-
         // Building the chat
         final VBox       chatHistory  = generator.createVerticalBox(5, padding, Pos.TOP_CENTER);
         final ScrollPane viewportChat = generator.createScrollPane(scrollPaneStylesheet, chatHistory);
         final TextField  chatInput    = generator.createTextField("Click to type...");
-        sceneRoots[1]                 = generator.createVerticalBox(3, Insets.EMPTY, Pos.CENTER, viewportChat, chatInput);
+        sceneRoots[1]                 = generator.createVerticalBox(3, padding, Pos.CENTER, viewportChat, chatInput);
 
         // Completing the design of the chat
         designer.setBackground(Background.EMPTY, chatInput);
         VBox.setVgrow(viewportChat, Priority.ALWAYS);
+
+        // Providing support for bright mode chat
+        actionsBrightModeSwitch.add(() -> {
+            designer.setBorder(borderBrightMode, viewportChat, chatInput, sceneRoots[1]);
+            designer.setStyle(textStyleBrightMode, chatInput);
+        });
+
+        // Providing support for dark mode chat
+        actionsDarkModeSwitch.add(() -> {
+            designer.setBorder(borderDarkMode, viewportChat, chatInput, sceneRoots[1]);
+            designer.setStyle(textStyleDarkMode, chatInput);
+        });
 
         // Assigning functionality to the chat input text field
         chatInput.setOnKeyPressed(event -> {
@@ -248,40 +265,155 @@ public final class MainApp extends Application {
             // Todo?: Provide support for bright and dark themed messages
         });
 
-        // Providing support for bright mode chat
-        actionsBrightModeSwitch.add(() -> {
-            designer.setBorder(borderBrightMode, viewportChat, chatInput);
-            designer.setStyle(textStyleBrightMode, chatInput);
-        });
-
-        // Providing support for dark mode chat
-        actionsDarkModeSwitch.add(() -> {
-            designer.setBorder(borderDarkMode, viewportChat, chatInput);
-            designer.setStyle(textStyleDarkMode, chatInput);
-        });
-
         // Todo: Create editor panel (aka sceneRoots[2])
+        // Building the rules panel of the editor
+        final Button     buttonNewRule = new Button("+");
+        final Label      ruleLabel     = generator.createLabel("Rules in Chomsky-Normal Form", Pos.CENTER);
+        final VBox       ruleHolder    = generator.createVerticalBox(5, padding, Pos.TOP_CENTER);
+        final ScrollPane viewportRules = generator.createScrollPane(scrollPaneStylesheet, ruleHolder);
+        final VBox       rulePanel     = generator.createVerticalBox(3, padding, Pos.CENTER, ruleLabel, viewportRules, buttonNewRule);
+
+        // Completing the design of the rule panel
+        designer.setBackground(Background.EMPTY, buttonNewRule);
+        designer.setMaxWidth(Double.MAX_VALUE, buttonNewRule, ruleLabel);
+        designer.setPrefHeight(30, ruleLabel);
+        VBox.setVgrow(viewportRules, Priority.ALWAYS);
+
+        // Providing support for bright mode editing
+        actionsBrightModeSwitch.add(() -> {
+            designer.setBorder(borderBrightMode, buttonNewRule, viewportRules, ruleLabel, rulePanel);
+            designer.setStyle(textStyleBrightMode, buttonNewRule, ruleLabel);
+        });
+
+        // Providing support for dark mode editing
+        actionsDarkModeSwitch.add(() -> {
+            designer.setBorder(borderDarkMode, buttonNewRule, viewportRules, ruleLabel, rulePanel);
+            designer.setStyle(textStyleDarkMode, buttonNewRule, ruleLabel);
+        });
+
+        // Assigning visual effects to the new rule button
+        designer.setOnMouseEntered(handlerButtonGreenHighlight, buttonNewRule);
+        designer.setOnMouseExited(handlerButtonResetHighlight, buttonNewRule);
+
+        // Defining how new rules are generated
+        final RuleGenerator ruleGenerator = (lhs, rhs) -> {
+            // Building a new front-end rule
+            final Button buttonDeleteRule = new Button(symbolMultiplication);
+            final Label  labelWarning     = generator.createLabel("", Pos.CENTER);
+            final Label  labelImplication = generator.createLabel(symbolRightArrow, Pos.CENTER);
+            final TextField textFieldLHS  = generator.createTextField("1 non-terminal");
+            final TextField textFieldRHS  = generator.createTextField("1 terminal or 2 non-terminals");
+            final HBox ruleBox = generator.createHorizontalBox(5, Insets.EMPTY, Pos.CENTER, textFieldLHS, labelImplication, textFieldRHS, buttonDeleteRule);
+            final VBox finalBox = generator.createVerticalBox(0, Insets.EMPTY, Pos.CENTER, labelWarning, ruleBox);
+
+            // Building the respective back-end rule
+            final var rule = new Rule() {
+                @Override
+                public String getLeftSide() {
+                    return textFieldLHS.getText();
+                }
+
+                @Override
+                public String getRightSide() {
+                    return textFieldRHS.getText();
+                }
+            };
+
+            // Completing the rule design
+            designer.setBackground(Background.EMPTY, buttonDeleteRule, textFieldLHS, textFieldRHS);
+            designer.setPrefWidth(120, textFieldLHS);
+            designer.setPrefWidth(240, textFieldRHS);
+            designer.setStyle(textStyleWarning, labelWarning);
+            textFieldLHS.setText(lhs);
+            textFieldRHS.setText(rhs);
+
+            // Adding both the back-end and front-end rule to the list
+            rules.add(rule);
+            ruleHolder.getChildren().add(finalBox);
+
+            // Providing support for rules in bright mode
+            final Action brightModeRuleAction = () -> {
+                designer.setBorder(borderBrightMode, buttonDeleteRule, textFieldLHS, textFieldRHS);
+                designer.setStyle(textStyleBrightMode, buttonDeleteRule, textFieldLHS, textFieldRHS, labelImplication);
+            };
+            actionsBrightModeSwitch.add(brightModeRuleAction);
+
+            // Providing support for rules in dark mode
+            final Action darkModeRuleAction = () -> {
+                designer.setBorder(borderDarkMode, buttonDeleteRule, textFieldLHS, textFieldRHS);
+                designer.setStyle(textStyleDarkMode, buttonDeleteRule, textFieldLHS, textFieldRHS, labelImplication);
+            };
+            actionsDarkModeSwitch.add(darkModeRuleAction);
+
+            // Assigning visual effects to the delete rule button
+            designer.setOnMouseEntered(handlerButtonRedHighlight, buttonDeleteRule);
+            designer.setOnMouseExited(handlerButtonResetHighlight, buttonDeleteRule);
+
+            // Applying current color scheme to rule design
+            if (themeEventHistory[0] == eventEnterBrightMode) brightModeRuleAction.execute();
+            else darkModeRuleAction.execute();
+
+            // Assigning functionality to delete rule button
+            buttonDeleteRule.setOnAction(deleteRuleEvent -> {
+                rules.remove(rule);
+                ruleHolder.getChildren().remove(finalBox);
+                actionsBrightModeSwitch.remove(brightModeRuleAction);
+                actionsDarkModeSwitch.remove(darkModeRuleAction);
+            });
+
+            // Assigning pre-processing functionality to lhs text field
+            textFieldLHS.textProperty().addListener((observable, oldValue, newValue) -> {
+                if (newValue.contains(" ")) labelWarning.setText("Warning: Left-hand sided text field should NOT contain spaces!");
+                else labelWarning.setText("");
+            });
+
+            // Assigning pre-processing functionality to rhs text field
+            textFieldRHS.textProperty().addListener((observable, oldValue, newValue) -> {
+                final String[] segments = newValue.split(" ");
+                if (segments.length > 1) labelWarning.setText("Warning: Right-handed sided text field should NOT contain MORE THAN 1 space");
+                else labelWarning.setText("");
+            });
+        };
+
+        // Assigning functionality to the new rule button
+        buttonNewRule.setOnAction(newRuleEvent -> ruleGenerator.generate("", ""));
+
+        // Todo: Add content to the editor panel (aka sceneRoots[2])
+        // Building the editor panel
+        sceneRoots[2] = generator.createVerticalBox(3, padding, Pos.CENTER, rulePanel);
+
+        // Completing the design of the editor panel
+        VBox.setVgrow(rulePanel, Priority.ALWAYS);
+
+        // Providing support for the editor panel in bright mode
+        actionsBrightModeSwitch.add(() -> designer.setBorder(borderBrightMode, sceneRoots[2]));
+
+        // Providing support for the editor panel in dark mode
+        actionsBrightModeSwitch.add(() -> designer.setBorder(borderDarkMode, sceneRoots[2]));
 
         // Todo: Create authorization panel (aka sceneRoots[0])
 
         // Completing design of scene roots
         // Todo: Complete design of every scene
-        designer.setBackground(Background.EMPTY, sceneRoots[1]);
+        designer.setBackground(Background.EMPTY, sceneRoots[1], sceneRoots[2]);
 
         // Creating scenes
         // Todo: Create every scene
         scenes[1] = new Scene(sceneRoots[1], sizeChatScene[0], sizeChatScene[1]);
+        scenes[2] = new Scene(sceneRoots[2], sizeEditorScene[0], sizeEditorScene[1]);
 
         // Providing support for bright mode scene
         actionsBrightModeSwitch.add(() -> {
             // Todo: Add support for every scene
             scenes[1].setFill(colorBrightMode);
+            scenes[2].setFill(colorBrightMode);
         });
 
         // Providing support for dark mode scene
         actionsDarkModeSwitch.add(() -> {
             // Todo: Add support for every scene
             scenes[1].setFill(colorDarkMode);
+            scenes[2].setFill(colorDarkMode);
         });
 
         // Selecting initial color scheme
@@ -304,5 +436,14 @@ public final class MainApp extends Application {
 
     private interface Action {
         void execute();
+    }
+
+    private interface Rule {
+        String getLeftSide();
+        String getRightSide();
+    }
+
+    private interface RuleGenerator {
+        void generate(String lhs, String rhs);
     }
 }
