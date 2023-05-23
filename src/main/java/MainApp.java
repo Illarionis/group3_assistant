@@ -759,24 +759,72 @@ public final class MainApp extends Application {
          *                                                  Start                                                    *
          * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-        // Todo: Create authorization panel (aka sceneRoots[0])
+        // Todo: Link face detection technology with the start screen buttons, so it can register a new face or confirm the old face
+
+        // Building the buttons
+        final Button signInButton = new Button("SIGN-IN");
+        final Button signUpButton = new Button("SIGN-UP");
+
+        // Creating the start panel
+        final VBox startPanel = factory.createVerticalBox(5, padding, Pos.CENTER, signInButton, signUpButton);
+
+        // Completing the design
+        designer.setBackground(Background.EMPTY, signInButton, signUpButton);
+        designer.setMaxWidth(180, signInButton, signUpButton);
+        designer.setMinWidth(180, signInButton, signUpButton);
+
+        // Assigning visual effects
+        designer.setOnMouseEntered(defaultHighlightHandler, signInButton, signUpButton);
+        designer.setOnMouseExited(removeHighlightHandler, signInButton, signUpButton);
+        VBox.setVgrow(startPanel, Priority.ALWAYS);
+
+        // Providing bright mode support
+        brightModeSwitchActions.add(() -> {
+            designer.setBorder(brightModeBorder, signInButton, signUpButton, startPanel);
+            designer.setStyle(brightModeTextStyle, signInButton, signUpButton);
+        });
+
+        // Providing dark mode support
+        darkModeSwitchActions.add(() -> {
+            designer.setBorder(darkModeBorder, signInButton, signUpButton, startPanel);
+            designer.setStyle(darkModeTextStyle, signInButton, signUpButton);
+        });
+
+        // Assigning functionality to buttons
+        final EventHandler<ActionEvent> enterChatSceneHandler = event -> {
+            // Removing the title bar from the start scene
+            sceneRoots[0].getChildren().remove(titleBar);
+
+            // Adding the title bar to the chat scene
+            sceneRoots[1].getChildren().add(0, titleBar);
+
+            // Enabling the chat - editor switch button
+            switchSceneButton.setDisable(false);
+
+            // Loading the chat scene centered on the screen
+            primaryStage.setScene(scenes[1]);
+            primaryStage.centerOnScreen();
+        };
+        signInButton.setOnAction(enterChatSceneHandler);
+        signUpButton.setOnAction(enterChatSceneHandler);
 
         /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
          *                                                  Roots                                                    *
          * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
         // Building the scene roots
+        sceneRoots[0] = factory.createVerticalBox(3, padding, Pos.CENTER, titleBar, startPanel);
         sceneRoots[1] = factory.createVerticalBox(3, padding, Pos.CENTER, chatViewport, chatInput);
         sceneRoots[2] = factory.createVerticalBox(3, padding, Pos.CENTER, editor);
 
         // Completing the design
-        designer.setBackground(Background.EMPTY, sceneRoots[1], sceneRoots[2]);
+        designer.setBackground(Background.EMPTY, sceneRoots);
 
         // Providing bright mode support
-        brightModeSwitchActions.add(() -> designer.setBorder(brightModeBorder, sceneRoots[1], sceneRoots[2]));
+        brightModeSwitchActions.add(() -> designer.setBorder(brightModeBorder, sceneRoots));
 
         // Providing dark mode support
-        brightModeSwitchActions.add(() -> designer.setBorder(darkModeBorder, sceneRoots[1], sceneRoots[2]));
+        darkModeSwitchActions.add(() -> designer.setBorder(darkModeBorder, sceneRoots));
 
 
         /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
@@ -784,29 +832,22 @@ public final class MainApp extends Application {
          * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
         // Creating scenes
-        // Todo: Create every scene
+        scenes[0] = new Scene(sceneRoots[0], startSceneSize[0], startSceneSize[1]);
         scenes[1] = new Scene(sceneRoots[1], chatSceneSize[0], chatSceneSize[1]);
         scenes[2] = new Scene(sceneRoots[2], editorSceneSize[0], editorSceneSize[1]);
 
         // Providing support for bright mode scene
         brightModeSwitchActions.add(() -> {
-            // Todo: Add support for every scene
-            scenes[1].setFill(brightMode);
-            scenes[2].setFill(brightMode);
+            for (Scene s : scenes) s.setFill(brightMode);
         });
 
         // Providing support for dark mode scene
         darkModeSwitchActions.add(() -> {
-            // Todo: Add support for every scene
-            scenes[1].setFill(darkMode);
-            scenes[2].setFill(darkMode);
+            for (Scene s : scenes) s.setFill(darkMode);
         });
 
         // Selecting initial color scheme
         switchColorThemeHandler.handle(enterDarkModeEvent);
-
-        // Todo: Remove statement below if authorization panel will contain the title bar
-        sceneRoots[1].getChildren().add(0, titleBar);
 
         /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
          *                                                  Stage                                                     *
@@ -817,8 +858,12 @@ public final class MainApp extends Application {
         primaryStage.setTitle("Digital Assistant");
 
         // Selecting initial scene
-        // Todo: Switch to scenes[0] once every scene and their functionality is completed
-        primaryStage.setScene(scenes[1]);
+        // Warning; If choosing another scene as the starting scene except the start scene,
+        //          make sure the title bar is assigned to that every scene
+        primaryStage.setScene(scenes[0]);
+
+        // Disabling the scene switch button in the title bar since we choose to start with the start scene
+        switchSceneButton.setDisable(true);
 
         // Showing the application
         primaryStage.show();
