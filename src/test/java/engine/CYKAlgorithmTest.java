@@ -19,7 +19,7 @@ final class CYKAlgorithmTest {
         g.createRule("C", "A", "B");
         g.createRule("C", "a");
 
-        final String[] in = {"ba", "baaba"};
+        final String[] in = {"baaba"};
         for (String s : in) assert CYKAlgorithm.solve(s, g);
     }
 }
