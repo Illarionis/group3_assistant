@@ -37,12 +37,14 @@ public final class CYKAlgorithm {
                         if (rules.containsKey(nt)) {
                             List<String[]> alternatives = rules.get(nt);
                             for (String[] a : alternatives) {
-                                String b = a[0];
-                                String c = a[1];
-                                int bIndex = nonTerminals.indexOf(b);
-                                int cIndex = nonTerminals.indexOf(c);
-                                if (bIndex >= 0 && cIndex >= 0 && table[j - 1][i][bIndex] && table[l - j - 1][i + j][cIndex]) {
-                                    table[l - 1][i][k] = true;
+                                if (a.length == 2) { // Modification: Check if the alternative has 2 symbols
+                                    String b = a[0];
+                                    String c = a[1];
+                                    int bIndex = nonTerminals.indexOf(b);
+                                    int cIndex = nonTerminals.indexOf(c);
+                                    if (bIndex >= 0 && cIndex >= 0 && table[j - 1][i][bIndex] && table[l - j - 1][i + j][cIndex]) {
+                                        table[l - 1][i][k] = true;
+                                    }
                                 }
                             }
                         }
