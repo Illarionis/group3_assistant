@@ -1,4 +1,6 @@
 import engine.Assistant;
+import engine.PlaceholderCounter;
+import engine.PlaceholderReplacer;
 import gui.NodeFactory;
 import gui.RegionDesigner;
 import javafx.application.Application;
@@ -44,6 +46,7 @@ public final class MainApp extends Application {
 
         // Insets
         final Insets padding = new Insets(5, 5, 5, 5);
+        final Insets viewportContentPadding = new Insets(10, 5, 10, 5);
 
         // Constant reference to scenes and their root nodes
         final Scene[] scenes     = new Scene[3]; // scenes[0]     => start scene      | scenes[1]     => chat scene      | scenes[2]     => editor scene
@@ -221,7 +224,7 @@ public final class MainApp extends Application {
         // Building the chat
         final VBox       chatHistory  = factory.createVerticalBox(5, padding, Pos.TOP_CENTER);
         final ScrollPane chatViewport = factory.createScrollPane(scrollPaneStylesheet, chatHistory);
-        final TextField  chatInput    = factory.createTextField("Click to type...");
+        final TextField  chatInput    = factory.createTextField("Click to type...", Pos.CENTER_LEFT);
 
         // Completing the design
         designer.setBackground(Background.EMPTY, chatInput);
@@ -311,155 +314,312 @@ public final class MainApp extends Application {
         // Todo: Create a basic editor which directly associates (input, output)
 
         /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
-         *                                                   Basic                                                   *
+         *                                                   Skill                                                   *
          * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
+        // Providing utility lists
+        final List<TextField> inputFields      = new ArrayList<>();
+        final List<TextField> outputFields     = new ArrayList<>();
+        final List<Label>     skillErrorLabels = new ArrayList<>();
+
         // Building the button
-        final Button saveBasicButton   = new Button("SAVE");
+        final Button addVariablesButton = new Button("ADD VARIABLES");
+        final Button saveSkillButton    = new Button("SAVE SKILL");
 
         // Building the labels
-        final Label basicLabel       = factory.createLabel("Basic Editor", Pos.CENTER);
-        final Label basicErrorLabel  = factory.createLabel("", Pos.CENTER);
-        final Label inputLabel       = factory.createLabel("Input", Pos.CENTER_RIGHT);
-        final Label outputLabel      = factory.createLabel("Output", Pos.CENTER_RIGHT);
-        final Label inputArrowLabel  = factory.createLabel(rightArrowSymbol, Pos.CENTER);
-        final Label outputArrowLabel = factory.createLabel(rightArrowSymbol, Pos.CENTER);
+        final Label skillEditorLabel         = factory.createLabel("Skill Editor", Pos.CENTER);
+        final Label placeholderLabel         = factory.createLabel("Placeholder", Pos.CENTER_RIGHT);
+        final Label placeholderArrowLabel    = factory.createLabel(rightArrowSymbol, Pos.CENTER);
+        final Label inputTemplateLabel       = factory.createLabel("Input Template", Pos.CENTER_RIGHT);
+        final Label inputTemplateArrowLabel  = factory.createLabel(rightArrowSymbol, Pos.CENTER);
+        final Label outputTemplateLabel      = factory.createLabel("Output Template", Pos.CENTER_RIGHT);
+        final Label outputTemplateArrowLabel = factory.createLabel(rightArrowSymbol, Pos.CENTER);
 
         // Building the text fields
-        final TextField inputTextField  = factory.createTextField("");
-        final TextField outputTextField = factory.createTextField("");
+        final TextField placeholderTextField    = factory.createTextField("One or more characters", Pos.CENTER);
+        final TextField inputTemplateTextField  = factory.createTextField("At least one or more placeholders", Pos.CENTER);
+        final TextField outputTemplateTextField = factory.createTextField("At least one or more placeholders", Pos.CENTER);
 
-        // Building the boxes
-        final HBox inputBox  = factory.createHorizontalBox(5, Insets.EMPTY, Pos.CENTER, inputLabel, inputArrowLabel, inputTextField);
-        final HBox outputBox = factory.createHorizontalBox(5, Insets.EMPTY, Pos.CENTER, outputLabel, outputArrowLabel, outputTextField);
-        final VBox basicBox  = factory.createVerticalBox(5, Insets.EMPTY, Pos.CENTER, basicErrorLabel, inputBox, outputBox);
+        // Building the horizontal boxes
+        final HBox placeholderBox    = factory.createHorizontalBox(5, Insets.EMPTY, Pos.CENTER, placeholderLabel, placeholderArrowLabel, placeholderTextField);
+        final HBox inputTemplateBox  = factory.createHorizontalBox(5, Insets.EMPTY, Pos.CENTER, inputTemplateLabel, inputTemplateArrowLabel, inputTemplateTextField);
+        final HBox outputTemplateBox = factory.createHorizontalBox(5, Insets.EMPTY, Pos.CENTER, outputTemplateLabel, outputTemplateArrowLabel, outputTemplateTextField);
+
+        // Building the editor content holder
+        final VBox templateHolder = factory.createVerticalBox(5, viewportContentPadding, Pos.CENTER, placeholderBox, inputTemplateBox, outputTemplateBox);
+        final VBox variableHolder = factory.createVerticalBox(5, padding, Pos.TOP_CENTER);
+
+        // Building the editor viewport
+        final ScrollPane skillEditorViewport = factory.createScrollPane(scrollPaneStylesheet, variableHolder);
 
         // Building the editor
-        final VBox basicEditor = factory.createVerticalBox(3, padding, Pos.CENTER, basicLabel, basicBox, saveBasicButton);
+        final VBox skillEditor = factory.createVerticalBox(3, padding, Pos.CENTER, skillEditorLabel, templateHolder, skillEditorViewport, addVariablesButton, saveSkillButton);
 
         // Completing the design
-        designer.setBackground(Background.EMPTY, saveBasicButton, inputTextField, outputTextField);
-        designer.setMaxWidth(Double.MAX_VALUE, saveBasicButton, inputTextField, outputTextField, basicLabel, basicErrorLabel);
-        designer.setPrefHeight(30, basicLabel);
-        designer.setPrefWidth(60, inputLabel, outputLabel);
-        designer.setPrefWidth(240, inputTextField, outputTextField);
-        designer.setStyle(warningTextStyle, basicErrorLabel);
-        VBox.setVgrow(basicBox, Priority.ALWAYS);
+        designer.setBackground(Background.EMPTY, addVariablesButton, saveSkillButton);
+        designer.setBackground(Background.EMPTY, placeholderTextField, inputTemplateTextField, outputTemplateTextField);
+        designer.setMaxWidth(Double.MAX_VALUE, addVariablesButton, saveSkillButton, skillEditorLabel);
+        designer.setMaxWidth(Double.MAX_VALUE, placeholderTextField, inputTemplateTextField, outputTemplateTextField);
+        designer.setMinHeight(30, skillEditorLabel);
+        designer.setMinWidth(120, placeholderLabel, inputTemplateLabel, outputTemplateLabel);
+        designer.setMinWidth(40, placeholderArrowLabel, inputTemplateArrowLabel, outputTemplateArrowLabel);
+        designer.setMinWidth(240, placeholderTextField, inputTemplateTextField, outputTemplateTextField);
+        VBox.setVgrow(skillEditorViewport, Priority.ALWAYS);
 
         // Assigning visual effects
-        designer.setOnMouseEntered(greenHighlightHandler, saveBasicButton);
-        designer.setOnMouseExited(removeHighlightHandler, saveBasicButton);
+        designer.setOnMouseEntered(greenHighlightHandler, addVariablesButton, saveSkillButton);
+        designer.setOnMouseExited(removeHighlightHandler, addVariablesButton, saveSkillButton);
 
         // Providing bright mode support
         brightModeSwitchActions.add(() -> {
-            designer.setBorder(brightModeBorder, basicLabel, basicBox);
-            designer.setBorder(brightModeBorder, inputTextField, outputTextField);
-            designer.setBorder(brightModeBorder, saveBasicButton);
-            designer.setStyle(brightModeTextStyle, basicLabel, inputLabel, inputArrowLabel, outputLabel, outputArrowLabel);
-            designer.setStyle(brightModeTextStyle, inputTextField, outputTextField);
-            designer.setStyle(brightModeTextStyle, saveBasicButton);
+            designer.setBorder(brightModeBorder, skillEditorLabel, templateHolder, variableHolder);
+            designer.setBorder(brightModeBorder, placeholderTextField, inputTemplateTextField, outputTemplateTextField);
+            designer.setBorder(brightModeBorder, addVariablesButton, saveSkillButton);
+            designer.setStyle(brightModeTextStyle, skillEditorLabel, placeholderLabel, inputTemplateLabel, outputTemplateLabel);
+            designer.setStyle(brightModeTextStyle, placeholderArrowLabel, inputTemplateArrowLabel, outputTemplateArrowLabel);
+            designer.setStyle(brightModeTextStyle, placeholderTextField, inputTemplateTextField, outputTemplateTextField);
+            designer.setStyle(brightModeTextStyle, addVariablesButton, saveSkillButton);
         });
 
         // Providing dark mode support
         darkModeSwitchActions.add(() -> {
-            designer.setBorder(darkModeBorder, basicLabel, basicBox);
-            designer.setBorder(darkModeBorder, inputTextField, outputTextField);
-            designer.setBorder(darkModeBorder, saveBasicButton);
-            designer.setStyle(darkModeTextStyle, basicLabel, inputLabel, inputArrowLabel, outputLabel, outputArrowLabel);
-            designer.setStyle(darkModeTextStyle, inputTextField, outputTextField);
-            designer.setStyle(darkModeTextStyle, saveBasicButton);
+            designer.setBorder(darkModeBorder, skillEditorLabel, templateHolder, variableHolder);
+            designer.setBorder(darkModeBorder, placeholderTextField, inputTemplateTextField, outputTemplateTextField);
+            designer.setBorder(darkModeBorder, addVariablesButton, saveSkillButton);
+            designer.setStyle(darkModeTextStyle, skillEditorLabel, placeholderLabel, inputTemplateLabel, outputTemplateLabel);
+            designer.setStyle(darkModeTextStyle, placeholderArrowLabel, inputTemplateArrowLabel, outputTemplateArrowLabel);
+            designer.setStyle(darkModeTextStyle, placeholderTextField, inputTemplateTextField, outputTemplateTextField);
+            designer.setStyle(darkModeTextStyle, addVariablesButton, saveSkillButton);
         });
 
-        // Assigning text field functionality
-        inputTextField.textProperty().addListener((observable, oldValue, newValue) -> {
-            if (newValue.isBlank()) basicErrorLabel.setText("Warning: Blank input detected!");
-            else basicErrorLabel.setText("");
-        });
-        outputTextField.textProperty().addListener((observable, oldValue, newValue) -> {
-            if (newValue.isBlank()) basicErrorLabel.setText("Warning: Blank output detected!");
-            else basicErrorLabel.setText("");
-        });
+        // Defining the variable generator the save skill button will be using
+        final VariableGenerator variableGenerator = (in, out) -> {
+            // Providing the delete button
+            final Button deleteButton = new Button(multiplicationSymbol);
 
-        // Assigning button functionality
-        saveBasicButton.setOnAction(saveSkillEvent -> {
-            // Accessing the (input, output)-association
-            final String input  = inputTextField.getText();
-            final String output = outputTextField.getText();
+            // Providing error label
+            final Label errorLabel = factory.createLabel("", Pos.CENTER);
 
-            // Validating input and output
-            if (input.isBlank()) {
-                basicErrorLabel.setText("Error: Can not save blank input!");
-                return;
-            } else if (output.isBlank()) {
-                basicErrorLabel.setText("Error: Can not save blank output!");
-                return;
-            } else if (assistant.getAssociation(input) != null) {
-                basicErrorLabel.setText("Error: Input already exists!");
-                return;
-            }
+            // Providing the text fields
+            final TextField inputField  = factory.createTextField("1st input variable, 2nd input variable, ...", Pos.CENTER);
+            final TextField outputField = factory.createTextField("1st output variable, 2nd output variable, ...", Pos.CENTER);
 
-            // Registering the input
-            assistant.associate(input, output);
+            // Building the text field holder
+            final VBox fieldBox  = factory.createVerticalBox(3, Insets.EMPTY, Pos.CENTER, inputField, outputField);
 
-            // Clearing the fields
-            inputTextField.clear();
-            outputTextField.clear();
-            basicErrorLabel.setText("");
+            // Building the box that includes the delete button and the text field holder
+            final HBox deleteBox = factory.createHorizontalBox(3, Insets.EMPTY, Pos.CENTER, deleteButton, fieldBox);
 
-            // Building buttons
-            final Button openSkill   = new Button(input);
-            final Button deleteSkill = new Button(multiplicationSymbol);
+            // Building the last box that includes the delete box and the error label
+            final VBox finalBox = factory.createVerticalBox(0, Insets.EMPTY, Pos.CENTER_RIGHT, errorLabel, deleteBox);
 
-            // Building the skill representation
-            final HBox skillBox = factory.createHorizontalBox(3, Insets.EMPTY, Pos.CENTER, deleteSkill, openSkill);
+            // Clearing the default backgrounds
+            designer.setBackground(Background.EMPTY, deleteButton, inputField, outputField);
 
-            // Completing the design
-            designer.setBackground(Background.EMPTY, openSkill, deleteSkill);
-            designer.setMaxWidth(Double.MAX_VALUE, openSkill);
-            HBox.setHgrow(openSkill, Priority.ALWAYS);
+            // Removing maximum size constraints
+            designer.setMaxHeight(Double.MAX_VALUE, deleteButton);
+            designer.setMaxWidth(Double.MAX_VALUE, deleteButton, errorLabel);
 
-            // Adding the skill box
-            skillHolder.getChildren().add(skillBox);
+            // Assigning preferred sizes
+            designer.setPrefWidth(360, errorLabel, inputField, outputField);
 
-            // Assigning visual effects
-            designer.setOnMouseEntered(redHighlightHandler, deleteSkill);
-            designer.setOnMouseEntered(greenHighlightHandler, openSkill);
-            designer.setOnMouseExited(removeHighlightHandler, deleteSkill, openSkill);
+            // Setting the text CSS of the error label
+            designer.setStyle(warningTextStyle, errorLabel);
+
+            // Assigning button visual effects
+            designer.setOnMouseEntered(redHighlightHandler, deleteButton);
+            designer.setOnMouseExited(removeHighlightHandler, deleteButton);
+
+            // Adding the final box to the variable holder
+            variableHolder.getChildren().add(finalBox);
+
+            // Adding items to their respective list
+            inputFields.add(inputField);
+            outputFields.add(outputField);
+            skillErrorLabels.add(errorLabel);
 
             // Providing bright mode support
             final Action brightModeSwitchAction = () -> {
-                designer.setBorder(brightModeBorder, openSkill, deleteSkill);
-                designer.setStyle(brightModeTextStyle, openSkill, deleteSkill);
+                designer.setBorder(brightModeBorder, deleteButton, inputField, outputField);
+                designer.setStyle(brightModeTextStyle, deleteButton, inputField, outputField);
             };
             brightModeSwitchActions.add(brightModeSwitchAction);
 
             // Providing dark mode support
             final Action darkModeSwitchAction = () -> {
-                designer.setBorder(darkModeBorder, openSkill, deleteSkill);
-                designer.setStyle(darkModeTextStyle, openSkill, deleteSkill);
+                designer.setBorder(darkModeBorder, deleteButton, inputField, outputField);
+                designer.setStyle(darkModeTextStyle, deleteButton, inputField, outputField);
             };
             darkModeSwitchActions.add(darkModeSwitchAction);
 
-            // Assigning functionality
-            deleteSkill.setOnAction(deleteSkillEvent -> {
-                skillHolder.getChildren().remove(skillBox);
-                assistant.removeAssociation(input);
-                brightModeSwitchActions.remove(brightModeSwitchAction);
-                darkModeSwitchActions.remove(darkModeSwitchAction);
-            });
-            openSkill.setOnAction(openSkillEvent -> {
-                inputTextField.setText(input);
-                outputTextField.setText(output);
-            });
-
-            // Applying current color theme
+            // Applying current color scheme
             if (colorThemeHistory[0] == enterBrightModeEvent) brightModeSwitchAction.execute();
             else darkModeSwitchAction.execute();
+
+            // Assigning delete event
+            deleteButton.setOnAction(deleteEvent -> {
+                variableHolder.getChildren().remove(finalBox);
+                inputFields.remove(inputField);
+                outputFields.remove(outputField);
+                skillErrorLabels.remove(errorLabel);
+            });
+
+            // Setting the text values of the fields
+            inputField.setText(in);
+            outputField.setText(out);
+        };
+
+        // Assigning add variables button functionality
+        addVariablesButton.setOnAction(addEvent -> variableGenerator.generate("", ""));
+
+        // Assigning save button functionality
+        saveSkillButton.setOnAction(saveSkillEvent -> {
+            // Getting the template related variables
+            final String placeholder    = placeholderTextField.getText();
+            final String inputTemplate  = inputTemplateTextField.getText();
+            final String outputTemplate = outputTemplateTextField.getText();
+
+            // Validating the template related variables
+            // Todo: Check for blanks etc and warn the user of the error
+
+            // Counting the placeholders in both the input and output
+            final int inputPlaceholderCount  = PlaceholderCounter.countPlaceholders(inputTemplate, placeholder);
+            final int outputPlaceholderCount = PlaceholderCounter.countPlaceholders(outputTemplate, placeholder);
+            final int n = inputFields.size();
+
+            // Validating the placeholder counts
+            // Todo: Check > 0 and warn the user if that is not the case
+
+            // Lists to store variables
+            final String[][] inputVariables  = new String[n][];
+            final String[][] outputVariables = new String[n][];
+
+            // Reading all variables
+            for (int i = 0; i < n; i++) {
+                // Accessing the text fields
+                final TextField inputField  = inputFields.get(i);
+                final TextField outputField = outputFields.get(i);
+
+                // Accessing the error label
+                final Label errorLabel = skillErrorLabels.get(i);
+
+                // Accessing the variables
+                final String[] inputs  = inputField.getText().split(",");
+                final String[] outputs = outputField.getText().split(",");
+
+                // Validating the variable count
+                // Todo: Confirm whether the number of variables equals the number of placeholders located
+                //      in its respective template
+
+                // Trimming the variables (so the variable doesn't have any leading and/or trailing spaces)
+                for (int j = 0; j < inputs.length; j++) {
+                    inputs[j]  = inputs[j].trim();
+                    outputs[j] = outputs[j].trim();
+                }
+
+                // Validating the variable value
+                // Todo: Confirm whether each string is at least not blank
+
+                // Storing the variables
+                inputVariables[i] = inputs;
+                outputVariables[i] = outputs;
+            }
+
+            // Arrays to store (input, output)-associations
+            final String[] inputs = new String[n];
+            final String[] outputs = new String[n];
+
+            // Processing variables and adding the (input, output) association the assistant
+            for (int i = 0; i < n; i++) {
+                // Getting the (input, output)-association
+                final String input  = PlaceholderReplacer.replacePlaceholders(inputTemplate, placeholder, inputVariables[i]);
+                final String output = PlaceholderReplacer.replacePlaceholders(outputTemplate, placeholder, outputVariables[i]);
+
+                // Todo: Check whether the input already exists, if so prevent saving and warn the user
+                // Todo: Check whether the input belongs to a grammar, if there is grammar and the input does not belong to it,
+                //       then prevent saving and warn the user
+
+                // Storing the values
+                inputs[i]  = input;
+                outputs[i] = output;
+            }
+
+            // Creating an association in the assistant
+            for (int i = 0; i < n; i++) assistant.associate(inputs[i], outputs[i]);
+
+            // Providing buttons for a skill overview entry
+            final Button deleteSkillButton = new Button(multiplicationSymbol);
+            final Button openSkillButton   = new Button(inputTemplate);
+
+            // Building the skill overview entry
+            final HBox skillBox = factory.createHorizontalBox(3, Insets.EMPTY, Pos.CENTER, deleteSkillButton, openSkillButton);
+
+            // Completing the graphical design of the skill box
+            designer.setBackground(Background.EMPTY, deleteSkillButton, openSkillButton);
+            designer.setMaxWidth(Double.MAX_VALUE, openSkillButton);
+            HBox.setHgrow(openSkillButton, Priority.ALWAYS);
+
+            // Assigning button visual effects
+            designer.setOnMouseEntered(redHighlightHandler, deleteSkillButton);
+            designer.setOnMouseEntered(greenHighlightHandler, openSkillButton);
+            designer.setOnMouseExited(removeHighlightHandler, deleteSkillButton, openSkillButton);
+
+            // Providing bright mode support
+            final Action brightModeSwitchAction = () -> {
+                designer.setBorder(brightModeBorder, deleteSkillButton, openSkillButton);
+                designer.setStyle(brightModeTextStyle, deleteSkillButton, openSkillButton);
+            };
+            brightModeSwitchActions.add(brightModeSwitchAction);
+
+            // Providing dark mode support
+            final Action darkModeSwitchAction = () -> {
+                designer.setBorder(darkModeBorder, deleteSkillButton, openSkillButton);
+                designer.setStyle(darkModeTextStyle, deleteSkillButton, openSkillButton);
+            };
+            darkModeSwitchActions.add(darkModeSwitchAction);
+
+            // Applying color scheme on the skill box
+            if (colorThemeHistory[0] == enterBrightModeEvent) brightModeSwitchAction.execute();
+            else darkModeSwitchAction.execute();
+
+            // Adding the skill box to the overview
+            skillHolder.getChildren().add(skillBox);
+
+            // Defining the delete event
+            deleteSkillButton.setOnAction(deleteSkillEvent -> {
+                // Removing skill box from the overview
+                skillHolder.getChildren().remove(skillBox);
+
+                // Removing color scheme support
+                brightModeSwitchActions.remove(brightModeSwitchAction);
+                darkModeSwitchActions.remove(darkModeSwitchAction);
+
+                // Removing associations from the assistant
+                for (String input : inputs) assistant.removeAssociation(input);
+            });
+
+            // Defining the open skill event
+            openSkillButton.setOnAction(openSkillEvent -> {
+                // Clearing any existing entries in the variable holder
+                variableHolder.getChildren().clear();
+
+                // Updating the default fields
+                placeholderTextField.setText(placeholder);
+                inputTemplateTextField.setText(inputTemplate);
+                outputTemplateTextField.setText(outputTemplate);
+
+                // Generating the variables
+                for (int i = 0; i < n; i++) variableGenerator.generate(inputs[i], outputs[i]);
+            });
+
+            // Clearing template fields
+            placeholderTextField.clear();
+            inputTemplateTextField.clear();
+            outputTemplateTextField.clear();
+
+            // Clearing saved variables
+            variableHolder.getChildren().clear();
         });
-
-        // Todo: Add button functionality
-
-        // Todo: Add a placeholder editor (phase 1) if time over
 
         /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
          *                                                   Rules                                                   *
@@ -480,8 +640,8 @@ public final class MainApp extends Application {
             final Button deleteRuleButton = new Button(multiplicationSymbol);
             final Label  ruleWarningLabel = factory.createLabel("", Pos.CENTER);
             final Label  arrowLabel       = factory.createLabel(rightArrowSymbol, Pos.CENTER);
-            final TextField lhsTextField  = factory.createTextField("1 non-terminal");
-            final TextField rhsTextField  = factory.createTextField("1 terminal or up to 2 non-terminals");
+            final TextField lhsTextField  = factory.createTextField("1 non-terminal", Pos.CENTER);
+            final TextField rhsTextField  = factory.createTextField("1 terminal or up to 2 non-terminals", Pos.CENTER);
             final HBox ruleBox  = factory.createHorizontalBox(5, Insets.EMPTY, Pos.CENTER, lhsTextField, arrowLabel, rhsTextField, deleteRuleButton);
             final VBox finalBox = factory.createVerticalBox(0, Insets.EMPTY, Pos.CENTER, ruleWarningLabel, ruleBox);
 
@@ -577,8 +737,8 @@ public final class MainApp extends Application {
          * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
         // Building buttons
-        final Button newRuleButton       = new Button("+");
-        final Button saveGrammarButton   = new Button("SAVE");
+        final Button newRuleButton       = new Button("ADD RULE");
+        final Button saveGrammarButton   = new Button("SAVE RULES");
 
         // Building labels
         final Label grammarEditorLabel = factory.createLabel("Grammar Editor", Pos.CENTER);
@@ -738,13 +898,13 @@ public final class MainApp extends Application {
          * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
         // Building the complete editor
-        final HBox editor = factory.createHorizontalBox(0, Insets.EMPTY, Pos.CENTER, skillOverview, basicEditor, grammarEditor, grammarOverview);
+        final HBox editor = factory.createHorizontalBox(0, Insets.EMPTY, Pos.CENTER, skillOverview, skillEditor, grammarEditor, grammarOverview);
 
         // Completing the design
         designer.setMinWidth(200, skillOverview, grammarOverview);
-        designer.setMinWidth(500, basicEditor, grammarEditor);
+        designer.setMinWidth(500, skillEditor, grammarEditor);
         HBox.setHgrow(skillOverview, Priority.ALWAYS);
-        HBox.setHgrow(basicEditor, Priority.ALWAYS);
+        HBox.setHgrow(skillEditor, Priority.ALWAYS);
         HBox.setHgrow(grammarEditor, Priority.ALWAYS);
         HBox.setHgrow(grammarOverview, Priority.ALWAYS);
         VBox.setVgrow(editor, Priority.ALWAYS);
@@ -882,5 +1042,9 @@ public final class MainApp extends Application {
 
     private interface RuleGenerator {
         void generate(String lhs, String rhs);
+    }
+
+    private interface VariableGenerator {
+        void generate(String in, String out);
     }
 }
