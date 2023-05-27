@@ -12,20 +12,19 @@ import java.io.File;
 
 public class FaceDetect {
     public boolean detectFace(String filePath) {
+        System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
         Mat m = Imgcodecs.imread(filePath);
         return detectFace(m);
     }
 
     public boolean detectFace(Frame f) {
+        System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
         var converter = new OpenCVFrameConverter.ToOrgOpenCvCoreMat();
         Mat m = converter.convert(f);
         return detectFace(m);
     }
 
     public boolean detectFace(Mat m){
-        // Load OpenCV core lib
-        System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
-
         // Define the cascade classifier, based on the pretrained model, provided by OpenCV
         CascadeClassifier classifier = new CascadeClassifier(xmlFilePath());
 
