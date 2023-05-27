@@ -994,12 +994,6 @@ public final class MainApp extends Application {
 
         // Assigning functionality to buttons
         final EventHandler<ActionEvent> enterChatSceneHandler = event -> {
-            // Capturing a picture
-            camController.takePicture("test");
-
-            // Detecting face
-            System.out.println(faceDetector.faceDetected("test"));
-
             // Removing the title bar from the start scene
             sceneRoots[0].getChildren().remove(titleBar);
 
