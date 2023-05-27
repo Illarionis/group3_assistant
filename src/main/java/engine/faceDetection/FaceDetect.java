@@ -13,7 +13,9 @@ public class FaceDetect {
     public boolean userPresent(){
         CamController camController = new CamController();
         FaceDetect faceDetect = new FaceDetect();
+        // Picture snap. imageName - the name for the image when saving
         camController.takePicture("image");
+        // Facial detection. imageName - the name of the image being scanned
         return faceDetect.faceDetected("image");
     }
 
@@ -24,7 +26,6 @@ public class FaceDetect {
         catch (Throwable e){
             e.printStackTrace();
         }
-
     }
 
     public boolean faceDetected(String imageName){
