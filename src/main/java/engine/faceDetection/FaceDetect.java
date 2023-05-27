@@ -1,87 +1,39 @@
 package engine.faceDetection;
 
+import org.bytedeco.javacv.Frame;
+import org.bytedeco.javacv.OpenCVFrameConverter;
 import org.opencv.core.Core;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfRect;
 import org.opencv.imgcodecs.Imgcodecs;
-import org.opencv.imgproc.Imgproc;
 import org.opencv.objdetect.CascadeClassifier;
 
 import java.io.File;
 
 public class FaceDetect {
-
-    public boolean userPresent(){
-        CamController camController = new CamController();
-        FaceDetect faceDetect = new FaceDetect();
-        // Picture snap. imageName - the name for the image when saving
-        camController.takePicture("image");
-        // Facial detection. imageName - the name of the image being scanned
-        return faceDetect.faceDetected("image");
+    public boolean detectFace(String filePath) {
+        Mat m = Imgcodecs.imread(filePath);
+        return detectFace(m);
     }
 
-    public static void main(String[] args) {
-        try{
-            System.out.println("Face detected: " + new FaceDetect().userPresent());
-        }
-        catch (Throwable e){
-            e.printStackTrace();
-        }
+    public boolean detectFace(Frame f) {
+        var converter = new OpenCVFrameConverter.ToOrgOpenCvCoreMat();
+        Mat m = converter.convert(f);
+        return detectFace(m);
     }
 
-    public boolean faceDetected(String imageName){
+    public boolean detectFace(Mat m){
         // Load OpenCV core lib
         System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
 
         // Define the cascade classifier, based on the pretrained model, provided by OpenCV
         CascadeClassifier classifier = new CascadeClassifier(xmlFilePath());
 
-        // Histogram equalization
-        String imageNameHistEq = histogramEqualization(imageName);
+        // Detect faces, store in matrices if so.
+        MatOfRect faceDetections = new MatOfRect();
+        classifier.detectMultiScale(m, faceDetections);
 
-        // Read image, save in Mat matrix
-        String fullPathBasic = imageFilePath(imageName);
-        String fullPathHist = imageFilePath(imageNameHistEq);
-
-        Mat inputBasic = Imgcodecs.imread(fullPathBasic);
-        Mat inputHist = Imgcodecs.imread(fullPathHist);
-
-        // Detect faces, store in matrices
-        MatOfRect faceDetectionsBasic = new MatOfRect();
-        MatOfRect faceDetectionsHist = new MatOfRect();
-
-        classifier.detectMultiScale(inputBasic, faceDetectionsBasic);
-        classifier.detectMultiScale(inputHist, faceDetectionsHist);
-
-        return (faceDetectionsBasic.toArray().length > 0) || (faceDetectionsHist.toArray().length > 0);
-    }
-
-    private String histogramEqualization(String imageName){
-        System.loadLibrary( Core.NATIVE_LIBRARY_NAME );
-        String fullPath = imageFilePath(imageName);
-
-        Mat input = Imgcodecs.imread(fullPath, Imgcodecs.IMREAD_GRAYSCALE);
-        Mat output = new Mat(input.rows(), input.cols(), input.type());
-
-        // 1. Split image into channels
-        // 2. Equalize each
-        // 3. Merge into a single Mat
-        // 4. Save Mat as jpg
-
-        Imgproc.equalizeHist(input, output);
-
-        String newImageName = imageName + "_histogram_equalized";
-
-        String newFullPath = imageFilePath(newImageName);
-        Imgcodecs.imwrite(newFullPath, output);
-
-        return newImageName;
-    }
-
-    private String imageFilePath(String imageName){
-        String targetDirectory = "images/face/";
-        String absolutePath = new File("").getAbsolutePath();
-        return absolutePath + "/" + targetDirectory + imageName + ".jpg";
+        return faceDetections.toArray().length > 0;
     }
 
     private String xmlFilePath(){
