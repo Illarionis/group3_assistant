@@ -34,3 +34,5 @@ test {
 
 
 mainClassName = "MainApp"
+
+applicationDefaultJvmArgs = ["-Djava.library.path=opencv/build/java/x64"]
