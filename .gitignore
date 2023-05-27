@@ -1,7 +1,7 @@
 ### Gradle ###
 gradle
 .gradle
-build/
+/build/
 !gradlew/wrapper/gradle-wrapper.jar
 !**/src/main/**/build/
 !**/src/test/**/build/
@@ -16,5 +16,5 @@ out/
 !**/src/test/**/out/
 
 ### Data ###
-data
-.data
+/data
+/.data
