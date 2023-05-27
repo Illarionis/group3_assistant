@@ -2,6 +2,8 @@ import engine.Assistant;
 import engine.ContextFreeGrammar;
 import engine.PlaceholderCounter;
 import engine.PlaceholderReplacer;
+import engine.faceDetection.CamController;
+import engine.faceDetection.FaceDetect;
 import gui.NodeFactory;
 import gui.RegionDesigner;
 import javafx.application.Application;
@@ -42,8 +44,10 @@ public final class MainApp extends Application {
         final String darkModeTextStyle   = "-fx-font: 14 arial; -fx-text-fill: rgb(180, 180, 180); -fx-prompt-text-fill: -fx-text-fill;";
         final String warningTextStyle    = "-fx-text-fill: rgb(255, 120, 150);";
 
-        // Assistant
-        final var assistant   = new Assistant();
+        // Engine variables
+        final var assistant     = new Assistant();
+        final var camController = new CamController();
+        final var faceDetector  = new FaceDetect();
 
         // Insets
         final Insets defaultPadding = new Insets(5, 5, 5, 5);
@@ -987,6 +991,12 @@ public final class MainApp extends Application {
 
         // Assigning functionality to buttons
         final EventHandler<ActionEvent> enterChatSceneHandler = event -> {
+            // Capturing a picture
+            camController.takePicture("test");
+
+            // Detecting face
+            System.out.println(faceDetector.faceDetected("test"));
+
             // Removing the title bar from the start scene
             sceneRoots[0].getChildren().remove(titleBar);
 
