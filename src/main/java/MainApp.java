@@ -273,6 +273,9 @@ public final class MainApp extends Application {
             // Adding messages
             chatHistory.getChildren().addAll(inputBox, outputBox);
 
+            // Clearing text field
+            chatInput.clear();
+
             // Todo?: Provide support for bright and dark themed messages
         });
 
