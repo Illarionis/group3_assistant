@@ -15,6 +15,9 @@ repositories {
 dependencies {
     implementation 'org.bytedeco:javacv-platform:1.5.8'
     implementation 'net.sf.jazzy:jazzy-core:0.5.2'
+    implementation 'black.ninia:jep:4.1.1'
+    implementation 'org.python:jython-standalone:2.7.2'
+    implementation files('opencv/build/java/opencv-460.jar')
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.9.0'
     testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.9.0'
 }
