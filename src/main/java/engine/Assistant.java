@@ -1,6 +1,8 @@
 package engine;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public final class Assistant {
@@ -8,6 +10,11 @@ public final class Assistant {
      * Provides a map to store user defined (input, output)-associations.
      **/
     private final Map<String, String> associations = new HashMap<>();
+
+    /**
+     * Provides a list to store user defined context free grammar.
+     **/
+    private final List<ContextFreeGrammar> grammarList = new ArrayList<>();
 
     /**
      * Associates an input with an output.
@@ -35,6 +42,24 @@ public final class Assistant {
     }
 
     /**
+     * Gets all context-free grammars that have been registered to the assistant.
+     *
+     * @return A context-free grammar list with a size >= 0
+     **/
+    public List<ContextFreeGrammar> getGrammarList() {
+        return grammarList;
+    }
+
+    /**
+     * Registers a context-free grammar to the assistant.
+     *
+     * @param g The context-free grammar that should be registered.
+     **/
+    public void registerGrammar(ContextFreeGrammar g) {
+        if (!grammarList.contains(g)) grammarList.add(g);
+    }
+
+    /**
      * Removes an (input, output)-association from the assistant.
      *
      * @param in The input of (input, output)-association that should be removed.
@@ -43,6 +68,15 @@ public final class Assistant {
      **/
     public String removeAssociation(String in) {
         return associations.remove(in);
+    }
+
+    /**
+     * Removes a context-free grammar from the assistant.
+     *
+     * @param g The context-free grammar that should be removed from the assistant.
+     **/
+    public void removeGrammar(ContextFreeGrammar g) {
+        grammarList.remove(g);
     }
 
     /**
@@ -57,5 +91,18 @@ public final class Assistant {
         // Todo: Check for spelling mistakes
         // Todo: Check whether input belongs to a grammar
         return "Apologies, could not recognize your message.";
+    }
+
+    /**
+     * Validates an input by confirming whether the input belongs to any registered grammar in the assistant.
+     *
+     * @param in The input the assistant should validate.
+     * @return True, if the input belongs to a grammar that has been registered to the assistant. <br>
+     *         True, if the assistant does not have a registered grammar. <br.
+     *         False, otherwise.
+     **/
+    public boolean validate(String in) {
+        // Todo: Use the CYK algorithm to validate
+        return true;
     }
 }

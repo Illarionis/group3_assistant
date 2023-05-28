@@ -10,7 +10,7 @@ import org.opencv.objdetect.CascadeClassifier;
 
 import java.io.File;
 
-public class FaceDetect {
+public class FaceDetector {
     public boolean detectFace(String filePath) {
         System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
         Mat m = Imgcodecs.imread(filePath);
