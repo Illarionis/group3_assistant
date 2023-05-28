@@ -2,15 +2,23 @@ package engine.faceDetection;
 
 import org.bytedeco.javacv.Frame;
 import org.bytedeco.javacv.OpenCVFrameConverter;
-import org.opencv.core.Core;
-import org.opencv.core.Mat;
-import org.opencv.core.MatOfRect;
+import org.opencv.core.*;
 import org.opencv.imgcodecs.Imgcodecs;
+import org.opencv.imgproc.Imgproc;
 import org.opencv.objdetect.CascadeClassifier;
 
 import java.io.File;
 
+
 public class FaceDetector {
+    private Frame frameBasic;
+    private Frame frameHist;
+
+    public FaceDetector(){
+        this.frameBasic = null;
+        this.frameHist = null;
+    }
+
     public boolean detectFace(String filePath) {
         System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
         Mat m = Imgcodecs.imread(filePath);
@@ -24,15 +32,66 @@ public class FaceDetector {
         return detectFace(m);
     }
 
-    public boolean detectFace(Mat m){
+    public boolean detectFace(Mat input){
+        // Converter for converting matrices into images
+        var converter = new OpenCVFrameConverter.ToOrgOpenCvCoreMat();
+
+        // Histogram equalized image
+        Mat inputHist = histogramEqualization(input);
+
+        // Save the input image and the hist eq image as Frames
+        this.setFrameBasic(converter.convert(input));
+        this.setFrameHist(converter.convert(inputHist));
+
         // Define the cascade classifier, based on the pretrained model, provided by OpenCV
         CascadeClassifier classifier = new CascadeClassifier(xmlFilePath());
 
-        // Detect faces, store in matrices if so.
-        MatOfRect faceDetections = new MatOfRect();
-        classifier.detectMultiScale(m, faceDetections);
+        // Matrices of rectangles to store the detected face areas
+        MatOfRect faceDetectionsBasic = new MatOfRect();
+        MatOfRect faceDetectionsHist = new MatOfRect();
 
-        return faceDetections.toArray().length > 0;
+        // Detect faces, store results in matrices
+        classifier.detectMultiScale(input, faceDetectionsBasic);
+        classifier.detectMultiScale(inputHist, faceDetectionsHist);
+
+        // Boolean flags for face detection on the input and hist image
+        boolean faceDetectedBasic = faceDetectionsBasic.toArray().length > 0;
+        boolean faceDetectedHist = faceDetectionsHist.toArray().length > 0;
+
+        // If face found - convert Mat to Frame
+        if (faceDetectedBasic || faceDetectedHist){
+            if (faceDetectedBasic){
+                Mat matRectangleBasic = drawRectangle(faceDetectionsBasic, input);
+                Frame frame = converter.convert(matRectangleBasic);
+                this.setFrameBasic(frame);
+            }
+            if (faceDetectedHist){
+                Mat matRectangleHist = drawRectangle(faceDetectionsHist, inputHist);
+                Frame frame = converter.convert(matRectangleHist);
+                this.setFrameHist(frame);
+            }
+        }
+        return faceDetectedBasic || faceDetectedHist;
+    }
+    private Mat histogramEqualization(Mat input){
+        Mat inputHist = input.clone();
+        Mat output = new Mat(input.rows(), input.cols(), input.type());
+
+        Imgproc.equalizeHist(input, output);
+        return output;
+    }
+
+    // Draw a rectangle around the face(s)
+    private Mat drawRectangle(MatOfRect rectangles, Mat input){
+        for (Rect rect : rectangles.toArray()) {
+            Imgproc.rectangle(
+                    input,
+                    new Point( rect.x, rect.y ),
+                    new Point( rect.width + rect.x, rect.height + rect.y ),
+                    new Scalar( 255, 0, 0 )
+            );
+        }
+        return input;
     }
 
     private String xmlFilePath(){
@@ -40,6 +99,22 @@ public class FaceDetector {
         String absolutePath = new File("").getAbsolutePath();
         return absolutePath + "/" + targetDirectory + "haarcascade_frontalface_default.xml";
     }
+
+    public Frame getFrameBasic() {
+        return this.frameBasic;
+    }
+    public Frame getFrameHist() {
+        return this.frameHist;
+    }
+    public void setFrameBasic(Frame frameBasic) {
+        this.frameBasic = frameBasic;
+    }
+    public void setFrameHist(Frame frameHist) {
+        this.frameHist = frameHist;
+    }
+
+
+
 }
 //    Sasha's latest histogram changes
 //    public boolean faceDetected(String imageName){
@@ -69,24 +144,4 @@ public class FaceDetector {
 //        return (faceDetectionsBasic.toArray().length > 0) || (faceDetectionsHist.toArray().length > 0);
 //    }
 //
-//    private String histogramEqualization(String imageName){
-//        System.loadLibrary( Core.NATIVE_LIBRARY_NAME );
-//        String fullPath = imageFilePath(imageName);
-//
-//        Mat input = Imgcodecs.imread(fullPath, Imgcodecs.IMREAD_GRAYSCALE);
-//        Mat output = new Mat(input.rows(), input.cols(), input.type());
-//
-//        // 1. Split image into channels
-//        // 2. Equalize each
-//        // 3. Merge into a single Mat
-//        // 4. Save Mat as jpg
-//
-//        Imgproc.equalizeHist(input, output);
-//
-//        String newImageName = imageName + "_histogram_equalized";
-//
-//        String newFullPath = imageFilePath(newImageName);
-//        Imgcodecs.imwrite(newFullPath, output);
-//
-//        return newImageName;
-//    }
+
