@@ -39,9 +39,8 @@ public class FaceDetector {
         // Histogram equalized image
         Mat inputHist = histogramEqualization(input);
 
-        // Save the input image and the hist eq image as Frames
+        // Save the input image as Frame
         this.setFrameBasic(converter.convert(input));
-        this.setFrameHist(converter.convert(inputHist));
 
         // Define the cascade classifier, based on the pretrained model, provided by OpenCV
         CascadeClassifier classifier = new CascadeClassifier(xmlFilePath());
@@ -58,6 +57,13 @@ public class FaceDetector {
         boolean faceDetectedBasic = faceDetectionsBasic.toArray().length > 0;
         boolean faceDetectedHist = faceDetectionsHist.toArray().length > 0;
 
+        // Convert the hist eq image from grayscale to BGR (for JavaFX)
+        Mat histToBGR = new Mat();
+        Imgproc.cvtColor(inputHist, histToBGR, Imgproc.COLOR_GRAY2BGR);
+        // Save the hist eq image as Frame.
+        this.setFrameHist(converter.convert(histToBGR));
+
+
         // If face found - convert Mat to Frame
         if (faceDetectedBasic || faceDetectedHist){
             if (faceDetectedBasic){
@@ -66,7 +72,7 @@ public class FaceDetector {
                 this.setFrameBasic(frame);
             }
             if (faceDetectedHist){
-                Mat matRectangleHist = drawRectangle(faceDetectionsHist, inputHist);
+                Mat matRectangleHist = drawRectangle(faceDetectionsHist, histToBGR);
                 Frame frame = converter.convert(matRectangleHist);
                 this.setFrameHist(frame);
             }
@@ -74,10 +80,11 @@ public class FaceDetector {
         return faceDetectedBasic || faceDetectedHist;
     }
     private Mat histogramEqualization(Mat input){
-        Mat inputHist = input.clone();
+        Mat inputHist = new Mat();
+        Imgproc.cvtColor(input, inputHist, Imgproc.COLOR_BGR2GRAY);
         Mat output = new Mat(input.rows(), input.cols(), input.type());
 
-        Imgproc.equalizeHist(input, output);
+        Imgproc.equalizeHist(inputHist, output);
         return output;
     }
 
@@ -113,35 +120,4 @@ public class FaceDetector {
         this.frameHist = frameHist;
     }
 
-
-
 }
-//    Sasha's latest histogram changes
-//    public boolean faceDetected(String imageName){
-//        // Load OpenCV core lib
-//        System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
-//
-//        // Define the cascade classifier, based on the pretrained model, provided by OpenCV
-//        CascadeClassifier classifier = new CascadeClassifier(xmlFilePath());
-//
-//        // Histogram equalization
-//        String imageNameHistEq = histogramEqualization(imageName);
-//
-//        // Read image, save in Mat matrix
-//        String fullPathBasic = imageFilePath(imageName);
-//        String fullPathHist = imageFilePath(imageNameHistEq);
-//
-//        Mat inputBasic = Imgcodecs.imread(fullPathBasic);
-//        Mat inputHist = Imgcodecs.imread(fullPathHist);
-//
-//        // Detect faces, store in matrices
-//        MatOfRect faceDetectionsBasic = new MatOfRect();
-//        MatOfRect faceDetectionsHist = new MatOfRect();
-//
-//        classifier.detectMultiScale(inputBasic, faceDetectionsBasic);
-//        classifier.detectMultiScale(inputHist, faceDetectionsHist);
-//
-//        return (faceDetectionsBasic.toArray().length > 0) || (faceDetectionsHist.toArray().length > 0);
-//    }
-//
-
