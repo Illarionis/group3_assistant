@@ -74,17 +74,16 @@ public final class FaceDetection {
             // Performing face detection
             final boolean detected = faceDetector.detectFace(frame);
 
-            // Adjusting the application according to the changed user presence
-            if (detected != previousDetectionValues[0]) {
-                System.out.println("Face detected: " + detected);
-                if (detected) faceDetectionLabelValues[0] = "USER HAS BEEN DETECTED";
-                else faceDetectionLabelValues[0] = "USER HAS LEFT";
-                faceDetectionImages[0] = frameConverter.convert(frame);
-                Platform.runLater(updatePanelProcess);
-            } else {
-                // Update the countdown latch
-                if (detectionCountDownLatches[0] != null) detectionCountDownLatches[0].countDown();
-            }
+            // Manual confirmation of the detection
+            System.out.println("Face detected: " + detected);
+
+            // Update the face detection panel to show the detection state and the captured picture
+            if (detected) faceDetectionLabelValues[0] = "USER HAS BEEN DETECTED";
+            else faceDetectionLabelValues[0] = "USER NOT DETECTED";
+            faceDetectionImages[0] = frameConverter.convert(frame);
+
+            // Request the FX thread to update the GUI
+            Platform.runLater(updatePanelProcess);
 
             // Updating the detection history
             previousDetectionValues[0] = detected;
@@ -117,8 +116,6 @@ public final class FaceDetection {
 
                     // Restart the timer
                     startTime = currentTime;
-
-                    System.out.println("I am here thou!");
                 } catch (InterruptedException e) {
                     System.out.println("Detection countdown latch got interrupted due to exception " + e);
                 }
@@ -142,6 +139,7 @@ public final class FaceDetection {
                 detectionCountDownLatches[1].countDown();
                 toggleDetection.setText("STOP");
                 toggleDetection.setOnMouseEntered(enterEvent -> toggleDetection.setBackground(Effects.RED_OVERLAY_BACKGROUND));
+                titleHolder.setText("Detecting...");
             } else {
                 detectionCountDownLatches[1] = new CountDownLatch(1);
                 toggleDetection.setText("START");
@@ -154,9 +152,6 @@ public final class FaceDetection {
         toggleDetection.setText("START");
         toggleDetection.setOnMouseEntered(enterEvent -> toggleDetection.setBackground(Effects.GREEN_OVERLAY_BACKGROUND));
         toggleDetection.setOnMouseExited(exitEvent -> toggleDetection.setBackground(Background.EMPTY));
-
-        // Selecting the initial state of the previous detection value
-        previousDetectionValues[0] = true;
 
         // Selecting the initial state of the run detection process flag
         runDetectionProcesses[0] = true;
