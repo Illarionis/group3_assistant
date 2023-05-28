@@ -4,6 +4,7 @@ import org.opencv.core.Core;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfRect;
 import org.opencv.imgcodecs.Imgcodecs;
+import org.opencv.imgproc.Imgproc;
 import org.opencv.objdetect.CascadeClassifier;
 
 import java.io.File;
@@ -35,16 +36,46 @@ public class FaceDetect {
         // Define the cascade classifier, based on the pretrained model, provided by OpenCV
         CascadeClassifier classifier = new CascadeClassifier(xmlFilePath());
 
+        // Histogram equalization
+        String imageNameHistEq = histogramEqualization(imageName);
+
         // Read image, save in Mat matrix
+        String fullPathBasic = imageFilePath(imageName);
+        String fullPathHist = imageFilePath(imageNameHistEq);
+
+        Mat inputBasic = Imgcodecs.imread(fullPathBasic);
+        Mat inputHist = Imgcodecs.imread(fullPathHist);
+
+        // Detect faces, store in matrices
+        MatOfRect faceDetectionsBasic = new MatOfRect();
+        MatOfRect faceDetectionsHist = new MatOfRect();
+
+        classifier.detectMultiScale(inputBasic, faceDetectionsBasic);
+        classifier.detectMultiScale(inputHist, faceDetectionsHist);
+
+        return (faceDetectionsBasic.toArray().length > 0) || (faceDetectionsHist.toArray().length > 0);
+    }
+
+    private String histogramEqualization(String imageName){
+        System.loadLibrary( Core.NATIVE_LIBRARY_NAME );
         String fullPath = imageFilePath(imageName);
-        Mat input = Imgcodecs.imread(fullPath);
 
-        // Detect faces, store in matrices if so.
-        MatOfRect faceDetections = new MatOfRect();
-        classifier.detectMultiScale(input, faceDetections);
+        Mat input = Imgcodecs.imread(fullPath, Imgcodecs.IMREAD_GRAYSCALE);
+        Mat output = new Mat(input.rows(), input.cols(), input.type());
 
-        return faceDetections.toArray().length > 0;
+        // 1. Split image into channels
+        // 2. Equalize each
+        // 3. Merge into a single Mat
+        // 4. Save Mat as jpg
 
+        Imgproc.equalizeHist(input, output);
+
+        String newImageName = imageName + "_histogram_equalized";
+
+        String newFullPath = imageFilePath(newImageName);
+        Imgcodecs.imwrite(newFullPath, output);
+
+        return newImageName;
     }
 
     private String imageFilePath(String imageName){

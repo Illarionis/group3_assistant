@@ -23,15 +23,15 @@ public class CamController {
     private void grabPicture(){
         try {
             grabber.start();
-            Thread.sleep(1000);
+            //Thread.sleep(1000);
             frame = grabber.grab();
 
         } catch (FrameGrabber.Exception e) {
             throw new RuntimeException(e);
         }
-        catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
+//        catch (InterruptedException e) {
+//            throw new RuntimeException(e);
+//        }
     }
     private void convert(){
         img = converter.convert(frame);
