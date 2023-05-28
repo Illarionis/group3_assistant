@@ -35,9 +35,10 @@ public final class NodeFactory {
         return scrollPane;
     }
 
-    public TextField createTextField(String promptText) {
+    public TextField createTextField(String promptText, Pos alignment) {
         final var textField = new TextField();
         textField.setPromptText(promptText);
+        textField.setAlignment(alignment);
         return textField;
     }
 
