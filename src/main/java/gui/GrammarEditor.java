@@ -113,10 +113,19 @@ public final class GrammarEditor extends Editor implements Displayable, Styleabl
                 // Accessing the data on the right-hand side
                 rightHandSides[i] = rule.getRightHandSide();
 
-                // Todo: Validate right hand side depending on the rule definition
-
-                // Adding the rule to the grammar
-                grammar.createRule(leftHandSides[i], rightHandSides[i]);
+                // Attempting to add the rule to the grammar
+                try {
+                    // Confirming whether the '|' (OR-symbol) has been used
+                    if (rightHandSides[i].contains("|")) {
+                        final String[] segments = rightHandSides[i].split("\\|");
+                        for (int j = 0; j < segments.length; j++) segments[j] = segments[j].trim();
+                        grammar.createRule(leftHandSides[i], segments);
+                    }
+                    else grammar.createRule(leftHandSides[i], rightHandSides[i]);
+                } catch (IllegalArgumentException e) {
+                    rule.setWarning("Warning: " + e.getMessage());
+                    return;
+                }
             }
 
             // Updating the assistant
@@ -237,7 +246,7 @@ public final class GrammarEditor extends Editor implements Displayable, Styleabl
             });
 
             // Providing a text field to get the right hand side of the rule
-            rightHandSide = f.createTextField("value 1, value 2, ...", Pos.CENTER);
+            rightHandSide = f.createTextField("1 terminal or up to 2 terminals", Pos.CENTER);
             rightHandSide.setBackground(Background.EMPTY);
             rightHandSide.setMinWidth(240);
             rightHandSide.textProperty().addListener((observable, oldValue, newValue) -> {
