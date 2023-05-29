@@ -80,7 +80,7 @@ public final class FaceDetection {
             // Update the face detection panel to show the detection state and the captured picture
             if (detected) faceDetectionLabelValues[0] = "USER HAS BEEN DETECTED";
             else faceDetectionLabelValues[0] = "USER NOT DETECTED";
-            faceDetectionImages[0] = frameConverter.convert(frame);
+            faceDetectionImages[0] = frameConverter.convert(faceDetector.getFrameBasic());
 
             // Request the FX thread to update the GUI
             Platform.runLater(updatePanelProcess);
