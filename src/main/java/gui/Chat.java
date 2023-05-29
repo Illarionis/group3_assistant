@@ -58,7 +58,7 @@ public final class Chat implements Displayable, Styleable {
         final Text t = new Text(text);
         final TextFlow f = new TextFlow(t);
         f.setPadding(padding);
-        f.setMaxWidth(240);
+        f.setMaxWidth(500);
         return f;
     }
 
