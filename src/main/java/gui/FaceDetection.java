@@ -24,7 +24,7 @@ public final class FaceDetection {
     public FaceDetection(Factory f) {
         // Providing constant memory addresses for the face detection panel
         final String[] faceDetectionLabelValues = new String[1];
-        final Image[] faceDetectionImages = new Image[1];
+        final Image[] faceDetectionImages = new Image[2];
 
         // Providing a label to display the face detection value
         titleHolder = f.createLabel("DETECTION NOT STARTED");
@@ -32,10 +32,14 @@ public final class FaceDetection {
         titleHolder.setPrefHeight(30);
 
         // Providing an image view to show the picture that has been captured.
-        final ImageView viewContent = new ImageView();
+        final ImageView viewContent1 = new ImageView();
+        final ImageView viewContent2 = new ImageView();
+
+        // Providing a box to display both images vertically
+        final VBox viewportContent = f.createVBox(5, viewContent1, viewContent2);
 
         // Providing a scroll pane that will function as the image viewport
-        viewport = f.createScrollPane(viewContent);
+        viewport = f.createScrollPane(viewportContent);
         VBox.setVgrow(viewport, Priority.ALWAYS);
 
         // Providing a button to start the face detection processes
@@ -60,7 +64,8 @@ public final class FaceDetection {
         final Runnable updatePanelProcess = () -> {
             // Updating the graphical components
             titleHolder.setText(faceDetectionLabelValues[0]);
-            viewContent.setImage(faceDetectionImages[0]);
+            viewContent1.setImage(faceDetectionImages[0]);
+            viewContent2.setImage(faceDetectionImages[1]);
 
             // Update the countdown latch
             if (detectionCountDownLatches[0] != null) detectionCountDownLatches[0].countDown();
@@ -81,6 +86,7 @@ public final class FaceDetection {
             if (detected) faceDetectionLabelValues[0] = "USER HAS BEEN DETECTED";
             else faceDetectionLabelValues[0] = "USER NOT DETECTED";
             faceDetectionImages[0] = frameConverter.convert(faceDetector.getFrameBasic());
+            faceDetectionImages[1] = frameConverter.convert(faceDetector.getFrameHist());
 
             // Request the FX thread to update the GUI
             Platform.runLater(updatePanelProcess);
