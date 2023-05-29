@@ -129,19 +129,21 @@ public final class SkillEditor extends Editor implements Displayable, Styleable 
 
             // Updating the assistant
             if (a != null) {
-                // Providing an input validation progress
-                for (int i = 0; i < n; i++) {
-                    // Validating the input through the assistant
-                    if (a.validate(inputs[i])) continue;
+                if (a.getGrammarList().size() > 0) {
+                    // Providing an input validation progress
+                    for (int i = 0; i < n; i++) {
+                        // Validating the input through the assistant
+                        if (a.validate(inputs[i])) continue;
 
-                    // Accessing the value pair of the invalid input
-                    final var value = valuePairs.get(i);
+                        // Accessing the value pair of the invalid input
+                        final var value = valuePairs.get(i);
 
-                    // Providing an invalid input warning
-                    value.setWarning("Warning: Input does not belong to any grammar!");
+                        // Providing an invalid input warning
+                        value.setWarning("Warning: Input does not belong to any grammar!");
 
-                    // Exiting the new skill event prematurely
-                    return;
+                        // Exiting the new skill event prematurely
+                        return;
+                    }
                 }
                 // Associating all (input, output) values
                 for (int i = 0; i < n; i++) a.associate(inputs[i], outputs[i]);

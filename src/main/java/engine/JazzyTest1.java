@@ -41,6 +41,10 @@ public class JazzyTest1 implements SpellCheckListener {
         misspelled.add(event.getInvalidWord());
     }
 
+    public List<String> getMisspelledWords() {
+        return misspelled;
+    }
+
     public static void main(String[] args) {
         String input="This ise not verry englisch";
         new JazzyTest1(input);
