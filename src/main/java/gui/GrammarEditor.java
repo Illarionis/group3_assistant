@@ -246,7 +246,7 @@ public final class GrammarEditor extends Editor implements Displayable, Styleabl
             });
 
             // Providing a text field to get the right hand side of the rule
-            rightHandSide = f.createTextField("1 terminal or up to 2 terminals", Pos.CENTER);
+            rightHandSide = f.createTextField("1 terminal or 2 non-terminals", Pos.CENTER);
             rightHandSide.setBackground(Background.EMPTY);
             rightHandSide.setMinWidth(240);
             rightHandSide.textProperty().addListener((observable, oldValue, newValue) -> {
