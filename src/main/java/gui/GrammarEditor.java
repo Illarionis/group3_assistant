@@ -90,9 +90,8 @@ public final class GrammarEditor extends Editor implements Displayable, Styleabl
             final int n = rules.size();
 
             // Providing arrays to store the rule values
-            final String[]   leftHandSides     = new String[n];
-            final String[]   rawRightHandSides = new String[n];
-            final String[][] rightHandSides    = new String[n][];
+            final String[]   leftHandSides  = new String[n];
+            final String[]   rightHandSides = new String[n];
 
             // Storing all rule data
             for (int i = 0; i < n; i++) {
@@ -112,13 +111,7 @@ public final class GrammarEditor extends Editor implements Displayable, Styleabl
                 }
 
                 // Accessing the data on the right-hand side
-                rawRightHandSides[i] = rule.getRightHandSide();
-
-                // Processing the right hand side
-                rightHandSides[i] = rawRightHandSides[i].split(",");
-
-                // Trimming the values
-                for (int j = 0; j < rightHandSides[i].length; j++) rightHandSides[i][j] = rightHandSides[i][j].trim();
+                rightHandSides[i] = rule.getRightHandSide();
 
                 // Todo: Validate right hand side depending on the rule definition
 
@@ -176,7 +169,7 @@ public final class GrammarEditor extends Editor implements Displayable, Styleabl
                     // Providing a new rule
                     final var rule = new Rule(f);
                     rule.setLeftHandSide(leftHandSides[i]);
-                    rule.setRightHandSide(rawRightHandSides[i]);
+                    rule.setRightHandSide(rightHandSides[i]);
 
                     // Storing the rule to the back-end list
                     rules.add(rule);

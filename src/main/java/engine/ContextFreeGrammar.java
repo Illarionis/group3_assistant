@@ -1,13 +1,11 @@
 package engine;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public final class ContextFreeGrammar {
+    private final Comparator<String> sortCriteria;
     private final List<String> nonTerminals, terminals;
-    private final Map<String, List<String[]>> rules;
+    private final Map<String, List<List<String>>> rules;
     private String startSymbol;
 
     /**
@@ -17,10 +15,13 @@ public final class ContextFreeGrammar {
         nonTerminals = new ArrayList<>();
         terminals = new ArrayList<>();
         rules = new HashMap<>();
+        sortCriteria = new StringSizeComparator();
     }
 
     /**
-     * Creates a rule for a non-terminal and its substitution values.
+     * Creates a rule for a non-terminal and its substitution values. <br>
+     * WARNING: You must sort both the non-terminals and terminals before calling this method as each substitution
+     *          string will be interpreted and not directly added.
      *
      * @param nonTerminal   The non-terminal for which the rule should be created.
      * @param substitutions The non-terminals or terminal that will substitute the non-terminal.
@@ -31,34 +32,93 @@ public final class ContextFreeGrammar {
         // Confirming whether the non-terminal has been registered
         if (!nonTerminals.contains(nonTerminal)) throw new IllegalArgumentException("Not allowed to create rules for unregistered non-terminals!");
 
-        // Confirming whether the substitution values have been registered as either a non-terminal or a terminal
-        for (String s : substitutions) {
-            if (nonTerminals.contains(s) || terminals.contains(s)) continue;
-            throw new IllegalArgumentException("Not allowed to create rules for unregistered substitution values!");
-        }
-
         // Obtaining the mapped substitution options of the non-terminal
-        final List<String[]> rhsRules = rules.computeIfAbsent(nonTerminal, k -> new ArrayList<>());
+        final List<List<String>> options = rules.computeIfAbsent(nonTerminal, k -> new ArrayList<>());
 
-        // Adding the substitution option to the options list
-        rhsRules.add(substitutions);
+        // Interpreting every rule (or say substitution option)
+        for (String s : substitutions) {
+            // Entry
+            final List<String> l = new ArrayList<>();
+
+            int i = 0;
+            while (i < s.length()) {
+                final int i_ = i;
+
+                // Attempting to detect a space at the current index
+                if (s.contains(" ")) {
+                    final String[] segments = s.split(" ");
+                    i = i + 1;
+
+                    for (String segment : segments) {
+                        if (nonTerminals.contains(segment)) {
+                            l.add(segment);
+                            i = i + segment.length();
+                        }
+                    }
+                    // Confirming whether everything in the split was detected
+                    if (i == s.length()) continue;
+
+                    // Throwing an exception as not every symbol was recognized.
+                    throw new IllegalArgumentException("Failed to detect all non-terminals in the rule split!");
+                }
+
+                // Attempting to detect a non-terminal
+                for (String nt : nonTerminals) {
+                    final int j = i + nt.length();
+                    if (j > s.length()) continue;
+
+                    final String sub = s.substring(i, j);
+                    if (sub.equals(nt)) {
+                        l.add(nt);
+                        i = i + nt.length();
+                    }
+                }
+
+                // Confirming whether a non-terminal was detected
+                if (i_ != i) continue;
+
+                // Attempting to detect a terminal
+                for (String t : terminals) {
+                    final int j = i + t.length();
+                    if (j > s.length()) continue;
+
+                    final String sub = s.substring(i, j);
+                    if (sub.equals(t)) {
+                        l.add(t);
+                        i = i + t.length();
+                    }
+                }
+
+                // Confirming whether a terminal was detected
+                if (i_ != i) continue;
+
+                // Failed to detect a non-terminal, terminal and space
+                // Therefore, throwing an exception
+                throw new IllegalArgumentException("Failed to detect a non-terminal, terminal and space!");
+            }
+
+            // Creating the rule entry
+            options.add(l);
+        }
     }
 
     /**
      * Obtains the production rules of the grammar.
      *
-     * @return A (String, String[] List)-map, where each string key represent a non-terminal and each string array
-     *         provides a substitution option for the non-terminal.
+     * @return A map containing all rules registered to the grammar, where each key in the map entry
+     *         represents a non-terminal and each value represents all substitution options for that non-terminal.
+     *         Each string list represent a production rule for that non-terminal and each string in the string
+     *         list represent at most one symbol that will substitute the non-terminal.
      **/
-    public Map<String, List<String[]>> getRules() {
+    public Map<String, List<List<String>>> getRules() {
         return rules;
     }
 
     /**
      * Obtains the non-terminals of the grammar.
      *
-     * @return A list of string, where each string represent a symbol that can be substituted
-     *         by a terminal or a non-terminal.
+     * @return A list of string, where each string represent a symbol that could be substituted
+     *         by one or more non-terminals and/or one or more terminals.
      **/
     public List<String> getNonTerminals() {
         return nonTerminals;
@@ -67,7 +127,8 @@ public final class ContextFreeGrammar {
     /**
      * Obtains the terminals of the grammar.
      *
-     * @return A list of string, where each string represent a character or a word that is used to formulate a phrase.
+     * @return A list of strings, where each string represent a character or a word
+     *         that is part of the grammar's alphabet
      **/
     public List<String> getTerminals() {
         return terminals;
@@ -83,39 +144,31 @@ public final class ContextFreeGrammar {
     }
 
     /**
-     * Adds non-terminals to the grammar.
+     * Registers new non-terminals to the grammar.
      *
      * @param values The non-terminals that should be added to the grammar.
+     * @throws IllegalArgumentException Thrown when one or more values already have been registered as a terminal.
      **/
     public void registerNonTerminals(String... values) {
         for (String s : values) {
-            if (this.nonTerminals.contains(s)) continue;
-            this.nonTerminals.add(s);
+            if (terminals.contains(s)) throw new IllegalArgumentException("Provided a non-terminal value that already has been registered as a terminal!");
+            else if (nonTerminals.contains(s)) continue;
+            nonTerminals.add(s);
         }
     }
 
     /**
-     * Adds terminals to the grammar.
+     * Registers new terminals to the grammar.
      *
      * @param values The terminals that should be added to the grammar.
+     * @throws IllegalArgumentException Thrown when one or more values already have been registered as a non-terminal.
      **/
     public void registerTerminals(String... values) {
         for (String s : values) {
-            if (this.terminals.contains(s)) continue;
-            this.terminals.add(s);
+            if (nonTerminals.contains(s)) throw new IllegalArgumentException("Provided a terminal value that already has been registered as a non-terminal!");
+            else if (terminals.contains(s)) continue;
+            terminals.add(s);
         }
-    }
-
-    /**
-     * Removes a specific rule of a non-terminal from the grammar.
-     *
-     * @param nonTerminal   The non-terminal for which the rule should be removed.
-     * @param substitutions The substitutions involved in the rule that should be removed.
-     **/
-    public void removeRule(String nonTerminal, String... substitutions) {
-        final List<String[]> options = rules.get(nonTerminal);
-        if (options == null) return;
-        options.remove(substitutions);
     }
 
     /**
@@ -148,9 +201,25 @@ public final class ContextFreeGrammar {
     /**
      * Sets the start symbol of the grammar.
      *
-     * @param s The start symbol the grammar should have.
+     * @param s A registered non-terminal the grammar should use as its start symbol.
+     * @throws IllegalArgumentException Thrown when the s is not a registered non-terminal.
      **/
     public void setStartSymbol(String s) {
-        startSymbol = s;
+        if (nonTerminals.contains(s)) startSymbol = s;
+        else throw new IllegalArgumentException("Provided start symbol is not a non-terminal!");
+    }
+
+    /**
+     * Sorts the non-terminals of the grammar according to their length from the largest to the smallest.
+     **/
+    public void sortNonTerminals() {
+        nonTerminals.sort(sortCriteria);
+    }
+
+    /**
+     * Sorts the terminals of the grammar according to their length from the largest to the smallest.
+     **/
+    public void sortTerminals() {
+        terminals.sort(sortCriteria);
     }
 }

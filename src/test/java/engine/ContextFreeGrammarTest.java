@@ -45,18 +45,18 @@ final class ContextFreeGrammarTest {
         for (String s : expectedList) assert l.contains(s);
     }
 
-    private void testGetRules(ContextFreeGrammar g, Map<String, List<String[]>> expectedMap) {
-        final Map<String, List<String[]>> rules = g.getRules();
+    private void testGetRules(ContextFreeGrammar g, Map<String, List<List<String>>> expectedMap) {
+        final Map<String, List<List<String>>> rules = g.getRules();
         for (String key : expectedMap.keySet()) {
-            final List<String[]> expectedList = expectedMap.get(key);
-            final List<String[]> actualList = rules.get(key);
-            for (String[] expectedArray : expectedList) assert actualList.contains(expectedArray);
+            final List<List<String>> expectedValue = expectedMap.get(key);
+            final List<List<String>> actualValue = rules.get(key);
+            assert expectedValue.size() == actualValue.size();
+            for (int i = 0; i < expectedValue.size(); i++) {
+                final List<String> expected = expectedValue.get(i);
+                final List<String> actual = actualValue.get(i);
+                assert actual.containsAll(expected);
+            }
         }
-    }
-
-    private void testRemoveRule(ContextFreeGrammar g, String nonTerminal, String[] substitutions) {
-        g.removeRule(nonTerminal, substitutions);
-        assert !g.getRules().get(nonTerminal).contains(substitutions);
     }
 
     private void testRemoveRules(ContextFreeGrammar g, String nonTerminal) {
@@ -85,8 +85,10 @@ final class ContextFreeGrammarTest {
         final String[] symbols = {"x", "y"};
         final var grammar = new ContextFreeGrammar();
         for (String s : symbols) {
+            grammar.registerNonTerminals(s);
             grammar.setStartSymbol(s);
             testGetStartSymbol(grammar, s);
+            grammar.removeNonTerminals(s);
         }
     }
 
@@ -126,38 +128,15 @@ final class ContextFreeGrammarTest {
 
     @Test
     public void testGetRules() {
-        final String key = "a";
-        final String[] values = {"x", "y"};
-        final List<String[]> l = new ArrayList<>();
-        l.add(values);
-
-        final Map<String, List<String[]>> expectedMap = new HashMap<>();
-        expectedMap.put(key, l);
+        final var map = new HashMap<String, List<List<String>>>();
+        map.put("key", List.of(List.of("x", "z")));
 
         final var grammar = new ContextFreeGrammar();
-        grammar.registerNonTerminals(key);
-        grammar.registerTerminals(values);
-        grammar.createRule(key, values);
+        grammar.registerNonTerminals("key");
+        grammar.registerTerminals("x", "z");
+        grammar.createRule("key", "xz");
 
-        testGetRules(grammar, expectedMap);
-    }
-
-    @Test
-    public void testRemoveRule() {
-        final String[] key = {"a", "b"};
-        final String[][] values = {{"x", "y"}, {"1", "2"}};
-
-        final var grammar = new ContextFreeGrammar();
-        grammar.registerNonTerminals(key);
-        grammar.registerTerminals(values[0]);
-        grammar.registerTerminals(values[1]);
-
-        for (String k : key) {
-            for (String[] v : values) {
-                grammar.createRule(k, v);
-                testRemoveRule(grammar, k, v);
-            }
-        }
+        testGetRules(grammar, map);
     }
 
     @Test
