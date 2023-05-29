@@ -17,6 +17,16 @@ public final class Assistant {
     private final List<ContextFreeGrammar> grammarList = new ArrayList<>();
 
     /**
+     * Provides the CYK algorithm to determine whether an input belongs to a CFG.
+     **/
+    private final CYKAlgorithm cyk = new CYKAlgorithm();
+
+    /**
+     * Provides a tool to format an input string such that it can be used by the CYK algorithm.
+     **/
+    private final TerminalDetector detector = new TerminalDetector();
+
+    /**
      * Associates an input with an output.
      *
      * @param in  The input that should be associated with an output.
@@ -89,8 +99,8 @@ public final class Assistant {
         final String out = getAssociation(in);
         if (out != null) return out;
         // Todo: Check for spelling mistakes
-        // Todo: Check whether input belongs to a grammar
-        return "Apologies, could not recognize your message.";
+        if (validate(in)) return "Recognized your message as it belongs to the grammar you have defined. However you have not defined it as a skill.";
+        else return "Apologies, could not recognize your message.";
     }
 
     /**
@@ -102,7 +112,12 @@ public final class Assistant {
      *         False, otherwise.
      **/
     public boolean validate(String in) {
-        // Todo: Use the CYK algorithm to validate
-        return true;
+        for (var grammar : grammarList) {
+            try {
+                final List<String> terminals = detector.detectTerminals(in, grammar);
+                if (cyk.solve(terminals, grammar)) return true;
+            } catch (IllegalArgumentException ignored) {}
+        }
+        return grammarList.size() == 0;
     }
 }
