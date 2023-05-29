@@ -53,8 +53,7 @@ public final class MainApp extends Application {
         chat.setAssistant(assistant);
 
         final var chatPanel = chat.getPanel();
-        chatPanel.setMinWidth(300);
-        chatPanel.setMaxWidth(900);
+        chatPanel.setMinWidth(500);
         HBox.setHgrow(chatPanel, Priority.ALWAYS);
 
         /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
@@ -64,8 +63,7 @@ public final class MainApp extends Application {
         final var terminateDetectionProcess = faceDetection.getTerminationProcess();
         final var detectionBackgroundThread = faceDetection.getBackgroundThread();
         final var faceDetectionPanel        = faceDetection.getPanel();
-        faceDetectionPanel.setMinWidth(300);
-        faceDetectionPanel.setMaxWidth(900);
+        faceDetectionPanel.setMinWidth(500);
         HBox.setHgrow(faceDetectionPanel, Priority.ALWAYS);
 
         /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
@@ -123,7 +121,7 @@ public final class MainApp extends Application {
         final VBox chatSceneRoot = factory.createVBox(10, padding, chatScenePanel);
         chatSceneRoot.setBackground(Background.EMPTY);
 
-        final Scene chatScene = new Scene(chatSceneRoot, 900, 900);
+        final Scene chatScene = new Scene(chatSceneRoot, 1200, 900);
 
         final HBox editorScenePanel = factory.createHBox(10, skillOverviewPanel, skillEditorPanel, grammarEditorPanel, grammarOverviewPanel);
         VBox.setVgrow(editorScenePanel, Priority.ALWAYS);
