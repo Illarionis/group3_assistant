@@ -10,8 +10,8 @@ import java.io.IOException;
 public final class Grammar {
     private final File input, output, predict, terminate;
     private final Generator generator;
+    private final ProcessBuilder builder;
     private final Reader reader;
-    private final String pythonCommand;
     private final Writer writer;
     private Process pythonScript;
 
@@ -22,8 +22,16 @@ public final class Grammar {
         output    = new File("src/main/resources/nlp/model.output");
         predict   = new File("src/main/resources/flags/model.predict");
         terminate = new File("src/main/resources/flags/model.terminate");
-        pythonCommand = "python " + model.getAbsolutePath() + ' ' + data.getAbsolutePath() + ' ' + input.getAbsolutePath() + ' '
-                + output.getAbsolutePath() + ' ' + predict.getAbsolutePath() + ' ' + terminate.getAbsolutePath();
+
+        builder = new ProcessBuilder(
+                "python",
+                model.getAbsolutePath(),
+                data.getAbsolutePath(),
+                input.getAbsolutePath(),
+                output.getAbsolutePath(),
+                predict.getAbsolutePath(),
+                terminate.getAbsolutePath()
+        );
         generator = new Generator();
         reader    = new Reader();
         writer    = new Writer();
@@ -53,7 +61,7 @@ public final class Grammar {
         else if (isRunning()) return true;
 
         try {
-            pythonScript = Runtime.getRuntime().exec(pythonCommand);
+            pythonScript = builder.start();
             return true;
         } catch (IOException e) {
             return false;
