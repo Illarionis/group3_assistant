@@ -4,11 +4,9 @@ from datetime import datetime
 from deepface import DeepFace
 
 # The script requires execution with 3 additional file path arguments
-#  1. A path to read the image that should be recognized
-#  2. A path to access the database
+#  1. A path containing all recognized images/faces
+#  2. A path to read the image that should be recognized
 #  3. A path to store the (prediction) result
-#  4. A file to request prediction
-#  5. A file to request termination
 
 # Defining the maximum loop time
 operational_seconds = 0 + 60 * 5

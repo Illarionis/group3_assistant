@@ -1,4 +1,4 @@
-package engine.faceDetection;
+package engine;
 
 import org.bytedeco.javacv.*;
 import org.bytedeco.opencv.opencv_core.IplImage;
@@ -34,7 +34,7 @@ public class CamController {
         OpenCVFrameConverter.ToIplImage converter = new OpenCVFrameConverter.ToIplImage();
         try {
             grabber.start();
-            for(int i = 0; i < 5; i++){
+            for(int i = 0; i < 20; i++){
                 IplImage image = converter.convert(grabber.grab());
                 cvSaveImage("face recognition data/" + personName + " (" + i + ")" + ".jpg", image);
                 Thread.sleep(50);

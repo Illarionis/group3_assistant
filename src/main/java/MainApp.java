@@ -1,8 +1,4 @@
-import engine.Assistant;
-import engine.Grammar;
-import engine.Jazzy;
-import engine.faceDetection.CamController;
-import engine.faceDetection.FaceDetector;
+import engine.*;
 import gui.ChatWindow;
 import gui.EditorWindow;
 import gui.Factory;
@@ -24,17 +20,20 @@ import java.util.Stack;
 public final class MainApp extends Application {
     @Override
     public void start(Stage primaryStage) {
-        final var assistant = new Assistant();
-        final var camera    = new CamController();
-        final var detector  = new FaceDetector();
-        final var grammar   = new Grammar();
-        final var jazzy     = new Jazzy();
-        final var factory   = new Factory();
-        final var chat      = new ChatWindow(factory);
-        final var login     = new LoginWindow(factory);
-        final var editor    = new EditorWindow(factory, assistant);
+        final var assistant  = new Assistant();
+        final var camera     = new CamController();
+        final var detector   = new FaceDetector();
+        final var recognizer = new FaceRecognition();
+        final var saviour    = new FrameSaver();
+        final var grammar    = new Grammar();
+        final var jazzy      = new Jazzy();
+        final var factory    = new Factory();
+        final var chat       = new ChatWindow(factory);
+        final var login      = new LoginWindow(factory);
+        final var editor     = new EditorWindow(factory, assistant);
 
         final boolean[] runBackgroundThreads = {true};
+        final boolean[] emptyRecognitionQueue = {true};
         final long detectionDelaySeconds = 30;
         final long startCheckpoint = 31;
         final long[] detectionStartTime = {System.currentTimeMillis()};
@@ -140,6 +139,10 @@ public final class MainApp extends Application {
                     });
                     final var frame = camera.takePicture();
                     final boolean detected = detector.detectFace(frame);
+                    if (emptyRecognitionQueue[0]) {
+                        saviour.save(frame);
+                        emptyRecognitionQueue[0] = false;
+                    }
                     if (detected)
                         Platform.runLater(() -> {
                             if (primaryStage.getScene() == chat.getScene()) {
@@ -163,6 +166,20 @@ public final class MainApp extends Application {
         });
         detectionStartTime[0] = System.currentTimeMillis();
         faceDetectionInvoker.start();
+
+        final Thread faceRecognitionInvoker = new Thread(() -> {
+            while (runBackgroundThreads[0]) {
+                if (emptyRecognitionQueue[0]) continue;
+                else if (!recognizer.isRunning()) recognizer.start();
+                final String result = recognizer.detect();
+                System.out.println("Recognized: " + result);
+                Platform.runLater(() -> {
+                    if (primaryStage.getScene() == chat.getScene())
+                        chat.registerAssistantMessage(factory, "Recognized " + result + " in the taken picture.");
+                });
+            }
+        });
+        faceRecognitionInvoker.start();
 
         final Thread spellCheckInvoker = new Thread(() -> {
             while(runBackgroundThreads[0]) {

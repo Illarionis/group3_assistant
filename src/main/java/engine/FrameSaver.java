@@ -1,4 +1,4 @@
-package engine.faceDetection;
+package engine;
 
 import org.bytedeco.javacv.Frame;
 import org.bytedeco.javacv.OpenCVFrameConverter;
@@ -10,25 +10,19 @@ import java.nio.file.Path;
 import static org.bytedeco.opencv.helper.opencv_imgcodecs.cvSaveImage;
 
 public class FrameSaver {
-    public String save(Frame f, String directory, String fileName) {
-        final File dir = new File(directory);
-        if (!dir.exists() && !dir.mkdirs()) throw new RuntimeException("Failed to create directory: " + directory);
-
-        final Path p = Path.of(directory, fileName);
-
+    private final String imagePath = "src/main/resources/ivp/temp.jpg";
+    public boolean save(Frame f) {
         try {
-            final File imgFile = p.toFile();
+            final File imgFile = new File(imagePath);
             if (!imgFile.exists() && !imgFile.createNewFile()) throw new RuntimeException();
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
 
-        final String s = p.toString();
-
         final var converter = new OpenCVFrameConverter.ToIplImage();
         final IplImage image = converter.convert(f);
-        cvSaveImage(s, image);
+        cvSaveImage(imagePath, image);
 
-        return s;
+        return true;
     }
 }

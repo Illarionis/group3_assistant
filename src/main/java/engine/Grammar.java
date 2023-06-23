@@ -47,7 +47,7 @@ public final class Grammar {
         final long startTime = System.currentTimeMillis();
         while (predict.exists()) {
             final long elapsedTime = System.currentTimeMillis() - startTime;
-            if (elapsedTime > 5000) {
+            if (elapsedTime > 10000) {
                 System.out.println("Warning: Failed to complete prediction within allocated time.");
                 return false;
             }

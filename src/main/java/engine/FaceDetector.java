@@ -1,4 +1,4 @@
-package engine.faceDetection;
+package engine;
 
 import org.bytedeco.javacv.Frame;
 import org.bytedeco.javacv.OpenCVFrameConverter;
