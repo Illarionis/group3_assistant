@@ -35,6 +35,7 @@ public final class ChatWindow extends Window {
 
         panel.getChildren().addAll(viewport, input);
         panel.setMinSize(360, 720);
+        panel.setMaxSize(360, 720);
         VBox.setVgrow(viewport, Priority.ALWAYS);
 
         factory.update(Borders.GRAY_OVERLAY, viewport, input);
