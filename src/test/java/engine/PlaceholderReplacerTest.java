@@ -21,6 +21,7 @@ final class PlaceholderReplacerTest {
     }
 
     public void testReplacePlaceholders(String expected, String template, String placeholder, String... values) {
-        assert PlaceholderReplacer.replacePlaceholders(template, placeholder, values).equals(expected);
+        final var replacer = new PlaceholderReplacer();
+        assert replacer.replacePlaceholders(template, placeholder, values).equals(expected);
     }
 }

@@ -1,94 +1,121 @@
 package gui;
 
+import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
+import javafx.scene.Scene;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextField;
-import javafx.scene.layout.Background;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.VBox;
+import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.*;
+import javafx.scene.text.Text;
+import javafx.scene.text.TextFlow;
 
 public final class Factory {
-    private final String scrollPaneCSS;
+    public final EventHandler<MouseEvent> highlightOnMouseEnter;
+    public final EventHandler<MouseEvent> removeHighlightOnMouseExit;
+    public final String scrollPaneStylesheet;
+    public final String textStyle =
+            "-fx-text-fill: rgb(210, 210, 210);"+
+            "-fx-prompt-text-fill: -fx-text-fill;";
 
     public Factory() {
-        final var css = getClass().getResource("/transparent-scroll-pane.css");
-        if (css == null) throw new IllegalStateException("Failed to fetch scroll pane css file!");
-        scrollPaneCSS = css.toExternalForm();
+        final var resource = getClass().getResource("/css/transparent-scroll-pane.css");
+        scrollPaneStylesheet = resource == null ? "" : resource.toExternalForm();
+
+        highlightOnMouseEnter = event -> {
+            final var region = (Region) event.getSource();
+            if (region.getBackground() == Background.EMPTY) region.setBackground(Backgrounds.HIGHLIGHT);
+        };
+
+        removeHighlightOnMouseExit = event -> {
+            final var region = (Region) event.getSource();
+            if (region.getBackground() == Backgrounds.HIGHLIGHT) region.setBackground(Background.EMPTY);
+        };
     }
 
-    public Label createLabel(String text) {
-        return createLabel(text, Pos.CENTER);
+    public Button createButton(String text, double minWidth, double minHeight, double maxWidth, double maxHeight) {
+        final var button = new Button(text);
+        button.setMinSize(minWidth, minHeight);
+        button.setMaxSize(maxWidth, maxHeight);
+        button.setBackground(Background.EMPTY);
+        button.setOnMouseEntered(highlightOnMouseEnter);
+        button.setOnMouseExited(removeHighlightOnMouseExit);
+        button.setStyle(textStyle);
+        return button;
     }
 
-    public Label createLabel(String text, Pos alignment) {
+    public HBox createHBox(double spacing, Insets padding, Pos alignment, Node... children) {
+        final var hbox = new HBox(children);
+        hbox.setAlignment(alignment);
+        hbox.setPadding(padding);
+        hbox.setSpacing(spacing);
+        hbox.setBackground(Background.EMPTY);
+        return hbox;
+    }
+
+    public Label createLabel(String text, Pos alignment, double minWidth, double minHeight, double maxWidth, double maxHeight) {
         final var label = new Label(text);
         label.setAlignment(alignment);
-        label.setMinHeight(30);
+        label.setMinSize(minWidth, minHeight);
+        label.setMaxSize(maxWidth, maxHeight);
+        label.setBackground(Background.EMPTY);
+        label.setStyle(textStyle);
         return label;
     }
 
-    public HBox createHBox(Node... children) {
-        return createHBox(0, Insets.EMPTY, Pos.CENTER, children);
+    public Scene createScene(Region root) {
+        final var scene = new Scene(root);
+        scene.setFill(Colors.SCENE);
+        return scene;
     }
 
-    public HBox createHBox(Pos alignment, Node... children) {
-        return createHBox(0, Insets.EMPTY, alignment, children);
-    }
-
-    public HBox createHBox(double spacing, Node... children) {
-        return createHBox(spacing, Insets.EMPTY, Pos.CENTER, children);
-    }
-
-    public HBox createHBox (double spacing, Insets padding, Pos alignment, Node... children) {
-        final var box = new HBox(children);
-        box.setAlignment(alignment);
-        box.setPadding(padding);
-        box.setSpacing(spacing);
-        box.setFillHeight(true);
-        return box;
-    }
-
-    public VBox createVBox(double spacing, Node... children) {
-        return createVBox(spacing, Insets.EMPTY, Pos.TOP_CENTER, children);
-    }
-
-    public VBox createVBox (double spacing, Insets padding, Node... children) {
-        return createVBox(spacing, padding, Pos.TOP_CENTER, children);
-    }
-
-    public VBox createVBox (double spacing, Pos alignment, Node... children) {
-        return createVBox(spacing, Insets.EMPTY, alignment, children);
-    }
-
-    public VBox createVBox (double spacing, Insets padding, Pos alignment, Node... children) {
-        final var box = new VBox(children);
-        box.setAlignment(alignment);
-        box.setPadding(padding);
-        box.setSpacing(spacing);
-        box.setFillWidth(true);
-        return box;
-    }
-
-    public ScrollPane createScrollPane(Node content) {
+    public ScrollPane createScrollPane(Region content) {
         final var scrollPane = new ScrollPane(content);
-        scrollPane.getStylesheets().add(scrollPaneCSS);
-        scrollPane.setFitToHeight(true);
         scrollPane.setFitToWidth(true);
+        scrollPane.setFitToHeight(true);
+        scrollPane.setBackground(Background.EMPTY);
+        scrollPane.getStylesheets().add(scrollPaneStylesheet);
         return scrollPane;
     }
 
-    public TextField createTextField(String promptText) {
-        return createTextField(promptText, Pos.CENTER_LEFT);
+    public Text createText(String s) {
+        final var text = new Text(s);
+        text.setFill(Colors.TEXT);
+        return text;
     }
 
-    public TextField createTextField(String promptText, Pos alignment) {
+    public TextField createTextField(String promptText, Pos alignment, double minWidth, double minHeight, double maxWidth, double maxHeight) {
         final var textField = new TextField();
         textField.setAlignment(alignment);
         textField.setPromptText(promptText);
+        textField.setMinSize(minWidth, minHeight);
+        textField.setMaxSize(maxWidth, maxHeight);
         textField.setBackground(Background.EMPTY);
+        textField.setStyle(textStyle);
         return textField;
+    }
+
+    public TextFlow createTextFlow(Background bg, Insets padding, Node... children) {
+        final var textFlow = new TextFlow(children);
+        textFlow.setPadding(padding);
+        textFlow.setBackground(bg);
+        return textFlow;
+    }
+
+    public VBox createVBox(double spacing, Insets padding, Pos alignment, Node... children) {
+        final var vbox = new VBox(children);
+        vbox.setAlignment(alignment);
+        vbox.setPadding(padding);
+        vbox.setSpacing(spacing);
+        vbox.setBackground(Background.EMPTY);
+        return vbox;
+    }
+
+    public void update(Border b, Region... regions) {
+        for (var region : regions) region.setBorder(b);
     }
 }

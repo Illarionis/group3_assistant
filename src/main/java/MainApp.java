@@ -1,253 +1,235 @@
 import engine.Assistant;
-import gui.*;
+import engine.Grammar;
+import engine.Jazzy;
+import engine.faceDetection.CamController;
+import engine.faceDetection.FaceDetector;
+import gui.ChatWindow;
+import gui.EditorWindow;
+import gui.Factory;
+import gui.LoginWindow;
 import javafx.application.Application;
-import javafx.geometry.Insets;
-import javafx.scene.Scene;
-import javafx.scene.layout.*;
-import javafx.scene.paint.Color;
+import javafx.application.Platform;
+import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
+import javafx.scene.control.TextField;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
+import javafx.scene.input.MouseEvent;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
+import javafx.stage.WindowEvent;
+
+import java.util.Stack;
 
 public final class MainApp extends Application {
     @Override
     public void start(Stage primaryStage) {
-        // Assistant
         final var assistant = new Assistant();
+        final var camera    = new CamController();
+        final var detector  = new FaceDetector();
+        final var grammar   = new Grammar();
+        final var jazzy     = new Jazzy();
+        final var factory   = new Factory();
+        final var chat      = new ChatWindow(factory);
+        final var login     = new LoginWindow(factory);
+        final var editor    = new EditorWindow(factory, assistant);
 
-        // Utility
-        final var factory = new Factory();
+        final boolean[] runBackgroundThreads = {true};
+        final long detectionDelaySeconds = 30;
+        final long startCheckpoint = 31;
+        final long[] detectionStartTime = {System.currentTimeMillis()};
+        final long[] previousCheckpoint = {startCheckpoint};
+        final Stack<String> unchecked = new Stack<>();
+        final Stack<String> unpredicted = new Stack<>();
+        final Stack<String> unanswered = new Stack<>();
 
-        // Control flags
-        final boolean[] enterDarkMode = new boolean[1];
+        final Stage secondaryStage = new Stage();
+        secondaryStage.initStyle(StageStyle.UNDECORATED);
+        secondaryStage.setTitle("ASSISTANT EDITOR");
+        secondaryStage.setScene(editor.getScene());
 
-        // Backgrounds
-        final Background assistantMessageBackground = Background.fill(Color.rgb(150, 180, 200));
-        final Background userMessageBackground      = Background.fill(Color.rgb(150, 200, 180));
+        final double[] secondaryPreviousCoordinates = new double[2];
+        final EventHandler<MouseEvent> secondaryTitlePressHandler = event -> {
+            secondaryPreviousCoordinates[0] = event.getScreenX();
+            secondaryPreviousCoordinates[1] = event.getScreenY();
+        };
+        final EventHandler<MouseEvent> secondaryTitleDragHandler = event -> {
+            final double x = secondaryStage.getX() + event.getScreenX() - secondaryPreviousCoordinates[0];
+            final double y = secondaryStage.getY() + event.getScreenY() - secondaryPreviousCoordinates[1];
+            secondaryPreviousCoordinates[0] = event.getScreenX();
+            secondaryPreviousCoordinates[1] = event.getScreenY();
+            secondaryStage.setX(x);
+            secondaryStage.setY(y);
+        };
+        editor.setOnCloseClicked(event -> {
+            detectionStartTime[0] = System.currentTimeMillis();
+            previousCheckpoint[0] = startCheckpoint;
+            secondaryStage.close();
+        });
+        editor.setOnTitlePressed(secondaryTitlePressHandler);
+        editor.setOnTitleDragged(secondaryTitleDragHandler);
 
-        // Color schemes
-        final Color brightModeColor = Color.WHITE;
-        final Color darkModeColor   = Color.rgb(30, 30, 30);
-
-        // Borders
-        final Border brightModeBorder = Border.stroke(darkModeColor);
-        final Border darkModeBorder = Border.stroke(brightModeColor);
-
-        // Insets
-        final Insets padding = new Insets(5, 5, 5, 5);
-
-        // Inline CSS
-        final String brightModeTextStyle = "-fx-font: 14px arial; -fx-text-fill: rgb(30, 30, 30); -fx-prompt-text-fill: rgb(120, 120, 120);";
-        final String darkModeTextStyle   = "-fx-font: 14px arial; -fx-text-fill: rgb(210, 210, 210); -fx-prompt-text-fill: rgb(120, 120, 120);";
-
-        // Symbols
-        final String sunSymbol      = Character.toString(9728);
-        final String moonSymbol     = Character.toString(127769);
-        final String editorModeText = "ASSISTANT MODE: " + Character.toString(128221);
-        final String chatModeText   = "ASSISTANT MODE: " + Character.toString(128490);
-
-        /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
-         *                                                    Chat                                                   *
-         * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
-        final var chat      = new Chat(factory);
-        chat.setBackgrounds(assistantMessageBackground, userMessageBackground);
-        chat.setAssistant(assistant);
-
-        final var chatPanel = chat.getPanel();
-        chatPanel.setMinWidth(500);
-        HBox.setHgrow(chatPanel, Priority.ALWAYS);
-
-        /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
-         *                                                  Detection                                                *
-         * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
-        final var faceDetection             = new FaceDetection(factory);
-        final var terminateDetectionProcess = faceDetection.getTerminationProcess();
-        final var detectionBackgroundThread = faceDetection.getBackgroundThread();
-        final var faceDetectionPanel        = faceDetection.getPanel();
-        faceDetectionPanel.setMinWidth(500);
-        HBox.setHgrow(faceDetectionPanel, Priority.ALWAYS);
-
-        /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
-         *                                                  Overviews                                                *
-         * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
-        final var skillOverview   = new Overview(factory);
-        skillOverview.setTitle("SKILL");
-
-        final var skillOverviewPanel = skillOverview.getPanel();
-        skillOverviewPanel.setMinWidth(250);
-        skillOverviewPanel.setMaxWidth(250);
-
-        final var grammarOverview = new Overview(factory);
-        grammarOverview.setTitle("GRAMMAR");
-
-        final var grammarOverviewPanel = grammarOverview.getPanel();
-        grammarOverviewPanel.setMinWidth(250);
-        grammarOverviewPanel.setMaxWidth(250);
-
-        /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
-         *                                                    Skill                                                  *
-         * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
-        final var skillEditor = new SkillEditor(factory);
-        skillEditor.setAssistant(assistant);
-        skillEditor.setOverview(skillOverview);
-
-        final var skillEditorPanel = skillEditor.getPanel();
-        skillEditorPanel.setMinWidth(500);
-        HBox.setHgrow(skillEditorPanel, Priority.ALWAYS);
-
-        /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
-         *                                                    Grammar                                                *
-         * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
-        final var grammarEditor = new GrammarEditor(factory);
-        grammarEditor.setAssistant(assistant);
-        grammarEditor.setOverview(grammarOverview);
-
-        final var grammarEditorPanel = grammarEditor.getPanel();
-        grammarEditorPanel.setMinWidth(500);
-        HBox.setHgrow(grammarEditorPanel, Priority.ALWAYS);
-
-        /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
-         *                                                    Title                                                  *
-         * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
-        final var titleBar = new TitleBar(factory, primaryStage);
-        final var titleBarPanel = titleBar.getPanel();
-        HBox.setHgrow(titleBarPanel, Priority.ALWAYS);
-
-        /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
-         *                                                    Scenes                                                 *
-         * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
-        final HBox chatScenePanel = factory.createHBox(10, faceDetectionPanel, chatPanel);
-        VBox.setVgrow(chatScenePanel, Priority.ALWAYS);
-
-        final VBox chatSceneRoot = factory.createVBox(10, padding, chatScenePanel);
-        chatSceneRoot.setBackground(Background.EMPTY);
-
-        final Scene chatScene = new Scene(chatSceneRoot, 1200, 900);
-
-        final HBox editorScenePanel = factory.createHBox(10, skillOverviewPanel, skillEditorPanel, grammarEditorPanel, grammarOverviewPanel);
-        VBox.setVgrow(editorScenePanel, Priority.ALWAYS);
-
-        final VBox editorSceneRoot = factory.createVBox(10, padding, editorScenePanel);
-        editorSceneRoot.setBackground(Background.EMPTY);
-
-        final Scene editorScene = new Scene(editorSceneRoot, 1600, 900);
-
-        // Providing the switch to chat scene process
-        final Runnable enterChatSceneProcess = () -> {
-            editorSceneRoot.getChildren().remove(titleBarPanel);
-            chatSceneRoot.getChildren().add(0, titleBarPanel);
-            primaryStage.setScene(chatScene);
-            primaryStage.centerOnScreen();
-            titleBar.getSwitchSceneButton().setText(chatModeText);
+        final EventHandler<ActionEvent> closePrimaryStageHandler = event -> {
+            final var closeWindowEvent = new WindowEvent(primaryStage, WindowEvent.WINDOW_CLOSE_REQUEST);
+            primaryStage.getScene().getWindow().fireEvent(closeWindowEvent);
+            secondaryStage.close();
         };
 
-        // Providing the switch to editor scene process
-        final Runnable enterEditorSceneProcess = () -> {
-            chatSceneRoot.getChildren().remove(titleBarPanel);
-            editorSceneRoot.getChildren().add(0, titleBarPanel);
-            primaryStage.setScene(editorScene);
-            primaryStage.centerOnScreen();
-            titleBar.getSwitchSceneButton().setText(editorModeText);
+        final double[] previousPrimaryCoordinates = new double[2];
+        final EventHandler<MouseEvent> primaryTitlePressHandler = event -> {
+            previousPrimaryCoordinates[0] = event.getScreenX();
+            previousPrimaryCoordinates[1] = event.getScreenY();
+        };
+        final EventHandler<MouseEvent> primaryTitleDragHandler = event -> {
+            final double x = primaryStage.getX() + event.getScreenX() - previousPrimaryCoordinates[0];
+            final double y = primaryStage.getY() + event.getScreenY() - previousPrimaryCoordinates[1];
+            previousPrimaryCoordinates[0] = event.getScreenX();
+            previousPrimaryCoordinates[1] = event.getScreenY();
+            primaryStage.setX(x);
+            primaryStage.setY(y);
         };
 
+        final Runnable enterLoginScene = () -> {
+            primaryStage.setScene(login.getScene());
+            primaryStage.centerOnScreen();
+        };
+        final Runnable enterChatScene = () -> {
+            primaryStage.setScene(chat.getScene());
+            primaryStage.centerOnScreen();
+        };
 
-        // Providing the switch scene functionality
-        titleBar.setSwitchSceneEvent(() -> {
-            if (primaryStage.getScene() == chatScene) enterEditorSceneProcess.run();
-            else if (primaryStage.getScene() == editorScene) enterChatSceneProcess.run();
+        chat.setOnCloseClicked(closePrimaryStageHandler);
+        chat.setOnTitleDragged(primaryTitleDragHandler);
+        chat.setOnTitlePressed(primaryTitlePressHandler);
+        chat.setOnSettingsPressed(event -> {
+            if (secondaryStage.isShowing()) return;
+            secondaryStage.show();
         });
 
-        /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
-         *                                                  Color Theme                                              *
-         * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
-        final Runnable enterBrightModeProcess = () -> {
-            // Updating borders
-            chat.setBorder(brightModeBorder);
-            faceDetection.setBorder(brightModeBorder);
-            skillOverview.setBorder(brightModeBorder);
-            grammarOverview.setBorder(brightModeBorder);
-            skillEditor.setBorder(brightModeBorder);
-            grammarEditor.setBorder(brightModeBorder);
-            titleBar.setBorder(brightModeBorder);
+        login.setOnButtonClicked(event -> enterChatScene.run());
+        login.setOnCloseClicked(closePrimaryStageHandler);
+        login.setOnTitleDragged(primaryTitleDragHandler);
+        login.setOnTitlePressed(primaryTitlePressHandler);
 
-            // Updating text styles
-            chat.setStyle(brightModeTextStyle);
-            faceDetection.setStyle(brightModeTextStyle);
-            skillOverview.setStyle(brightModeTextStyle);
-            grammarOverview.setStyle(brightModeTextStyle);
-            skillEditor.setStyle(brightModeTextStyle);
-            grammarEditor.setStyle(brightModeTextStyle);
-            titleBar.setStyle(brightModeTextStyle);
-
-            // Updating scene background colors
-            chatScene.setFill(brightModeColor);
-            editorScene.setFill(brightModeColor);
-
-            // Updating color theme icon
-            titleBar.getSwitchColorThemeButton().setText(sunSymbol);
-
-            // Updating the color theme boolean flag
-            enterDarkMode[0] = true;
-        };
-
-        final Runnable enterDarkModeProcess = () -> {
-            // Updating borders
-            chat.setBorder(darkModeBorder);
-            faceDetection.setBorder(darkModeBorder);
-            skillOverview.setBorder(darkModeBorder);
-            grammarOverview.setBorder(darkModeBorder);
-            skillEditor.setBorder(darkModeBorder);
-            grammarEditor.setBorder(darkModeBorder);
-            titleBar.setBorder(darkModeBorder);
-
-            // Updating text styles
-            chat.setStyle(darkModeTextStyle);
-            faceDetection.setStyle(darkModeTextStyle);
-            skillOverview.setStyle(darkModeTextStyle);
-            grammarOverview.setStyle(darkModeTextStyle);
-            skillEditor.setStyle(darkModeTextStyle);
-            grammarEditor.setStyle(darkModeTextStyle);
-            titleBar.setStyle(darkModeTextStyle);
-
-            // Updating scene background colors
-            chatScene.setFill(darkModeColor);
-            editorScene.setFill(darkModeColor);
-
-            // Updating color theme icon
-            titleBar.getSwitchColorThemeButton().setText(moonSymbol);
-
-            // Updating the color theme boolean flag
-            enterDarkMode[0] = false;
-        };
-
-        // Selecting initial color scheme
-        enterBrightModeProcess.run();
-
-        // Assigning the switch color scheme functionality
-        titleBar.setSwitchColorThemeEvent(() -> {
-            if (enterDarkMode[0]) enterDarkModeProcess.run();
-            else enterBrightModeProcess.run();
+        primaryStage.setOnCloseRequest(event -> {
+            runBackgroundThreads[0] = false;
+            grammar.terminate();
         });
-
-        /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
-         *                                                   Stage                                                   *
-         * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
-
-        // Selecting the initial scene
-        enterChatSceneProcess.run();
-
-        // Removing the original title bar
         primaryStage.initStyle(StageStyle.UNDECORATED);
-
-        // Providing the termination condition of the background thread
-        primaryStage.setOnCloseRequest(closeEvent -> {
-            terminateDetectionProcess.run();
-            primaryStage.close();
-        });
-
-        // Showing the stage
+        primaryStage.setTitle("DIGITAL ASSISTANT");
+        primaryStage.setScene(login.getScene());
         primaryStage.show();
 
-        // Starting the background thread
-        detectionBackgroundThread.start();
+        if (grammar.start()) System.out.println("Successfully started the grammar process in the background.");
+        else throw new IllegalStateException("Failed to start grammar process in the background.");
+
+        final Thread faceDetectionInvoker = new Thread(() -> {
+            while(runBackgroundThreads[0]) {
+                if (secondaryStage.isShowing()) continue;
+                final long remainingSeconds = detectionDelaySeconds - (System.currentTimeMillis() - detectionStartTime[0]) / 1000;
+                if (remainingSeconds < previousCheckpoint[0] && remainingSeconds > 0 && remainingSeconds <= 10 && primaryStage.getScene() == chat.getScene()) {
+                    Platform.runLater(() -> chat.registerAssistantMessage(factory, "Taking a picture to detect your presence in " + remainingSeconds + " seconds."));
+                    previousCheckpoint[0] = remainingSeconds;
+                } else if (remainingSeconds < previousCheckpoint[0] && remainingSeconds > 0 && primaryStage.getScene() == login.getScene()) {
+                    Platform.runLater(() -> login.setButtonText("Click to unlock or wait " + remainingSeconds + " seconds for face detection to start."));
+                    previousCheckpoint[0] = remainingSeconds;
+                } else if (remainingSeconds <= 0){
+                    Platform.runLater(() -> {
+                        if (primaryStage.getScene() == chat.getScene()) chat.registerAssistantMessage(factory, "Taking a picture!");
+                        else login.setButtonText("Taking a picture!");
+                    });
+                    final var frame = camera.takePicture();
+                    final boolean detected = detector.detectFace(frame);
+                    if (detected)
+                        Platform.runLater(() -> {
+                            if (primaryStage.getScene() == chat.getScene()) {
+                                chat.registerAssistantMessage(factory, "Detected your presence");
+                                chat.registerAssistantMessage(factory, "Will check again after " + detectionDelaySeconds + " seconds.");
+                            }
+                            else enterChatScene.run();
+
+                        });
+                    else
+                        Platform.runLater(() -> {
+                            if (primaryStage.getScene() == chat.getScene()) {
+                                chat.registerAssistantMessage(factory, "Failed to detect your presence. Therefore, locking the application.");
+                                enterLoginScene.run();
+                            }
+                        });
+                    detectionStartTime[0] = System.currentTimeMillis();
+                    previousCheckpoint[0] = startCheckpoint;
+                }
+            }
+        });
+        detectionStartTime[0] = System.currentTimeMillis();
+        faceDetectionInvoker.start();
+
+        final Thread spellCheckInvoker = new Thread(() -> {
+            while(runBackgroundThreads[0]) {
+                if (unchecked.empty()) continue;
+                final String input = unchecked.pop();
+                final String quoted = "\"" + input + "\"";
+                Platform.runLater(() -> chat.registerAssistantMessage(factory, "Checking spelling for " + quoted));
+                final var misspelled = jazzy.checkSpelling(input);
+                if (misspelled.size() == 0) Platform.runLater(() -> {
+                    chat.registerAssistantMessage(factory,"Did not find any misspelled words in " + quoted);
+                    unpredicted.push(input);
+                });
+                else Platform.runLater(() -> {
+                    chat.registerAssistantMessage(factory, "Found misspelled words in " + quoted);
+                    chat.registerAssistantMessage(factory, "Following words are misspelled:");
+                    for (String s : misspelled) chat.registerAssistantMessage(factory, s);
+                });
+            }
+        });
+        spellCheckInvoker.start();
+
+        final Thread grammarCheckInvoker = new Thread(() -> {
+            while(runBackgroundThreads[0]) {
+                if (unpredicted.empty()) continue;
+                final String input = unpredicted.pop();
+                final String quoted = "\"" + input + "\"";
+                Platform.runLater(() -> chat.registerAssistantMessage(factory, "Checking grammar for " + quoted));
+                if (!grammar.isRunning()) grammar.start();
+                final boolean valid = grammar.recognize(input);
+                if (valid)
+                    Platform.runLater(() -> chat.registerAssistantMessage(factory, "No grammar mistakes found in " + quoted));
+                else
+                    Platform.runLater(() -> chat.registerAssistantMessage(factory, "Failed to recognize grammar of " + quoted));
+                unanswered.add(input);
+            }
+        });
+        grammarCheckInvoker.start();
+
+        final Thread conversationInvoker = new Thread(() -> {
+            while(runBackgroundThreads[0]) {
+                if (unanswered.empty()) continue;
+                final String input = unanswered.pop();
+                final String output = assistant.respond(input);
+                Platform.runLater(() -> chat.registerAssistantMessage(factory, output));
+            }
+        });
+        conversationInvoker.start();
+
+        chat.setInputChangeListener(((observable, oldValue, newValue) -> {
+            detectionStartTime[0] = System.currentTimeMillis();
+            previousCheckpoint[0] = startCheckpoint;
+        }));
+
+        final EventHandler<KeyEvent> keyPressedHandler = event -> {
+            if (event.getCode() != KeyCode.ENTER) return;
+            final var textField = (TextField) event.getSource();
+            final String input = textField.getText();
+
+            textField.clear();
+            if (input.isBlank()) return;
+            chat.registerUserMessage(factory, input);
+
+            unchecked.add(input);;
+
+            detectionStartTime[0] = System.currentTimeMillis();
+            previousCheckpoint[0] = startCheckpoint;
+        };
+        chat.setOnKeyPressedHandler(keyPressedHandler);
     }
 }

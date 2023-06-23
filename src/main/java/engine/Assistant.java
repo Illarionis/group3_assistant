@@ -100,18 +100,9 @@ public final class Assistant {
         final String out = getAssociation(in);
         if (out != null) return out;
         // In case of failure, determining whether input belongs to grammar
-        if (validate(in)) return "Recognized your message as it belongs to the grammar you have defined. However you have not defined it as a skill.";
-        // In case of another failure, checking for spelling mistakes
-        final var jazzy = new JazzyTest1(in);
-        final var misspelled = jazzy.getMisspelledWords();
-        if (misspelled.size() > 0) {
-            final StringBuilder sb = new StringBuilder("Failed to recognize your message, however some words were misspelled and therefore it may have been the root cause of this issue.");
-            sb.append("So, please double check the spelling of the following words:\n");
-            sb.append(" ").append(Character.toChars(8212)).append(" ").append(misspelled.get(0));
-            for (int i = 1; i < misspelled.size(); i++) sb.append("\n ").append(Character.toChars(8212)).append(" ").append(misspelled.get(i));
-            return sb.toString();
-        }
-        return "Apologies, could not recognize your message at all.";
+        if (validate(in)) return "Well, according to the CYK algorithm, the phrase " + "\"" + in + "\"" +
+                "belongs to one of your grammars.";
+        return "Moreover, failed to find a response associated with \"" + in + "\"";
     }
 
     /**
@@ -129,6 +120,6 @@ public final class Assistant {
                 if (cyk.solve(terminals, grammar)) return true;
             } catch (IllegalArgumentException ignored) {}
         }
-        return false;
+        return grammarList.size() == 0;
     }
 }

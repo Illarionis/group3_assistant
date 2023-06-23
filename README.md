@@ -1,5 +1,12 @@
 # Group 3 - Digital Assistant
 
+## Dependencies
+Following python packages are required to run the machine learning
+model in the background:
+1. sentence-transformers
+2. sklearn
+3. pandas
+
 ## Running the GUI in IntelliJ using Gradle
 1. Open the gradle tab that is located on the right side menu ![](images/readme/1.png)
 2. Open the dropdown menu by clicking once ![](images/readme/2.png)

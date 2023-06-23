@@ -12,6 +12,7 @@ final class PlaceholderCounterTest {
     }
 
     public void testCountPlaceholders(String template, String placeholder, int expectedCount) {
-        assert PlaceholderCounter.countPlaceholders(template, placeholder) == expectedCount;
+        final var counter = new PlaceholderCounter();
+        assert counter.countPlaceholders(template, placeholder) == expectedCount;
     }
 }

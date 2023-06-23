@@ -16,5 +16,4 @@ out/
 !**/src/test/**/out/
 
 ### Data ###
-/data
-/.data
+/src/main/resources/flags

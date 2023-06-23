@@ -1,218 +1,122 @@
 package gui;
 
-import engine.Assistant;
+import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextField;
-import javafx.scene.layout.*;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
+import javafx.scene.layout.VBox;
 
-import java.util.ArrayList;
-import java.util.List;
+public abstract class Editor implements Displayable {
+    protected final Button add, save;
+    protected final Label title;
+    protected final Overview list;
+    protected final VBox content, variables, panel;
 
-public abstract class Editor implements Displayable, Styleable {
-    // INLINE CSS
-    protected static final String WARNING_TEXT_STYLE = "-fx-text-fill:rgb(180, 0, 0);";
+    public Editor(Factory factory) {
+        list = new Overview(factory);
 
-    // Utility
-    protected final List<OverviewButton> overviewButtons;
-    protected final String arrowSymbol = Character.toString(8594);
+        title = factory.createLabel("EDITOR", Pos.CENTER, 360, 30, Double.MAX_VALUE, 30);
 
-    // Graphical Design
-    protected final Button addButton, saveButton;
-    protected final Label titleHolder, topLabel, middleLabel, bottomLabel;
-    protected final ScrollPane viewport;
-    protected final TextField topTextField, middleTextField, bottomTextField;
-    protected final VBox templateHolder, valueHolder, editorPanel;
+        variables = factory.createVBox(5, Paddings.DEFAULT, Pos.TOP_CENTER);
+        variables.setMinHeight(250);
 
-    // Functionality
-    protected Assistant a;
-    protected Overview o;
+        content = factory.createVBox(5, Paddings.DEFAULT, Pos.TOP_CENTER);
+        final ScrollPane viewport = factory.createScrollPane(content);
 
-    public Editor(Factory f) {
-        final Insets padding = new Insets(5, 5, 5, 5);
+        add = factory.createButton("ADD", 180, 30, Double.MAX_VALUE, 30);
+        save = factory.createButton("SAVE", 180, 30, Double.MAX_VALUE, 30);
+        final HBox buttons = factory.createHBox(5, Insets.EMPTY, Pos.CENTER, add, save);
+        HBox.setHgrow(add, Priority.ALWAYS);
+        HBox.setHgrow(save, Priority.ALWAYS);
 
-        // Providing a label to recognize the editor
-        titleHolder = f.createLabel("EDITOR TITLE");
-        titleHolder.setMaxWidth(Double.MAX_VALUE);
+        panel = factory.createVBox(3, Insets.EMPTY, Pos.CENTER, title, variables, viewport, buttons);
+        panel.setMinSize(450, 720);
 
-        // Providing a box to hold all template boxes
-        templateHolder = f.createVBox(5, padding, Pos.CENTER);
-
-        // Providing a box to hold all value boxes
-        valueHolder = f.createVBox(5, padding);
-
-        // Providing a scroll pane to make the value holder scrollable
-        viewport = f.createScrollPane(valueHolder);
         VBox.setVgrow(viewport, Priority.ALWAYS);
-
-        // Providing a button to add a value box to the value holder
-        addButton = new Button("ADD");
-        addButton.setBackground(Background.EMPTY);
-        addButton.setMaxWidth(Double.MAX_VALUE);
-
-        // Providing a button to save the templates and values
-        saveButton = new Button("SAVE");
-        saveButton.setBackground(Background.EMPTY);
-        saveButton.setMaxWidth(Double.MAX_VALUE);
-
-        // Providing a panel to represent the editor
-        editorPanel = f.createVBox(3, titleHolder, templateHolder, viewport, addButton, saveButton);
-
-        // Providing a label to recognize the top template
-        topLabel = f.createLabel("TOP LABEL", Pos.CENTER_RIGHT);
-        topLabel.setMinWidth(150);
-
-        // Providing a text field for the top template
-        topTextField = f.createTextField("TOP TEXT FIELD", Pos.CENTER);
-        topTextField.setBackground(Background.EMPTY);
-        topTextField.setMinWidth(240);
-
-        // Providing a box to display the top template components horizontally
-        final HBox topBox = f.createHBox(Pos.CENTER, topLabel, topTextField);
-
-        // Providing a label to recognize the middle template
-        middleLabel = f.createLabel("MID LABEL", Pos.CENTER_RIGHT);
-        middleLabel.setMinWidth(150);
-
-        // Providing a text field for the middle template
-        middleTextField = f.createTextField("MIDDLE TEXT FIELD", Pos.CENTER);
-        middleTextField.setBackground(Background.EMPTY);
-        middleTextField.setMinWidth(240);
-
-        // Providing a box to display the middle template components horizontally
-        final HBox middleBox = f.createHBox(Pos.CENTER, middleLabel, middleTextField);
-
-        // Providing a label to recognize the bottom template
-        bottomLabel = f.createLabel("BOTTOM LABEL", Pos.CENTER_RIGHT);
-        bottomLabel.setMinWidth(150);
-
-        // Providing a text field for the bottom template
-        bottomTextField = f.createTextField("BOTTOM TEXT FIELD", Pos.CENTER);
-        bottomTextField.setBackground(Background.EMPTY);
-        bottomTextField.setMinWidth(240);
-
-        // Providing a box to display the bottom template components horizontally
-        final HBox bottomBox = f.createHBox(Pos.CENTER, bottomLabel, bottomTextField);
-
-        // Adding the template boxes to the template holder
-        templateHolder.getChildren().addAll(topBox, middleBox, bottomBox);
-
-        // Providing a list to store all overview buttons
-        overviewButtons = new ArrayList<>();
-
-        // Assigning visual effects to the add button
-        addButton.setOnMouseEntered(enterEvent -> addButton.setBackground(Effects.GREEN_OVERLAY_BACKGROUND));
-        addButton.setOnMouseExited(exitEvent -> addButton.setBackground(Background.EMPTY));
-
-        // Assigning visual effects to the save button
-        saveButton.setOnMouseEntered(enterEvent -> saveButton.setBackground(Effects.GREEN_OVERLAY_BACKGROUND));
-        saveButton.setOnMouseExited(exitEvent -> saveButton.setBackground(Background.EMPTY));
+        factory.update(Borders.GRAY_OVERLAY, title, variables, viewport, add, save);
     }
 
-    public void setAssistant(Assistant a) {
-        this.a = a;
-    }
-
-    public void setOverview(Overview o) {
-        this.o = o;
+    public Overview getList() {
+        return list;
     }
 
     @Override
     public Region getPanel() {
-        return editorPanel;
+        return panel;
     }
 
-    @Override
-    public void setBorder(Border b) {
-        titleHolder.setBorder(b);
-        templateHolder.setBorder(b);
-        viewport.setBorder(b);
+    protected static final class Variable implements Displayable {
+        private final Label warning;
+        private final TextField value;
+        private final VBox panel;
 
-        addButton.setBorder(b);
-        saveButton.setBorder(b);
+        public Variable(Factory factory, String name, String description) {
+            final var arrow = factory.createLabel(Character.toString(8594), Pos.CENTER, 30, 30, 30, 30);
+            final var label = factory.createLabel(name, Pos.CENTER_RIGHT, 120, 30, 240, 30);
+            value = factory.createTextField(description, Pos.CENTER_LEFT, 240, 30, 240, 30);
+            warning = factory.createLabel("", Pos.CENTER, 360, 20, 390, 20);
+            final var hbox = factory.createHBox(3, Insets.EMPTY, Pos.CENTER, label, arrow, value);
+            panel = factory.createVBox(0, Insets.EMPTY, Pos.CENTER, warning, hbox);
 
-        topTextField.setBorder(b);
-        middleTextField.setBorder(b);
-        bottomTextField.setBorder(b);
-
-        for (var button : overviewButtons) button.setBorder(b);
-    }
-
-    @Override
-    public void setStyle(String s) {
-        titleHolder.setStyle(s);
-
-        addButton.setStyle(s);
-        saveButton.setStyle(s);
-
-        topLabel.setStyle(s);
-        middleLabel.setStyle(s);
-        bottomLabel.setStyle(s);
-
-        topTextField.setStyle(s);
-        middleTextField.setStyle(s);
-        bottomTextField.setStyle(s);
-
-        for (var button : overviewButtons) button.setStyle(s);
-    }
-
-    protected static final class OverviewButton implements Displayable, Styleable {
-        private final Button delete, display;
-        private final HBox panel;
-
-        public OverviewButton(Factory f) {
-            // Providing a button to delete the skill button from the skill overview
-            delete = new Button(Character.toString(10005));
-            delete.setBackground(Background.EMPTY);
-            delete.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
-
-            // Providing a button to display the skill in the skill editor
-            display = new Button();
-            display.setBackground(Background.EMPTY);
-            display.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
-            HBox.setHgrow(display, Priority.ALWAYS);
-
-            // Providing a box to display the buttons horizontally
-            panel = f.createHBox(3, display, delete);
-
-            // Assigning visual effects for the delete button
-            delete.setOnMouseEntered(enterEvent -> delete.setBackground(Effects.RED_OVERLAY_BACKGROUND));
-            delete.setOnMouseExited(exitEvent -> delete.setBackground(Background.EMPTY));
-
-            // Assigning visual effects for the display button
-            display.setOnMouseEntered(enterEvent -> display.setBackground(Effects.GREEN_OVERLAY_BACKGROUND));
-            display.setOnMouseExited(exitEvent -> display.setBackground(Background.EMPTY));
+            warning.setStyle("-fx-text-fill: rgb(210, 120, 120);");
+            value.textProperty().addListener(((observable, oldValue, newValue) -> {
+                if (warning.getText().length() > 0) warning.setText("");
+            }));
+            factory.update(Borders.GRAY_OVERLAY, value);
         }
 
-        public void setDeleteEvent(Runnable process) {
-            delete.setOnAction(deleteEvent -> process.run());
+        public void clear() {
+            value.clear();
         }
 
-        public void setDisplayEvent(Runnable process) {
-            display.setOnAction(displayEvent -> process.run());
+        public void setWarning(String s) {
+            warning.setText(s);
         }
 
-        public void setText(String s) {
-            display.setText(s);
+        public String getValue() {
+            return value.getText();
         }
 
         @Override
         public Region getPanel() {
             return panel;
         }
+    }
 
-        @Override
-        public void setBorder(Border b) {
-            display.setBorder(b);
+    protected static final class Item implements Displayable {
+        private final Button delete, title;
+        private final HBox panel;
+
+        public Item(Factory factory) {
+            delete = factory.createButton(Character.toString(10005), 30, 30, 30, 30);
+            title = factory.createButton("PLACEHOLDER", 30, 30, Double.MAX_VALUE, 30);
+            panel = factory.createHBox(3, Insets.EMPTY, Pos.CENTER, title, delete);
+            HBox.setHgrow(title, Priority.ALWAYS);
+            factory.update(Borders.GRAY_OVERLAY, title);
+        }
+
+        public void setOnDeleteClicked(EventHandler<ActionEvent> handler) {
+            delete.setOnAction(handler);
+        }
+
+        public void setOnTitleClicked(EventHandler<ActionEvent> handler) {
+            title.setOnAction(handler);
+        }
+
+        public void setTitle(String s) {
+            title.setText(s);
         }
 
         @Override
-        public void setStyle(String s) {
-            delete.setStyle(s);
-            display.setStyle(s);
+        public Region getPanel() {
+            return panel;
         }
     }
 }

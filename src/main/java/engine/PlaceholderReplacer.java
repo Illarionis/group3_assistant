@@ -8,7 +8,7 @@ public final class PlaceholderReplacer {
      * @param placeholder The placeholder character sequence used in the template.
      * @param values      The array of values that should be substituted into the template.
      **/
-    public static String replacePlaceholders(String template, String placeholder, String... values) {
+    public String replacePlaceholders(String template, String placeholder, String... values) {
         String result = template;
         for (String s : values)
             result = result.replaceFirst(placeholder, s);

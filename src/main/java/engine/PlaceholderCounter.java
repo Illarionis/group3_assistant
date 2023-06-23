@@ -8,7 +8,7 @@ public final class PlaceholderCounter {
      * @param placeholder The placeholder character sequence used in the template string.
      * @return An integer >= 0
      **/
-    public static int countPlaceholders(String template, String placeholder) {
+    public int countPlaceholders(String template, String placeholder) {
         int count = 0;
         int startIndex = 0;
         while (startIndex < template.length()) {
