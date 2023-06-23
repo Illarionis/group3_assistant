@@ -9,6 +9,8 @@ models in the background:
 4. opencv-python
 5. deepface
 
+Moreover, a JDK version of either 17 or 18 is suggested to be used with gradle
+
 ## Running the GUI in IntelliJ using Gradle
 1. Open the gradle tab that is located on the right side menu ![](images/readme/1.png)
 2. Open the dropdown menu by clicking once ![](images/readme/2.png)
