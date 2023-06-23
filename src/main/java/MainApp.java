@@ -14,6 +14,7 @@ import javafx.scene.input.MouseEvent;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import javafx.stage.WindowEvent;
+import org.bytedeco.javacv.Frame;
 
 import java.util.Stack;
 
@@ -33,11 +34,11 @@ public final class MainApp extends Application {
         final var editor     = new EditorWindow(factory, assistant);
 
         final boolean[] runBackgroundThreads = {true};
-        final boolean[] emptyRecognitionQueue = {true};
         final long detectionDelaySeconds = 30;
         final long startCheckpoint = 31;
         final long[] detectionStartTime = {System.currentTimeMillis()};
         final long[] previousCheckpoint = {startCheckpoint};
+        final Stack<Frame> unrecognized = new Stack<>();
         final Stack<String> unchecked = new Stack<>();
         final Stack<String> unpredicted = new Stack<>();
         final Stack<String> unanswered = new Stack<>();
@@ -122,6 +123,9 @@ public final class MainApp extends Application {
         if (grammar.start()) System.out.println("Successfully started the grammar process in the background.");
         else throw new IllegalStateException("Failed to start grammar process in the background.");
 
+        if (recognizer.start()) System.out.println("Successfully started the recognition process in the background.");
+        else throw new IllegalStateException("Failed to start recognition process in the background.");
+
         final Thread faceDetectionInvoker = new Thread(() -> {
             while(runBackgroundThreads[0]) {
                 if (secondaryStage.isShowing()) continue;
@@ -139,11 +143,8 @@ public final class MainApp extends Application {
                     });
                     final var frame = camera.takePicture();
                     final boolean detected = detector.detectFace(frame);
-                    if (emptyRecognitionQueue[0]) {
-                        saviour.save(frame);
-                        emptyRecognitionQueue[0] = false;
-                    }
-                    if (detected)
+                    if (detected) {
+                        unrecognized.push(frame);
                         Platform.runLater(() -> {
                             if (primaryStage.getScene() == chat.getScene()) {
                                 chat.registerAssistantMessage(factory, "Detected your presence");
@@ -152,6 +153,7 @@ public final class MainApp extends Application {
                             else enterChatScene.run();
 
                         });
+                    }
                     else
                         Platform.runLater(() -> {
                             if (primaryStage.getScene() == chat.getScene()) {
@@ -169,13 +171,17 @@ public final class MainApp extends Application {
 
         final Thread faceRecognitionInvoker = new Thread(() -> {
             while (runBackgroundThreads[0]) {
-                if (emptyRecognitionQueue[0]) continue;
-                else if (!recognizer.isRunning()) recognizer.start();
+                if (unrecognized.empty()) continue;
+                final var frame = unrecognized.pop();
+                saviour.save(frame);
+
+                System.out.println("Recognizing...");
+                if (!recognizer.isRunning()) recognizer.start();
                 final String result = recognizer.detect();
+
                 System.out.println("Recognized: " + result);
                 Platform.runLater(() -> {
-                    if (primaryStage.getScene() == chat.getScene())
-                        chat.registerAssistantMessage(factory, "Recognized " + result + " in the taken picture.");
+                    chat.registerAssistantMessage(factory, "Recognized " + result + " in the taken picture.");
                 });
             }
         });
