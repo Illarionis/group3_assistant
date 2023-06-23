@@ -2,10 +2,12 @@
 
 ## Dependencies
 Following python packages are required to run the machine learning
-model in the background:
+models in the background:
 1. sentence-transformers
 2. sklearn
 3. pandas
+4. cv2
+5. deepface
 
 ## Running the GUI in IntelliJ using Gradle
 1. Open the gradle tab that is located on the right side menu ![](images/readme/1.png)
