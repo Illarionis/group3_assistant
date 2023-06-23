@@ -120,6 +120,6 @@ public final class Assistant {
                 if (cyk.solve(terminals, grammar)) return true;
             } catch (IllegalArgumentException ignored) {}
         }
-        return grammarList.size() == 0;
+        return false;
     }
 }

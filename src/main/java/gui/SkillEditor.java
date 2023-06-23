@@ -98,7 +98,7 @@ public final class SkillEditor extends Editor {
                 inputs[i]  = replacer.replacePlaceholders(templates[0], placeholders[0], xs[i]);
                 outputs[i] = replacer.replacePlaceholders(templates[1], placeholders[1], ys[i]);
 
-                if (assistant.validate(inputs[i])) continue;
+                if (assistant.validate(inputs[i]) || assistant.getGrammarList().size() == 0) continue;
                 final var data = dataList.get(i);
                 data.setInputWarning("Error: Values do not yield an input that belongs to a grammar.");
                 return;
