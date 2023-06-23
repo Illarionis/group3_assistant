@@ -6,7 +6,7 @@ models in the background:
 1. sentence-transformers
 2. sklearn
 3. pandas
-4. cv2
+4. opencv-python
 5. deepface
 
 ## Running the GUI in IntelliJ using Gradle
