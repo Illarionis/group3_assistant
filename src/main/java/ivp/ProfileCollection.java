@@ -86,12 +86,6 @@ public final class ProfileCollection implements Displayable {
                 System.out.println("Missing name to create a new user!");
                 return;
             }
-            
-            final File targetFile = new File(dir.getPath() + "/" + name + ".jpg");
-            if (!targetFile.exists() && !targetFile.mkdirs()) {
-                System.out.println("Failed to generate user image at " + targetFile.getPath());
-                return;
-            }
 
             Platform.runLater(() -> {
                 pictureLabel.setText("Will be taking 1 picture, look at the camera please");
@@ -99,13 +93,13 @@ public final class ProfileCollection implements Displayable {
                 catch (Exception e) { throw new RuntimeException(e); }
             });
 
-            final File target = new File(targetFile + "/" + name + "(" + 0 + ")" + ".jpg");
-            g.generate(target);
+            final File targetFile = new File(dir.getPath() + "/" + name + ".jpg");
+            g.generate(targetFile);
 
             Platform.runLater(() -> {
                 pictureLabel.setText("Snap!");
                 final var frame = c.takePicture();
-                s.save(target, frame);
+                s.save(targetFile, frame);
                 setImage(converter.convert(frame));
                 if (representations.exists() && !representations.delete()) throw new IllegalStateException("Failed to delete face-net pkl so can not add a new user!");
                 try { Thread.sleep(200); }
