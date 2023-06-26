@@ -30,7 +30,7 @@ public final class ProfileCollection implements Displayable {
 
     public ProfileCollection(Factory f, Designer d, CamController c, FrameSaver s, File dir) {
         image = new ImageView();
-        final Label pictureLabel = f.createLabel("LAST TAKEN PICTURE", Pos.CENTER, 30, 30, Double.MAX_VALUE, 30);
+        final Label pictureLabel = f.createLabel("NO PICTURES TAKEN YET", Pos.CENTER, 30, 30, Double.MAX_VALUE, 30);
         final VBox pictureHolder = f.createVBox(0, Paddings.CONTENT, Pos.CENTER, image);
         final ScrollPane pictureViewport = f.createScrollPane(pictureHolder);
         final VBox picturePanel = f.createVBox(5, Paddings.DEFAULT, Pos.TOP_CENTER, pictureLabel, pictureViewport);
@@ -77,19 +77,34 @@ public final class ProfileCollection implements Displayable {
                 return;
             }
 
-            c.start();
+            Platform.runLater(() -> {
+                pictureLabel.setText("Will be taking 20 pictures (~ 5 pictures a second)");
+                try { Thread.sleep(200); }
+                catch (Exception e) { throw new RuntimeException(e); }
+            });
+
             for (int i = 0; i < 20; i++) {
+                final int remainingPictures = 20 - i;
                 final File target = new File(targetDir + "/" + name + "(" + i + ")" + ".jpg");
-                if (target.exists()) continue;
+                if (target.exists()) {
+                    final int x = i;
+                    Platform.runLater(() -> {
+                        pictureLabel.setText("Warning: Picture number " + x + " already exists!");
+                        try { Thread.sleep(200); }
+                        catch (Exception e) { throw new RuntimeException(e); }
+                    });
+                    continue;
+                };
                 Platform.runLater(() -> {
-                    final var frame = c.capture();
+                    pictureLabel.setText(remainingPictures + " pictures left!");
+                    final var frame = c.takePicture();
                     s.save(target, frame);
                     setImage(converter.convert(frame));
-                    try { Thread.sleep(100); }
+                    try { Thread.sleep(200); }
                     catch (Exception e) { throw new RuntimeException(e); }
                 });
             }
-            c.close();
+            Platform.runLater(() -> pictureLabel.setText("Completed taking pictures"));
 
             final var item = new Item(f);
             item.setName(name);
