@@ -145,7 +145,7 @@ public final class MainApp extends Application {
         final long[] delayStartTime = new long[1];
         final long[] remainingSeconds = new long[1];
         final long[] previousCheckpoint = new long[1];
-        final Stack<Frame>  frames   = new Stack<>();
+        //final Stack<Frame>  frames   = new Stack<>();
         final Runnable resetDetectionDelay = () -> {
             remainingSeconds[0] = delaySeconds;
             previousCheckpoint[0] = delaySeconds;
@@ -173,7 +173,7 @@ public final class MainApp extends Application {
                     images[0] = converter.convert(frame);
                     Platform.runLater(showUsedPicture);
                     resetDetectionDelay.run();
-                    if (detected) frames.push(frame);
+                    //if (detected) frames.push(frame);
                 } else if (remainingSeconds[0] < previousCheckpoint[0]) {
                     Platform.runLater(delayNotification);
                     previousCheckpoint[0] = remainingSeconds[0];
@@ -183,14 +183,14 @@ public final class MainApp extends Application {
         });
         faceDetection.start();
 
-        final File ivpModel     = new File("src/main/python/ivp.py");
-        final File ivpTerminate = new File("src/main/resources/ivp/model.terminate");
-        final File ivpPredict   = new File("src/main/resources/ivp/model.predict");
-        final File ivpDataset   = new File("src/main/resources/ivp/database");
-        final File ivpInput     = new File("src/main/resources/ivp/input.jpg");
-        final File ivpOutput    = new File("src/main/resources/ivp/output.txt");
-        final var faceRecognition = new FaceRecognition(generator, reader, ivpModel, ivpTerminate, ivpPredict, ivpDataset, ivpInput, ivpOutput);
-        faceRecognition.start();
+//        final File ivpModel     = new File("src/main/python/ivp.py");
+//        final File ivpTerminate = new File("src/main/resources/ivp/model.terminate");
+//        final File ivpPredict   = new File("src/main/resources/ivp/model.predict");
+//        final File ivpDataset   = new File("src/main/resources/ivp/database");
+//        final File ivpInput     = new File("src/main/resources/ivp/input.jpg");
+//        final File ivpOutput    = new File("src/main/resources/ivp/output.txt");
+//        final var faceRecognition = new FaceRecognition(generator, reader, ivpModel, ivpTerminate, ivpPredict, ivpDataset, ivpInput, ivpOutput);
+//        faceRecognition.start();
 
         // Todo: Check what happens in the python process when
         //      a) the image database is empty
@@ -198,20 +198,20 @@ public final class MainApp extends Application {
         //      c) an unknown face is provided
         //       Then the question on how to include multi-user
         //       using face recognition can be answered.
-        final Thread faceChecker = new Thread(() -> {
-            final var saver = new FrameSaver();
-            System.out.println("@FACE_CHECKER: Starting to loop...");
-            while (primaryStage.isShowing()) {
-                if (frames.empty()) continue;
-                final var frame = frames.pop();
-                saver.save(ivpInput, frame);
-                if (!faceRecognition.isRunning()) faceRecognition.start();
-                final String out = faceRecognition.predict();
-                Platform.runLater(() -> chat.registerAssistantMessage(factory, "Recognized " + out));
-            }
-            System.out.println("@FACE_CHECKER: Stopped looping...");
-        });
-        faceChecker.start();
+//        final Thread faceChecker = new Thread(() -> {
+//            final var saver = new FrameSaver();
+//            System.out.println("@FACE_CHECKER: Starting to loop...");
+//            while (primaryStage.isShowing()) {
+//                if (frames.empty()) continue;
+//                final var frame = frames.pop();
+//                saver.save(ivpInput, frame);
+//                if (!faceRecognition.isRunning()) faceRecognition.start();
+//                final String out = faceRecognition.predict();
+//                Platform.runLater(() -> chat.registerAssistantMessage(factory, "Recognized " + out));
+//            }
+//            System.out.println("@FACE_CHECKER: Stopped looping...");
+//        });
+//        faceChecker.start();
 
         chat.setOnKeyPressed(event -> {
             if (event.getCode() != KeyCode.ENTER) return;
