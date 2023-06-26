@@ -9,8 +9,7 @@ public final class Generator {
             if (parent.exists() || parent.mkdirs()) return f.createNewFile();
             else return false;
         } catch (Exception e) {
-            System.out.println("Failed to generate file " + f.getPath() + " due to exception " + e);
-            return false;
+            throw new RuntimeException("Failed to generate file " + f.getPath() + " due to exception " + e);
         }
     }
 }

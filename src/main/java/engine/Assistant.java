@@ -1,5 +1,9 @@
 package engine;
 
+import nlp.CYKAlgorithm;
+import nlp.ContextFreeGrammar;
+import utility.TerminalDetector;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -101,8 +105,8 @@ public final class Assistant {
         if (out != null) return out;
         // In case of failure, determining whether input belongs to grammar
         if (validate(in)) return "Well, according to the CYK algorithm, the phrase " + "\"" + in + "\"" +
-                "belongs to one of your grammars.";
-        return "Moreover, failed to find a response associated with \"" + in + "\"";
+                " belongs to one of your grammars.";
+        return "Failed to find a response associated with \"" + in + "\"";
     }
 
     /**
@@ -110,7 +114,6 @@ public final class Assistant {
      *
      * @param in The input the assistant should validate.
      * @return True, if the input belongs to a grammar that has been registered to the assistant. <br>
-     *         True, if the assistant does not have a registered grammar. <br.
      *         False, otherwise.
      **/
     public boolean validate(String in) {

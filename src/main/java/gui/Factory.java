@@ -1,6 +1,5 @@
 package gui;
 
-import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
@@ -9,42 +8,29 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextField;
-import javafx.scene.input.MouseEvent;
-import javafx.scene.layout.*;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Region;
+import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
 
 public final class Factory {
-    public final EventHandler<MouseEvent> highlightOnMouseEnter;
-    public final EventHandler<MouseEvent> removeHighlightOnMouseExit;
     public final String scrollPaneStylesheet;
-    public final String textStyle =
-            "-fx-text-fill: rgb(210, 210, 210);"+
-            "-fx-prompt-text-fill: -fx-text-fill;";
 
     public Factory() {
-        final var resource = getClass().getResource("/css/transparent-scroll-pane.css");
+        final var resource = getClass().getResource("/css/scroll-pane.css");
         scrollPaneStylesheet = resource == null ? "" : resource.toExternalForm();
-
-        highlightOnMouseEnter = event -> {
-            final var region = (Region) event.getSource();
-            if (region.getBackground() == Background.EMPTY) region.setBackground(Backgrounds.HIGHLIGHT);
-        };
-
-        removeHighlightOnMouseExit = event -> {
-            final var region = (Region) event.getSource();
-            if (region.getBackground() == Backgrounds.HIGHLIGHT) region.setBackground(Background.EMPTY);
-        };
+        System.out.println(scrollPaneStylesheet);
     }
 
     public Button createButton(String text, double minWidth, double minHeight, double maxWidth, double maxHeight) {
         final var button = new Button(text);
         button.setMinSize(minWidth, minHeight);
         button.setMaxSize(maxWidth, maxHeight);
-        button.setBackground(Background.EMPTY);
-        button.setOnMouseEntered(highlightOnMouseEnter);
-        button.setOnMouseExited(removeHighlightOnMouseExit);
-        button.setStyle(textStyle);
+        button.setBackground(Backgrounds.DEFAULT);
+        button.setStyle(TextStyles.DEFAULT);
+        button.setOnMouseEntered(EventHandlers.HIGHLIGHT_REGION);
+        button.setOnMouseExited(EventHandlers.REMOVE_HIGHLIGHT);
         return button;
     }
 
@@ -53,7 +39,8 @@ public final class Factory {
         hbox.setAlignment(alignment);
         hbox.setPadding(padding);
         hbox.setSpacing(spacing);
-        hbox.setBackground(Background.EMPTY);
+        hbox.setFillHeight(true);
+        hbox.setBackground(Backgrounds.DEFAULT);
         return hbox;
     }
 
@@ -62,23 +49,23 @@ public final class Factory {
         label.setAlignment(alignment);
         label.setMinSize(minWidth, minHeight);
         label.setMaxSize(maxWidth, maxHeight);
-        label.setBackground(Background.EMPTY);
-        label.setStyle(textStyle);
+        label.setBackground(Backgrounds.DEFAULT);
+        label.setStyle(TextStyles.DEFAULT);
         return label;
     }
 
-    public Scene createScene(Region root) {
-        final var scene = new Scene(root);
+    public Scene createScene(Region content, double width, double height) {
+        final var scene = new Scene(content, width, height);
         scene.setFill(Colors.SCENE);
         return scene;
     }
 
     public ScrollPane createScrollPane(Region content) {
         final var scrollPane = new ScrollPane(content);
+        scrollPane.setBackground(Backgrounds.DEFAULT);
+        scrollPane.getStylesheets().add(scrollPaneStylesheet);
         scrollPane.setFitToWidth(true);
         scrollPane.setFitToHeight(true);
-        scrollPane.setBackground(Background.EMPTY);
-        scrollPane.getStylesheets().add(scrollPaneStylesheet);
         return scrollPane;
     }
 
@@ -90,19 +77,19 @@ public final class Factory {
 
     public TextField createTextField(String promptText, Pos alignment, double minWidth, double minHeight, double maxWidth, double maxHeight) {
         final var textField = new TextField();
-        textField.setAlignment(alignment);
         textField.setPromptText(promptText);
+        textField.setAlignment(alignment);
         textField.setMinSize(minWidth, minHeight);
         textField.setMaxSize(maxWidth, maxHeight);
-        textField.setBackground(Background.EMPTY);
-        textField.setStyle(textStyle);
+        textField.setBackground(Backgrounds.DEFAULT);
+        textField.setStyle(TextStyles.DEFAULT);
         return textField;
     }
 
-    public TextFlow createTextFlow(Background bg, Insets padding, Node... children) {
+    public TextFlow createTextFlow(Insets padding, Node... children) {
         final var textFlow = new TextFlow(children);
         textFlow.setPadding(padding);
-        textFlow.setBackground(bg);
+        textFlow.setBackground(Backgrounds.DEFAULT);
         return textFlow;
     }
 
@@ -111,11 +98,8 @@ public final class Factory {
         vbox.setAlignment(alignment);
         vbox.setPadding(padding);
         vbox.setSpacing(spacing);
-        vbox.setBackground(Background.EMPTY);
+        vbox.setFillWidth(true);
+        vbox.setBackground(Backgrounds.DEFAULT);
         return vbox;
-    }
-
-    public void update(Border b, Region... regions) {
-        for (var region : regions) region.setBorder(b);
     }
 }

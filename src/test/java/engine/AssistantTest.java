@@ -1,5 +1,6 @@
 package engine;
 
+import nlp.ContextFreeGrammar;
 import org.junit.jupiter.api.Test;
 
 import java.util.Objects;

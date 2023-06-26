@@ -4,23 +4,25 @@ import java.io.File;
 import java.io.FileWriter;
 
 public final class Writer {
-    public void append(File f, String s) {
+    public boolean append(File f, String s) {
         try {
-            final var fileWriter = new FileWriter(f);
-            fileWriter.append(s);
-            fileWriter.close();
+            final var writer = new FileWriter(f);
+            writer.append(s);
+            writer.close();
+            return true;
         } catch (Exception e) {
-            System.out.println("Failed to write data to file " + f.getPath() + " due to exception " + e);
+            return false;
         }
     }
 
-    public void write(File f, String s) {
+    public boolean write(File f, String s) {
         try {
-            final var fileWriter = new FileWriter(f);
-            fileWriter.write(s);
-            fileWriter.close();
+            final var writer = new FileWriter(f);
+            writer.write(s);
+            writer.close();
+            return true;
         } catch (Exception e) {
-            System.out.println("Failed to write data to file " + f.getPath() + " due to exception " + e);
+            return false;
         }
     }
 }

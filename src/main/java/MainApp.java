@@ -1,258 +1,232 @@
-import engine.*;
-import gui.ChatWindow;
-import gui.EditorWindow;
+import engine.Assistant;
+import engine.Chat;
+import engine.GrammarEditor;
+import engine.SkillEditor;
+import gui.Borders;
+import gui.Designer;
 import gui.Factory;
-import gui.LoginWindow;
+import gui.Window;
+import io.Generator;
+import io.Reader;
+import io.Writer;
+import ivp.*;
 import javafx.application.Application;
 import javafx.application.Platform;
-import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
 import javafx.scene.control.TextField;
+import javafx.scene.image.Image;
 import javafx.scene.input.KeyCode;
-import javafx.scene.input.KeyEvent;
-import javafx.scene.input.MouseEvent;
 import javafx.stage.Stage;
-import javafx.stage.StageStyle;
-import javafx.stage.WindowEvent;
+import nlp.Dataset;
+import nlp.GrammarModel;
+import nlp.Jazzy;
 import org.bytedeco.javacv.Frame;
+import org.bytedeco.javacv.JavaFXFrameConverter;
 
+import java.io.File;
+import java.util.List;
 import java.util.Stack;
 
 public final class MainApp extends Application {
     @Override
     public void start(Stage primaryStage) {
-        final var assistant  = new Assistant();
-        final var camera     = new CamController();
-        final var detector   = new FaceDetector();
-        final var recognizer = new FaceRecognition();
-        final var saviour    = new FrameSaver();
-        final var grammar    = new Grammar();
-        final var jazzy      = new Jazzy();
-        final var factory    = new Factory();
-        final var chat       = new ChatWindow(factory);
-        final var login      = new LoginWindow(factory);
-        final var editor     = new EditorWindow(factory, assistant);
-
-        final boolean[] runBackgroundThreads = {true};
-        final long detectionDelaySeconds = 30;
-        final long startCheckpoint = 31;
-        final long[] detectionStartTime = {System.currentTimeMillis()};
-        final long[] previousCheckpoint = {startCheckpoint};
-        final Stack<Frame> unrecognized = new Stack<>();
-        final Stack<String> unchecked = new Stack<>();
-        final Stack<String> unpredicted = new Stack<>();
-        final Stack<String> unanswered = new Stack<>();
-
-        final Stage secondaryStage = new Stage();
-        secondaryStage.initStyle(StageStyle.UNDECORATED);
-        secondaryStage.setTitle("ASSISTANT EDITOR");
-        secondaryStage.setScene(editor.getScene());
-
-        final double[] secondaryPreviousCoordinates = new double[2];
-        final EventHandler<MouseEvent> secondaryTitlePressHandler = event -> {
-            secondaryPreviousCoordinates[0] = event.getScreenX();
-            secondaryPreviousCoordinates[1] = event.getScreenY();
-        };
-        final EventHandler<MouseEvent> secondaryTitleDragHandler = event -> {
-            final double x = secondaryStage.getX() + event.getScreenX() - secondaryPreviousCoordinates[0];
-            final double y = secondaryStage.getY() + event.getScreenY() - secondaryPreviousCoordinates[1];
-            secondaryPreviousCoordinates[0] = event.getScreenX();
-            secondaryPreviousCoordinates[1] = event.getScreenY();
-            secondaryStage.setX(x);
-            secondaryStage.setY(y);
-        };
-        editor.setOnCloseClicked(event -> {
-            detectionStartTime[0] = System.currentTimeMillis();
-            previousCheckpoint[0] = startCheckpoint;
-            secondaryStage.close();
-        });
-        editor.setOnTitlePressed(secondaryTitlePressHandler);
-        editor.setOnTitleDragged(secondaryTitleDragHandler);
-
-        final EventHandler<ActionEvent> closePrimaryStageHandler = event -> {
-            final var closeWindowEvent = new WindowEvent(primaryStage, WindowEvent.WINDOW_CLOSE_REQUEST);
-            primaryStage.getScene().getWindow().fireEvent(closeWindowEvent);
-            secondaryStage.close();
-        };
-
-        final double[] previousPrimaryCoordinates = new double[2];
-        final EventHandler<MouseEvent> primaryTitlePressHandler = event -> {
-            previousPrimaryCoordinates[0] = event.getScreenX();
-            previousPrimaryCoordinates[1] = event.getScreenY();
-        };
-        final EventHandler<MouseEvent> primaryTitleDragHandler = event -> {
-            final double x = primaryStage.getX() + event.getScreenX() - previousPrimaryCoordinates[0];
-            final double y = primaryStage.getY() + event.getScreenY() - previousPrimaryCoordinates[1];
-            previousPrimaryCoordinates[0] = event.getScreenX();
-            previousPrimaryCoordinates[1] = event.getScreenY();
-            primaryStage.setX(x);
-            primaryStage.setY(y);
-        };
-
-        final Runnable enterLoginScene = () -> {
-            primaryStage.setScene(login.getScene());
-            primaryStage.centerOnScreen();
-        };
-        final Runnable enterChatScene = () -> {
-            primaryStage.setScene(chat.getScene());
-            primaryStage.centerOnScreen();
-        };
-
-        chat.setOnCloseClicked(closePrimaryStageHandler);
-        chat.setOnTitleDragged(primaryTitleDragHandler);
-        chat.setOnTitlePressed(primaryTitlePressHandler);
-        chat.setOnSettingsPressed(event -> {
-            if (secondaryStage.isShowing()) return;
-            secondaryStage.show();
-        });
-
-        login.setOnButtonClicked(event -> enterChatScene.run());
-        login.setOnCloseClicked(closePrimaryStageHandler);
-        login.setOnTitleDragged(primaryTitleDragHandler);
-        login.setOnTitlePressed(primaryTitlePressHandler);
-
-        primaryStage.setOnCloseRequest(event -> {
-            runBackgroundThreads[0] = false;
-            grammar.terminate();
-        });
-        primaryStage.initStyle(StageStyle.UNDECORATED);
-        primaryStage.setTitle("DIGITAL ASSISTANT");
-        primaryStage.setScene(login.getScene());
+        final var assistant = new Assistant();
+        final var jazzy     = new Jazzy();
+        final var camera    = new CamController();
+        final var detector  = new FaceDetector();
+        final var generator = new Generator();
+        final var reader    = new Reader();
+        final var writer    = new Writer();
+        final var designer  = new Designer();
+        final var factory   = new Factory();
+        final var chat      = new Chat(factory, designer);
+        final var dataset   = new Dataset(factory, designer, generator, reader, writer);
+        final var grammar   = new GrammarEditor(factory, designer, assistant);
+        final var skills    = new SkillEditor(factory, designer, assistant);
+        final var detection = new DetectionStatus(factory, designer);
+        final var window    = new Window(factory);
+        final var scene =  factory.createScene(window.getPanel(), 960, 960);
+        primaryStage.setScene(scene);
         primaryStage.show();
 
-        if (grammar.start()) System.out.println("Successfully started the grammar process in the background.");
-        else throw new IllegalStateException("Failed to start grammar process in the background.");
+        final var showChat = factory.createButton("CHAT", 100, 30, Double.MAX_VALUE, 30);
+        showChat.setOnAction(event -> window.show(showChat, chat.getPanel()));
 
-        if (recognizer.start()) System.out.println("Successfully started the recognition process in the background.");
-        else throw new IllegalStateException("Failed to start recognition process in the background.");
+        final var showData = factory.createButton("DATASET", 100, 30, Double.MAX_VALUE, 30);
+        showData.setOnAction(event -> window.show(showData, dataset.getPanel()));
 
-        final Thread faceDetectionInvoker = new Thread(() -> {
-            while(runBackgroundThreads[0]) {
-                if (secondaryStage.isShowing()) continue;
-                final long remainingSeconds = detectionDelaySeconds - (System.currentTimeMillis() - detectionStartTime[0]) / 1000;
-                if (remainingSeconds < previousCheckpoint[0] && remainingSeconds > 0 && remainingSeconds <= 10 && primaryStage.getScene() == chat.getScene()) {
-                    Platform.runLater(() -> chat.registerAssistantMessage(factory, "Taking a picture to detect your presence in " + remainingSeconds + " seconds."));
-                    previousCheckpoint[0] = remainingSeconds;
-                } else if (remainingSeconds < previousCheckpoint[0] && remainingSeconds > 0 && primaryStage.getScene() == login.getScene()) {
-                    Platform.runLater(() -> login.setButtonText("Click to unlock or wait " + remainingSeconds + " seconds for face detection to start."));
-                    previousCheckpoint[0] = remainingSeconds;
-                } else if (remainingSeconds <= 0){
-                    Platform.runLater(() -> {
-                        if (primaryStage.getScene() == chat.getScene()) chat.registerAssistantMessage(factory, "Taking a picture!");
-                        else login.setButtonText("Taking a picture!");
-                    });
-                    final var frame = camera.takePicture();
-                    final boolean detected = detector.detectFace(frame);
-                    if (detected) {
-                        unrecognized.push(frame);
-                        Platform.runLater(() -> {
-                            if (primaryStage.getScene() == chat.getScene()) {
-                                chat.registerAssistantMessage(factory, "Detected your presence");
-                                chat.registerAssistantMessage(factory, "Will check again after " + detectionDelaySeconds + " seconds.");
-                            }
-                            else enterChatScene.run();
+        final var showGrammar = factory.createButton("GRAMMAR", 100, 30, Double.MAX_VALUE, 30);
+        showGrammar.setOnAction(event -> window.show(showGrammar, grammar.getPanel()));
 
-                        });
+        final var showSkills = factory.createButton("SKILLS", 100, 30, Double.MAX_VALUE, 30);
+        showSkills.setOnAction(event -> window.show(showSkills, skills.getPanel()));
+
+        final var showDetection = factory.createButton("DETECTION", 100, 30, Double.MAX_VALUE, 30);
+        showDetection.setOnAction(event -> window.show(showDetection, detection.getPanel()));
+
+        window.add(showChat, showData, showGrammar, showSkills, showDetection);
+        window.show(showData, dataset.getPanel());
+        designer.setBorder(Borders.GRAY, showChat, showData, showGrammar, showSkills, showDetection);
+
+        final Stack<String> messages = new Stack<>();
+        final Thread conversation = new Thread(() -> {
+            System.out.println("@CONVERSATION: Started to loop...");
+            while (primaryStage.isShowing()) {
+                if (messages.empty()) continue;
+                final String in = messages.pop();
+                final String out = assistant.respond(in);
+                Platform.runLater(() -> chat.registerAssistantMessage(factory, out));
+            }
+            System.out.println("@CONVERSATION: Stopped looping...");
+        });
+        conversation.start();
+
+        final Stack<String> spellCheckRequests = new Stack<>();
+        final Thread spellChecker = new Thread(() -> {
+            System.out.println("@SPELL_CHECKER: Starting to loop...");
+            while (primaryStage.isShowing()) {
+                if (spellCheckRequests.empty()) continue;
+                final String in = spellCheckRequests.pop();
+                final List<String>  misspelled = jazzy.checkSpelling(in);
+                Platform.runLater(() -> {
+                    if (misspelled.isEmpty()) {
+                        chat.registerAssistantMessage(factory, "No words were misspelled in " + "\"" + in + "\"");
+                    } else {
+                        chat.registerAssistantMessage(factory, "Following words were misspelled in " + "\"" + in + "\"");
+                        for (int i = 0; i < misspelled.size(); i++) chat.registerAssistantMessage(factory,  "(" + (i + 1) + ")" + misspelled.get(i));
                     }
-                    else
-                        Platform.runLater(() -> {
-                            if (primaryStage.getScene() == chat.getScene()) {
-                                chat.registerAssistantMessage(factory, "Failed to detect your presence. Therefore, locking the application.");
-                                enterLoginScene.run();
-                            }
-                        });
-                    detectionStartTime[0] = System.currentTimeMillis();
-                    previousCheckpoint[0] = startCheckpoint;
+                });
+            }
+            System.out.println("@SPELL_CHECKER: Stopped looping...");
+        });
+        spellChecker.start();
+
+        final File nlpModel     = new File("src/main/python/nlp.py");
+        final File nlpTerminate = new File("src/main/resources/nlp/model.terminate");
+        final File nlpTrain     = new File("src/main/resources/nlp/model.train");
+        final File nlpPredict   = new File("src/main/resources/nlp/model.predict");
+        final File nlpDataset   = new File("src/main/resources/nlp/data.csv");
+        final File nlpInput     = new File("src/main/resources/nlp/input.txt");
+        final File nlpOutput    = new File("src/main/resources/nlp/output.txt");
+        final var grammarModel  = new GrammarModel(generator, reader, writer, nlpModel, nlpTerminate, nlpTrain, nlpPredict, nlpDataset, nlpInput, nlpOutput);
+        if (grammarModel.start()) grammarModel.train();
+        dataset.load(nlpDataset);
+        dataset.setOnSaved(nlpTrain);
+
+        final Stack<String> grammarCheckRequests = new Stack<>();
+        final Thread grammarChecker = new Thread(() -> {
+            System.out.println("@GRAMMAR_CHECKER: Starting to loop...");
+            while (primaryStage.isShowing()) {
+                if (grammarCheckRequests.empty()) continue;
+                else if (!grammarModel.isRunning()) grammarModel.start();
+                final String in = grammarCheckRequests.pop();
+                final String quoted = "\"" + in + "\"";
+                final int out = grammarModel.predict(in);
+                switch (out) {
+                    case -1:
+                        Platform.runLater(() -> chat.registerAssistantMessage(factory, "Failed to predict whether " + quoted + " has correct grammar within allocated time."));
+                        break;
+                    case 0:
+                        Platform.runLater(() -> chat.registerAssistantMessage(factory, quoted + " is not phrased correctly."));
+                        break;
+                    case 1:
+                        Platform.runLater(() -> chat.registerAssistantMessage(factory, quoted + " is phrased correctly."));
+                        break;
+                    default:
+                        Platform.runLater(() -> chat.registerAssistantMessage(factory, "Contact tech support as grammar module did not yield a valid response."));
+                        break;
                 }
             }
+            System.out.println("@GRAMMAR_CHECKER: Stopped looping...");
         });
-        detectionStartTime[0] = System.currentTimeMillis();
-        faceDetectionInvoker.start();
+        grammarChecker.start();
 
-        final Thread faceRecognitionInvoker = new Thread(() -> {
-            while (runBackgroundThreads[0]) {
-                if (unrecognized.empty()) continue;
-                final var frame = unrecognized.pop();
-                saviour.save(frame);
-
-                System.out.println("Recognizing...");
-                if (!recognizer.isRunning()) recognizer.start();
-                final String result = recognizer.detect();
-
-                System.out.println("Recognized: " + result);
-                Platform.runLater(() -> {
-                    chat.registerAssistantMessage(factory, "Recognized " + result + " in the taken picture.");
-                });
+        final long delaySeconds = 31;
+        final long[] delayStartTime = new long[1];
+        final long[] remainingSeconds = new long[1];
+        final long[] previousCheckpoint = new long[1];
+        final Stack<Frame>  frames   = new Stack<>();
+        final Runnable resetDetectionDelay = () -> {
+            remainingSeconds[0] = delaySeconds;
+            previousCheckpoint[0] = delaySeconds;
+            delayStartTime[0] = System.currentTimeMillis();
+        };
+        final Thread faceDetection = new Thread(() -> {
+            final var converter  = new JavaFXFrameConverter();
+            final Image[] images = new Image[1];
+            final Runnable captureNotification = () -> detection.setText("Detecting...");
+            final Runnable successNotification = () -> detection.setText("Detected successfully!");
+            final Runnable failureNotification = () -> detection.setText("No one detected!");
+            final Runnable delayNotification   = () -> detection.setText("Detecting in " + remainingSeconds[0] + " seconds.");
+            final Runnable showUsedPicture     = () -> detection.setImage(images[0]);
+            System.out.println("@FACE_DETECTION: Starting to loop...");
+            previousCheckpoint[0] = delaySeconds;
+            delayStartTime[0] = System.currentTimeMillis();
+            while(primaryStage.isShowing()) {
+                remainingSeconds[0] = delaySeconds - (System.currentTimeMillis() - delayStartTime[0]) / 1000;
+                if (remainingSeconds[0] <= 0) {
+                    Platform.runLater(captureNotification);
+                    final var frame = camera.takePicture();
+                    final boolean detected = detector.detectFace(frame);
+                    if (detected) Platform.runLater(successNotification);
+                    else Platform.runLater(failureNotification);
+                    images[0] = converter.convert(frame);
+                    Platform.runLater(showUsedPicture);
+                    resetDetectionDelay.run();
+                    if (detected) frames.push(frame);
+                } else if (remainingSeconds[0] < previousCheckpoint[0]) {
+                    Platform.runLater(delayNotification);
+                    previousCheckpoint[0] = remainingSeconds[0];
+                }
             }
+            System.out.println("@FACE_DETECTION: Stopped looping...");
         });
-        faceRecognitionInvoker.start();
+        faceDetection.start();
 
-        final Thread spellCheckInvoker = new Thread(() -> {
-            while(runBackgroundThreads[0]) {
-                if (unchecked.empty()) continue;
-                final String input = unchecked.pop();
-                final String quoted = "\"" + input + "\"";
-                Platform.runLater(() -> chat.registerAssistantMessage(factory, "Checking spelling for " + quoted));
-                final var misspelled = jazzy.checkSpelling(input);
-                if (misspelled.size() == 0) Platform.runLater(() -> {
-                    chat.registerAssistantMessage(factory,"Did not find any misspelled words in " + quoted);
-                    unpredicted.push(input);
-                });
-                else Platform.runLater(() -> {
-                    chat.registerAssistantMessage(factory, "Found misspelled words in " + quoted);
-                    chat.registerAssistantMessage(factory, "Following words are misspelled:");
-                    for (String s : misspelled) chat.registerAssistantMessage(factory, s);
-                });
+        final File ivpModel     = new File("src/main/python/ivp.py");
+        final File ivpTerminate = new File("src/main/resources/ivp/model.terminate");
+        final File ivpPredict   = new File("src/main/resources/ivp/model.predict");
+        final File ivpDataset   = new File("src/main/resources/ivp/database");
+        final File ivpInput     = new File("src/main/resources/ivp/input.jpg");
+        final File ivpOutput    = new File("src/main/resources/ivp/output.txt");
+        final var faceRecognition = new FaceRecognition(generator, reader, ivpModel, ivpTerminate, ivpPredict, ivpDataset, ivpInput, ivpOutput);
+        faceRecognition.start();
+
+        // Todo: Check what happens in the python process when
+        //      a) the image database is empty
+        //      b) no image is provided
+        //      c) an unknown face is provided
+        //       Then the question on how to include multi-user
+        //       using face recognition can be answered.
+        final Thread faceChecker = new Thread(() -> {
+            final var saver = new FrameSaver();
+            System.out.println("@FACE_CHECKER: Starting to loop...");
+            while (primaryStage.isShowing()) {
+                if (frames.empty()) continue;
+                final var frame = frames.pop();
+                saver.save(ivpInput, frame);
+                if (!faceRecognition.isRunning()) faceRecognition.start();
+                final String out = faceRecognition.predict();
+                Platform.runLater(() -> chat.registerAssistantMessage(factory, "Recognized " + out));
             }
+            System.out.println("@FACE_CHECKER: Stopped looping...");
         });
-        spellCheckInvoker.start();
+        faceChecker.start();
 
-        final Thread grammarCheckInvoker = new Thread(() -> {
-            while(runBackgroundThreads[0]) {
-                if (unpredicted.empty()) continue;
-                final String input = unpredicted.pop();
-                final String quoted = "\"" + input + "\"";
-                Platform.runLater(() -> chat.registerAssistantMessage(factory, "Checking grammar for " + quoted));
-                if (!grammar.isRunning()) grammar.start();
-                final boolean valid = grammar.recognize(input);
-                if (valid)
-                    Platform.runLater(() -> chat.registerAssistantMessage(factory, "No grammar mistakes found in " + quoted));
-                else
-                    Platform.runLater(() -> chat.registerAssistantMessage(factory, "Failed to recognize grammar of " + quoted));
-                unanswered.add(input);
-            }
-        });
-        grammarCheckInvoker.start();
-
-        final Thread conversationInvoker = new Thread(() -> {
-            while(runBackgroundThreads[0]) {
-                if (unanswered.empty()) continue;
-                final String input = unanswered.pop();
-                final String output = assistant.respond(input);
-                Platform.runLater(() -> chat.registerAssistantMessage(factory, output));
-            }
-        });
-        conversationInvoker.start();
-
-        chat.setInputChangeListener(((observable, oldValue, newValue) -> {
-            detectionStartTime[0] = System.currentTimeMillis();
-            previousCheckpoint[0] = startCheckpoint;
-        }));
-
-        final EventHandler<KeyEvent> keyPressedHandler = event -> {
+        chat.setOnKeyPressed(event -> {
             if (event.getCode() != KeyCode.ENTER) return;
             final var textField = (TextField) event.getSource();
-            final String input = textField.getText();
-
+            final String in = textField.getText();
             textField.clear();
-            if (input.isBlank()) return;
-            chat.registerUserMessage(factory, input);
 
-            unchecked.add(input);;
+            if (in.isBlank()) return;
+            chat.registerUserMessage(factory, in);
+            messages.push(in);
+            spellCheckRequests.push(in);
+            grammarCheckRequests.push(in);
+        });
 
-            detectionStartTime[0] = System.currentTimeMillis();
-            previousCheckpoint[0] = startCheckpoint;
-        };
-        chat.setOnKeyPressedHandler(keyPressedHandler);
+        chat.setChangeListener(((observable, oldValue, newValue) -> resetDetectionDelay.run()));
+        scene.setOnMouseMoved(event -> resetDetectionDelay.run());
+        scene.setOnKeyPressed(event -> resetDetectionDelay.run());
     }
 }

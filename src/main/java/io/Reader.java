@@ -11,10 +11,9 @@ public final class Reader {
             final boolean succeeded = fileReader.read(data) == data.length;
             fileReader.close();
             if (succeeded) return String.valueOf(data);
-            else return "";
+            else throw new RuntimeException("Failed to read all data in file " + f.getPath());
         } catch (Exception e) {
-            System.out.println("Failed to read data of file " + f.getPath() + " due to exception " + e);
-            return "";
+            throw new RuntimeException("Failed to read data of file " + f.getPath() + " due to exception " + e);
         }
     }
 }
