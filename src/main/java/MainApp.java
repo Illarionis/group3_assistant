@@ -64,7 +64,7 @@ public final class MainApp extends Application {
         final var grammar   = new GrammarEditor(factory, designer, assistant);
         final var skills    = new SkillEditor(factory, designer, assistant);
         final var detection = new DetectionStatus(factory, designer);
-        final var profiles  = new ProfileCollection(factory, designer, camera, saver, ivpDataset);
+        final var profiles  = new ProfileCollection(generator, factory, designer, camera, saver, ivpDataset);
         final var window    = new Window(factory);
         final var scene =  factory.createScene(window.getPanel(), 960, 960);
 
@@ -259,7 +259,8 @@ public final class MainApp extends Application {
                 saver.save(ivpInput, frame);
                 generator.generate(ivpPredict);
                 final String out = recognitionModel.predict();
-                Platform.runLater(() -> detection.setImageLabelText("Recognized: " + out));
+                if (out == null || out.equals("Null")) Platform.runLater(() -> detection.setImageLabelText("Failed to recognize..."));
+                else Platform.runLater(() -> detection.setImageLabelText("Recognized: " + out));
             }
 
             System.out.println("@FACE_RECOGNITION: Stopped looping...");

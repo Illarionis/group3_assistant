@@ -7,6 +7,7 @@ import gui.Borders;
 import gui.Designer;
 import gui.Factory;
 import gui.Paddings;
+import io.Generator;
 import javafx.application.Platform;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
@@ -28,7 +29,7 @@ public final class ProfileCollection implements Displayable {
     private final ImageView image;
     private final VBox panel;
 
-    public ProfileCollection(Factory f, Designer d, CamController c, FrameSaver s, File dir) {
+    public ProfileCollection(Generator g, Factory f, Designer d, CamController c, FrameSaver s, File dir) {
         image = new ImageView();
         final Label pictureLabel = f.createLabel("NO PICTURES TAKEN YET", Pos.CENTER, 30, 30, Double.MAX_VALUE, 30);
         final VBox pictureHolder = f.createVBox(0, Paddings.CONTENT, Pos.CENTER, image);
@@ -104,6 +105,8 @@ public final class ProfileCollection implements Displayable {
             });
 
             final File target = new File(targetDir + "/" + name + "(" + 0 + ")" + ".jpg");
+            g.generate(target);
+
             Platform.runLater(() -> {
                 pictureLabel.setText("Snap!");
                 final var frame = c.takePicture();
@@ -122,7 +125,7 @@ public final class ProfileCollection implements Displayable {
         if (files == null) return;
         for (var file : files) {
             if (file.isDirectory()) {
-                final String name = dir.getName();
+                final String name = file.getName();
                 final var item = entry.generate(file, name);
                 item.setName(name);
             }
