@@ -105,7 +105,7 @@ public final class MainApp extends Application {
                         chat.registerAssistantMessage(factory, "No words were misspelled in " + "\"" + in + "\"");
                     } else {
                         chat.registerAssistantMessage(factory, "Following words were misspelled in " + "\"" + in + "\"");
-                        for (int i = 0; i < misspelled.size(); i++) chat.registerAssistantMessage(factory,  "(" + (i + 1) + ")" + misspelled.get(i));
+                        for (int i = 0; i < misspelled.size(); i++) chat.registerAssistantMessage(factory,  "(" + (i + 1) + ") " + misspelled.get(i));
                     }
                 });
             }
@@ -233,5 +233,18 @@ public final class MainApp extends Application {
         // Resetting the inactivity timers whenever the uses moves the mouse or presses a key
         scene.setOnMouseMoved(event -> resetDetectionDelay.run());
         scene.setOnKeyPressed(event -> resetDetectionDelay.run());
+
+        // Printing the python command
+        System.out.println(
+                "NLP Python Command:\n" +
+                "python "
+                        + nlpModel.getAbsolutePath() + " "
+                        + nlpTerminate.getAbsolutePath() + " "
+                        + nlpTrain.getAbsolutePath() + " "
+                        + nlpPredict.getAbsolutePath() + " "
+                        + nlpDataset.getAbsolutePath() + " "
+                        + nlpInput.getAbsolutePath() + " "
+                        + nlpOutput.getAbsolutePath()
+        );
     }
 }

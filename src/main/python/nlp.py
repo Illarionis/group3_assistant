@@ -1,5 +1,5 @@
 import os, sys
-import pandas
+import pandas as pd
 from datetime import datetime
 from sklearn import svm
 from sentence_transformers import SentenceTransformer
@@ -16,8 +16,7 @@ from sentence_transformers import SentenceTransformer
 operational_seconds = 0 + 60 * 5
 print('Script may at most loop for ' + str(operational_seconds) + ' second(s)')
 
-# Validating whether we have enough arguments
-print('Validating arguments...')
+# Validating
 assert len(sys.argv) == 7
 
 # Selecting the classifier and transformer model
@@ -38,16 +37,19 @@ def should_predict():
     return os.path.exists(sys.argv[3])
 
 # Defining a function to mark the termination request as completed
-def on_termination_completed():
-    os.remove(sys.argv[1])
+def complete_termination():
+    if os.path.exists(sys.argv[1]):
+        os.remove(sys.argv[1])
 
 # Defining a function to mark the training request as completed
-def on_training_completed():
-    os.remove(sys.argv[2])
+def complete_training():
+    if os.path.exists(sys.argv[2]):
+        os.remove(sys.argv[2])
 
 # Defining a function to mark the prediction request as completed
-def on_prediction_completed():
-    os.remove(sys.argv[3])
+def complete_prediction():
+    if os.path.exists(sys.argv[3]):
+        os.remove(sys.argv[3])
 
 # Defining a function to train the model
 def train():
@@ -86,16 +88,22 @@ start_time = datetime.now()
 while True :
     elapsed_time = datetime.now() - start_time
     if elapsed_time.total_seconds() > operational_seconds :
+        print('Stopping to loop as allocated operation time has been reached...')
         break
     elif should_terminate():
-        on_termination_completed()
+        print('Received a termination request...')
+        complete_termination()
         break
-    elif should_train:
+    elif should_train():
+        print('Received a training request...')
         train()
-        on_training_completed()
+        complete_training()
+        print('Completed training...')
     elif should_predict():
+        print('Received a prediction request...')
         predict()
-        on_prediction_completed()
+        complete_prediction()
+        print('Completed prediction...')
 
 # Confirming termination
 print('Terminating...')
