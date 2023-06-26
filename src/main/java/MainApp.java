@@ -142,8 +142,10 @@ public final class MainApp extends Application {
             grammarModel.train();
             final long startTime = System.currentTimeMillis();
             while (nlpTrain.exists()) {
+                if (!grammarModel.isRunning()) grammarModel.start();
+
                 final long elapsedTime = System.currentTimeMillis() - startTime;
-                if (elapsedTime > 30000) {
+                if (elapsedTime > 10000) {
                     System.out.println("@GRAMMAR_CHECKER: Failed to train model within allocated time...");
                     grammarModel.terminate();
                     return;

@@ -41,15 +41,9 @@ public final class GrammarModel {
             out = r.read(output);
         };
 
-        termination = () -> {
-            if (terminate.exists()) return;
-            g.generate(terminate);
-        };
+        termination = () -> g.generate(terminate);
 
-        training = () -> {
-            if (train.exists()) return;
-            g.generate(train);
-        };
+        training = () -> g.generate(train);
     }
 
     public boolean isRunning() {
