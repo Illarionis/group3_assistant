@@ -4,7 +4,7 @@
 Following python packages are required to run the machine learning
 models in the background:
 1. sentence-transformers
-2. sklearn
+2. scikit-learn
 3. pandas
 4. opencv-python
 5. deepface
