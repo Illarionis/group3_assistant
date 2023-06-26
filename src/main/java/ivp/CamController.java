@@ -29,21 +29,22 @@ public class CamController {
 
 
 
-
-    public void addNewFace(File dir, String nameBasis){
+    // best framerate: 60 durationSeconds = 1 and numFrames = 60
+    public void addNewFace(File dir, String nameBasis, int numFrames, int durationSeconds) {
         OpenCVFrameGrabber grabber = new OpenCVFrameGrabber(0);
         OpenCVFrameConverter.ToIplImage converter = new OpenCVFrameConverter.ToIplImage();
         try {
             grabber.start();
-            for(int i = 0; i < 20; i++){
+            int frameRate = numFrames / durationSeconds;
+            long timeInterval = Math.round(1000.0 / frameRate);
+            for (int i = 0; i < numFrames; i++) {
                 final File f = new File(dir.getPath() + "/" + nameBasis + "(" + i + ")");
                 if (f.exists()) continue;
                 IplImage image = converter.convert(grabber.grab());
                 cvSaveImage(f.getPath(), image);
-                Thread.sleep(50);
+                Thread.sleep(timeInterval);
             }
             grabber.close();
-
         } catch (FrameGrabber.Exception | InterruptedException e) {
             throw new RuntimeException(e);
         }
