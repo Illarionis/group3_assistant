@@ -78,11 +78,13 @@ public final class ProfileCollection implements Displayable {
             }
 
             Platform.runLater(() -> {
-                pictureLabel.setText("Will be taking 20 pictures (~ 5 pictures a second)");
+//                pictureLabel.setText("Will be taking 20 pictures (~ 5 pictures a second)");
+                pictureLabel.setText("Will be taking 1 picture, look at the camera please");
                 try { Thread.sleep(200); }
                 catch (Exception e) { throw new RuntimeException(e); }
             });
 
+            /*
             for (int i = 0; i < 20; i++) {
                 final int remainingPictures = 20 - i;
                 final File target = new File(targetDir + "/" + name + "(" + i + ")" + ".jpg");
@@ -104,6 +106,18 @@ public final class ProfileCollection implements Displayable {
                     catch (Exception e) { throw new RuntimeException(e); }
                 });
             }
+            */
+
+            final File target = new File(targetDir + "/" + name + "(" + 0 + ")" + ".jpg");
+            Platform.runLater(() -> {
+                pictureLabel.setText("Snap!");
+                final var frame = c.takePicture();
+                s.save(target, frame);
+                setImage(converter.convert(frame));
+                try { Thread.sleep(200); }
+                catch (Exception e) { throw new RuntimeException(e); }
+            });
+
             Platform.runLater(() -> pictureLabel.setText("Completed taking pictures"));
 
             final var item = new Item(f);
