@@ -30,10 +30,12 @@ import java.util.concurrent.Executors;
 public final class MainApp extends Application {
     @Override
     public void start(Stage primaryStage) {
+        final File ivpDataset = new File("src/main/resources/ivp/database");
         final var assistant = new Assistant();
         final var jazzy     = new Jazzy();
         final var camera    = new CamController();
         final var detector  = new FaceDetector();
+        final var saver     = new FrameSaver();
         final var generator = new Generator();
         final var reader    = new Reader();
         final var writer    = new Writer();
@@ -44,6 +46,7 @@ public final class MainApp extends Application {
         final var grammar   = new GrammarEditor(factory, designer, assistant);
         final var skills    = new SkillEditor(factory, designer, assistant);
         final var detection = new DetectionStatus(factory, designer);
+        final var profiles  = new ProfileCollection(factory, designer, camera, saver, ivpDataset);
         final var window    = new Window(factory);
         final var scene =  factory.createScene(window.getPanel(), 960, 960);
 
@@ -62,6 +65,7 @@ public final class MainApp extends Application {
         final var showGrammar = factory.createButton("GRAMMAR", 100, 30, Double.MAX_VALUE, 30);
         final var showSkills = factory.createButton("SKILLS", 100, 30, Double.MAX_VALUE, 30);
         final var showDetection = factory.createButton("DETECTION", 100, 30, Double.MAX_VALUE, 30);
+        final var showUsers = factory.createButton("USERS", 100, 30, Double.MAX_VALUE, 30);
 
         // Configuring the interactions the user has with window
         showChat.setOnAction(event -> window.show(showChat, chat.getPanel()));
@@ -69,11 +73,12 @@ public final class MainApp extends Application {
         showGrammar.setOnAction(event -> window.show(showGrammar, grammar.getPanel()));
         showSkills.setOnAction(event -> window.show(showSkills, skills.getPanel()));
         showDetection.setOnAction(event -> window.show(showDetection, detection.getPanel()));
+        showUsers.setOnAction(event -> window.show(showUsers, profiles.getPanel()));
 
         // Completing the window setup
-        window.add(showChat, showData, showGrammar, showSkills, showDetection);
+        window.add(showChat, showData, showGrammar, showSkills, showDetection, showUsers);
         window.show(showData, dataset.getPanel());
-        designer.setBorder(Borders.GRAY, showChat, showData, showGrammar, showSkills, showDetection);
+        designer.setBorder(Borders.GRAY, showChat, showData, showGrammar, showSkills, showDetection, showUsers);
 
         // Requirement to hold a conversation with the assistant
         final Stack<String> messages = new Stack<>();
@@ -138,8 +143,9 @@ public final class MainApp extends Application {
             final long startTime = System.currentTimeMillis();
             while (nlpTrain.exists()) {
                 final long elapsedTime = System.currentTimeMillis() - startTime;
-                if (elapsedTime > 10000) {
+                if (elapsedTime > 30000) {
                     System.out.println("@GRAMMAR_CHECKER: Failed to train model within allocated time...");
+                    grammarModel.terminate();
                     return;
                 }
             }
@@ -166,6 +172,7 @@ public final class MainApp extends Application {
                 }
             }
             System.out.println("@GRAMMAR_CHECKER: Stopped looping...");
+            grammarModel.terminate();
         };
 
         // Requirements to run face detections

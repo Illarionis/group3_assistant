@@ -38,8 +38,8 @@ public final class DetectionStatus implements Displayable {
 
     public void setImage(Image i) {
         image.setImage(i);
-        image.setFitWidth(panel.getWidth() - 10);
-        image.setFitHeight(panel.getHeight() - 10);
+        image.setFitWidth(panel.getWidth() - 50);
+        image.setFitHeight(panel.getHeight() - 50);
     }
 
     public void setText(String s) {
