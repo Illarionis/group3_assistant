@@ -123,7 +123,6 @@ public final class MainApp extends Application {
 
         // Grammar machine learning model
         final var grammarModel  = new GrammarModel(generator, reader, writer, nlpModel, nlpTerminate, nlpTrain, nlpPredict, nlpDataset, nlpInput, nlpOutput);
-        if (grammarModel.start()) grammarModel.train();
 
         // Loading training data into the gui
         dataset.load(nlpDataset);
@@ -134,6 +133,16 @@ public final class MainApp extends Application {
 
         // Defining how grammar is getting checked
         final Runnable grammarChecker = () -> {
+            System.out.println("@GRAMMAR_CHECKER: Training model...");
+            grammarModel.train();
+            final long startTime = System.currentTimeMillis();
+            while (nlpTrain.exists()) {
+                final long elapsedTime = System.currentTimeMillis() - startTime;
+                if (elapsedTime > 10000) {
+                    System.out.println("@GRAMMAR_CHECKER: Failed to train model within allocated time...");
+                    return;
+                }
+            }
             System.out.println("@GRAMMAR_CHECKER: Starting to loop...");
             while (primaryStage.isShowing()) {
                 if (grammarCheckRequests.empty()) continue;
