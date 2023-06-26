@@ -19,12 +19,13 @@ import javafx.stage.Stage;
 import nlp.Dataset;
 import nlp.GrammarModel;
 import nlp.Jazzy;
-import org.bytedeco.javacv.Frame;
 import org.bytedeco.javacv.JavaFXFrameConverter;
 
 import java.io.File;
 import java.util.List;
 import java.util.Stack;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public final class MainApp extends Application {
     @Override
@@ -45,31 +46,40 @@ public final class MainApp extends Application {
         final var detection = new DetectionStatus(factory, designer);
         final var window    = new Window(factory);
         final var scene =  factory.createScene(window.getPanel(), 960, 960);
+
+        // Provides the multitasking solution
+        final ExecutorService service = Executors.newFixedThreadPool(4);
+        primaryStage.setOnCloseRequest(event -> service.shutdown());
+
+        // Configuring the application
         primaryStage.setTitle("ASSISTANT");
         primaryStage.setScene(scene);
         primaryStage.show();
 
+        // Defining window tabs
         final var showChat = factory.createButton("CHAT", 100, 30, Double.MAX_VALUE, 30);
-        showChat.setOnAction(event -> window.show(showChat, chat.getPanel()));
-
         final var showData = factory.createButton("DATASET", 100, 30, Double.MAX_VALUE, 30);
-        showData.setOnAction(event -> window.show(showData, dataset.getPanel()));
-
         final var showGrammar = factory.createButton("GRAMMAR", 100, 30, Double.MAX_VALUE, 30);
-        showGrammar.setOnAction(event -> window.show(showGrammar, grammar.getPanel()));
-
         final var showSkills = factory.createButton("SKILLS", 100, 30, Double.MAX_VALUE, 30);
-        showSkills.setOnAction(event -> window.show(showSkills, skills.getPanel()));
-
         final var showDetection = factory.createButton("DETECTION", 100, 30, Double.MAX_VALUE, 30);
+
+        // Configuring the interactions the user has with window
+        showChat.setOnAction(event -> window.show(showChat, chat.getPanel()));
+        showData.setOnAction(event -> window.show(showData, dataset.getPanel()));
+        showGrammar.setOnAction(event -> window.show(showGrammar, grammar.getPanel()));
+        showSkills.setOnAction(event -> window.show(showSkills, skills.getPanel()));
         showDetection.setOnAction(event -> window.show(showDetection, detection.getPanel()));
 
+        // Completing the window setup
         window.add(showChat, showData, showGrammar, showSkills, showDetection);
         window.show(showData, dataset.getPanel());
         designer.setBorder(Borders.GRAY, showChat, showData, showGrammar, showSkills, showDetection);
 
+        // Requirement to hold a conversation with the assistant
         final Stack<String> messages = new Stack<>();
-        final Thread conversation = new Thread(() -> {
+
+        // Defining how the assistant converses
+        final Runnable conversation = () -> {
             System.out.println("@CONVERSATION: Started to loop...");
             while (primaryStage.isShowing()) {
                 if (messages.empty()) continue;
@@ -78,11 +88,13 @@ public final class MainApp extends Application {
                 Platform.runLater(() -> chat.registerAssistantMessage(factory, out));
             }
             System.out.println("@CONVERSATION: Stopped looping...");
-        });
-        conversation.start();
+        };
 
+        // Requirement to run spell checks
         final Stack<String> spellCheckRequests = new Stack<>();
-        final Thread spellChecker = new Thread(() -> {
+
+        // Defining how spelling is getting checked
+        final Runnable spellChecker = () -> {
             System.out.println("@SPELL_CHECKER: Starting to loop...");
             while (primaryStage.isShowing()) {
                 if (spellCheckRequests.empty()) continue;
@@ -98,9 +110,9 @@ public final class MainApp extends Application {
                 });
             }
             System.out.println("@SPELL_CHECKER: Stopped looping...");
-        });
-        spellChecker.start();
+        };
 
+        // Requirements to run the grammar machine learning model
         final File nlpModel     = new File("src/main/python/nlp.py");
         final File nlpTerminate = new File("src/main/resources/nlp/model.terminate");
         final File nlpTrain     = new File("src/main/resources/nlp/model.train");
@@ -108,13 +120,20 @@ public final class MainApp extends Application {
         final File nlpDataset   = new File("src/main/resources/nlp/data.csv");
         final File nlpInput     = new File("src/main/resources/nlp/input.txt");
         final File nlpOutput    = new File("src/main/resources/nlp/output.txt");
+
+        // Grammar machine learning model
         final var grammarModel  = new GrammarModel(generator, reader, writer, nlpModel, nlpTerminate, nlpTrain, nlpPredict, nlpDataset, nlpInput, nlpOutput);
         if (grammarModel.start()) grammarModel.train();
+
+        // Loading training data into the gui
         dataset.load(nlpDataset);
         dataset.setOnSaved(nlpTrain);
 
+        // Requirement to run the grammar checks
         final Stack<String> grammarCheckRequests = new Stack<>();
-        final Thread grammarChecker = new Thread(() -> {
+
+        // Defining how grammar is getting checked
+        final Runnable grammarChecker = () -> {
             System.out.println("@GRAMMAR_CHECKER: Starting to loop...");
             while (primaryStage.isShowing()) {
                 if (grammarCheckRequests.empty()) continue;
@@ -138,20 +157,21 @@ public final class MainApp extends Application {
                 }
             }
             System.out.println("@GRAMMAR_CHECKER: Stopped looping...");
-        });
-        grammarChecker.start();
+        };
 
+        // Requirements to run face detections
         final long delaySeconds = 31;
         final long[] delayStartTime = new long[1];
         final long[] remainingSeconds = new long[1];
         final long[] previousCheckpoint = new long[1];
-        //final Stack<Frame>  frames   = new Stack<>();
         final Runnable resetDetectionDelay = () -> {
             remainingSeconds[0] = delaySeconds;
             previousCheckpoint[0] = delaySeconds;
             delayStartTime[0] = System.currentTimeMillis();
         };
-        final Thread faceDetection = new Thread(() -> {
+
+        // Defining how the face is getting detected
+        final Runnable faceDetection = () -> {
             final var converter  = new JavaFXFrameConverter();
             final Image[] images = new Image[1];
             final Runnable captureNotification = () -> detection.setText("Detecting...");
@@ -173,46 +193,21 @@ public final class MainApp extends Application {
                     images[0] = converter.convert(frame);
                     Platform.runLater(showUsedPicture);
                     resetDetectionDelay.run();
-                    //if (detected) frames.push(frame);
                 } else if (remainingSeconds[0] < previousCheckpoint[0]) {
                     Platform.runLater(delayNotification);
                     previousCheckpoint[0] = remainingSeconds[0];
                 }
             }
             System.out.println("@FACE_DETECTION: Stopped looping...");
-        });
-        faceDetection.start();
+        };
 
-//        final File ivpModel     = new File("src/main/python/ivp.py");
-//        final File ivpTerminate = new File("src/main/resources/ivp/model.terminate");
-//        final File ivpPredict   = new File("src/main/resources/ivp/model.predict");
-//        final File ivpDataset   = new File("src/main/resources/ivp/database");
-//        final File ivpInput     = new File("src/main/resources/ivp/input.jpg");
-//        final File ivpOutput    = new File("src/main/resources/ivp/output.txt");
-//        final var faceRecognition = new FaceRecognition(generator, reader, ivpModel, ivpTerminate, ivpPredict, ivpDataset, ivpInput, ivpOutput);
-//        faceRecognition.start();
+        // Assigning tasks that can ran simultaneously
+        service.submit(conversation);
+        service.submit(spellChecker);
+        service.submit(grammarChecker);
+        service.submit(faceDetection);
 
-        // Todo: Check what happens in the python process when
-        //      a) the image database is empty
-        //      b) no image is provided
-        //      c) an unknown face is provided
-        //       Then the question on how to include multi-user
-        //       using face recognition can be answered.
-//        final Thread faceChecker = new Thread(() -> {
-//            final var saver = new FrameSaver();
-//            System.out.println("@FACE_CHECKER: Starting to loop...");
-//            while (primaryStage.isShowing()) {
-//                if (frames.empty()) continue;
-//                final var frame = frames.pop();
-//                saver.save(ivpInput, frame);
-//                if (!faceRecognition.isRunning()) faceRecognition.start();
-//                final String out = faceRecognition.predict();
-//                Platform.runLater(() -> chat.registerAssistantMessage(factory, "Recognized " + out));
-//            }
-//            System.out.println("@FACE_CHECKER: Stopped looping...");
-//        });
-//        faceChecker.start();
-
+        // Defining how the chat works
         chat.setOnKeyPressed(event -> {
             if (event.getCode() != KeyCode.ENTER) return;
             final var textField = (TextField) event.getSource();
@@ -226,7 +221,7 @@ public final class MainApp extends Application {
             grammarCheckRequests.push(in);
         });
 
-        chat.setChangeListener(((observable, oldValue, newValue) -> resetDetectionDelay.run()));
+        // Resetting the inactivity timers whenever the uses moves the mouse or presses a key
         scene.setOnMouseMoved(event -> resetDetectionDelay.run());
         scene.setOnKeyPressed(event -> resetDetectionDelay.run());
     }
