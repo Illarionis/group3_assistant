@@ -235,7 +235,7 @@ public final class MainApp extends Application {
                     images[0] = converter.convert(frame);
                     Platform.runLater(showUsedPicture);
                     if (detected) frames.push(frame);
-                    else detection.setImageLabelText("No one detected...");
+                    else Platform.runLater(() -> detection.setImageLabelText("No one detected..."));
                     manualDetectRequest[0] = false;
                     resetDetectionDelay.run();
                 } else if (remainingSeconds[0] < previousCheckpoint[0]) {
