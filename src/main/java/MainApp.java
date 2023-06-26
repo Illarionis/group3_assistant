@@ -145,7 +145,7 @@ public final class MainApp extends Application {
                 if (!grammarModel.isRunning()) grammarModel.start();
 
                 final long elapsedTime = System.currentTimeMillis() - startTime;
-                if (elapsedTime > 10000) {
+                if (elapsedTime > 30000) {
                     System.out.println("@GRAMMAR_CHECKER: Failed to train model within allocated time...");
                     grammarModel.terminate();
                     return;
