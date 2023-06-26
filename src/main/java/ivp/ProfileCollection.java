@@ -78,35 +78,10 @@ public final class ProfileCollection implements Displayable {
             }
 
             Platform.runLater(() -> {
-//                pictureLabel.setText("Will be taking 20 pictures (~ 5 pictures a second)");
                 pictureLabel.setText("Will be taking 1 picture, look at the camera please");
                 try { Thread.sleep(200); }
                 catch (Exception e) { throw new RuntimeException(e); }
             });
-
-            /*
-            for (int i = 0; i < 20; i++) {
-                final int remainingPictures = 20 - i;
-                final File target = new File(targetDir + "/" + name + "(" + i + ")" + ".jpg");
-                if (target.exists()) {
-                    final int x = i;
-                    Platform.runLater(() -> {
-                        pictureLabel.setText("Warning: Picture number " + x + " already exists!");
-                        try { Thread.sleep(200); }
-                        catch (Exception e) { throw new RuntimeException(e); }
-                    });
-                    continue;
-                };
-                Platform.runLater(() -> {
-                    pictureLabel.setText(remainingPictures + " pictures left!");
-                    final var frame = c.takePicture();
-                    s.save(target, frame);
-                    setImage(converter.convert(frame));
-                    try { Thread.sleep(200); }
-                    catch (Exception e) { throw new RuntimeException(e); }
-                });
-            }
-            */
 
             final File target = new File(targetDir + "/" + name + "(" + 0 + ")" + ".jpg");
             Platform.runLater(() -> {

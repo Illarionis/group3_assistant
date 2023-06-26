@@ -29,19 +29,16 @@ public final class FaceRecognition {
             final long startTime = System.currentTimeMillis();
             while (predict.exists()) {
                 final long elapsedTime = System.currentTimeMillis() - startTime;
-                if (elapsedTime > 5000) {
+                if (elapsedTime > 30000) {
                     System.out.println("@FACE_RECOGNITION: Failed to complete prediction within allocated time.");
-                    out = null;
+                    out = "Could not be completed in 30 seconds...";
                     return;
                 }
             }
             out = r.read(output);
         };
 
-        termination = () -> {
-            if (terminate.exists()) return;
-            g.generate(terminate);
-        };
+        termination = () -> g.generate(terminate);
     }
 
     public boolean isRunning() {

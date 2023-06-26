@@ -27,6 +27,9 @@ public class CamController {
         }
     }
 
+
+
+
     public void addNewFace(File dir, String nameBasis){
         OpenCVFrameGrabber grabber = new OpenCVFrameGrabber(0);
         OpenCVFrameConverter.ToIplImage converter = new OpenCVFrameConverter.ToIplImage();

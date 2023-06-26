@@ -19,6 +19,7 @@ import javafx.stage.Stage;
 import nlp.Dataset;
 import nlp.GrammarModel;
 import nlp.Jazzy;
+import org.bytedeco.javacv.Frame;
 import org.bytedeco.javacv.JavaFXFrameConverter;
 
 import java.io.File;
@@ -30,7 +31,24 @@ import java.util.concurrent.Executors;
 public final class MainApp extends Application {
     @Override
     public void start(Stage primaryStage) {
+        // Requirements to run the grammar machine learning model
+        final File nlpModel     = new File("src/main/python/nlp.py");
+        final File nlpTerminate = new File("src/main/resources/nlp/model.terminate");
+        final File nlpTrain     = new File("src/main/resources/nlp/model.train");
+        final File nlpPredict   = new File("src/main/resources/nlp/model.predict");
+        final File nlpDataset   = new File("src/main/resources/nlp/data.csv");
+        final File nlpInput     = new File("src/main/resources/nlp/input.txt");
+        final File nlpOutput    = new File("src/main/resources/nlp/output.txt");
+
+        // Requirements to run the face recognition model
+        final File ivpModel     = new File("/src/main/python/ivp.py");
+        final File ivpTerminate = new File("/src/main/resources/ivp/model.terminate");
+        final File ivpPredict   = new File("/src/main/resources/ivp/model.predict");
         final File ivpDataset = new File("src/main/resources/ivp/database");
+        final File ivpInput   = new File("/src/main/resources/ivp/input.jpg");
+        final File ivpOutput = new File("/src/main/resources/ivp/output.txt");
+
+        // ...
         final var assistant = new Assistant();
         final var jazzy     = new Jazzy();
         final var camera    = new CamController();
@@ -51,7 +69,7 @@ public final class MainApp extends Application {
         final var scene =  factory.createScene(window.getPanel(), 960, 960);
 
         // Provides the multitasking solution
-        final ExecutorService service = Executors.newFixedThreadPool(4);
+        final ExecutorService service = Executors.newFixedThreadPool(5);
         primaryStage.setOnCloseRequest(event -> service.shutdown());
 
         // Configuring the application
@@ -117,15 +135,6 @@ public final class MainApp extends Application {
             System.out.println("@SPELL_CHECKER: Stopped looping...");
         };
 
-        // Requirements to run the grammar machine learning model
-        final File nlpModel     = new File("src/main/python/nlp.py");
-        final File nlpTerminate = new File("src/main/resources/nlp/model.terminate");
-        final File nlpTrain     = new File("src/main/resources/nlp/model.train");
-        final File nlpPredict   = new File("src/main/resources/nlp/model.predict");
-        final File nlpDataset   = new File("src/main/resources/nlp/data.csv");
-        final File nlpInput     = new File("src/main/resources/nlp/input.txt");
-        final File nlpOutput    = new File("src/main/resources/nlp/output.txt");
-
         // Grammar machine learning model
         final var grammarModel  = new GrammarModel(generator, reader, writer, nlpModel, nlpTerminate, nlpTrain, nlpPredict, nlpDataset, nlpInput, nlpOutput);
 
@@ -138,6 +147,9 @@ public final class MainApp extends Application {
 
         // Defining how grammar is getting checked
         final Runnable grammarChecker = () -> {
+            if (nlpPredict.exists() && !nlpPredict.delete()) throw new IllegalStateException("Failed to delete nlp prediction request!");
+            else if (nlpTerminate.exists() && !nlpTerminate.delete()) throw new IllegalStateException("Failed to delete nlp termination request!");
+
             System.out.println("@GRAMMAR_CHECKER: Training model...");
             grammarModel.train();
             final long startTime = System.currentTimeMillis();
@@ -151,6 +163,7 @@ public final class MainApp extends Application {
                     return;
                 }
             }
+
             System.out.println("@GRAMMAR_CHECKER: Starting to loop...");
             while (primaryStage.isShowing()) {
                 if (grammarCheckRequests.empty()) continue;
@@ -173,9 +186,16 @@ public final class MainApp extends Application {
                         break;
                 }
             }
+
             System.out.println("@GRAMMAR_CHECKER: Stopped looping...");
             grammarModel.terminate();
         };
+
+        // Face recognition model
+        final FaceRecognition recognitionModel = new FaceRecognition(generator, reader, ivpModel, ivpTerminate, ivpPredict, ivpDataset, ivpInput, ivpOutput);
+
+        // Requirement to run face recognition
+        final Stack<Frame> frames = new Stack<>();
 
         // Requirements to run face detections
         final long delaySeconds = 31;
@@ -192,10 +212,10 @@ public final class MainApp extends Application {
         final Runnable faceDetection = () -> {
             final var converter  = new JavaFXFrameConverter();
             final Image[] images = new Image[1];
-            final Runnable captureNotification = () -> detection.setText("Detecting...");
-            final Runnable successNotification = () -> detection.setText("Detected successfully!");
-            final Runnable failureNotification = () -> detection.setText("No one detected!");
-            final Runnable delayNotification   = () -> detection.setText("Detecting in " + remainingSeconds[0] + " seconds.");
+            final Runnable captureNotification = () -> detection.setButtonText("Detecting...");
+            final Runnable successNotification = () -> detection.setButtonText("Detected successfully!");
+            final Runnable failureNotification = () -> detection.setButtonText("No one detected!");
+            final Runnable delayNotification   = () -> detection.setButtonText("Detecting in " + remainingSeconds[0] + " seconds.");
             final Runnable showUsedPicture     = () -> detection.setImage(images[0]);
             System.out.println("@FACE_DETECTION: Starting to loop...");
             previousCheckpoint[0] = delaySeconds;
@@ -210,6 +230,7 @@ public final class MainApp extends Application {
                     else Platform.runLater(failureNotification);
                     images[0] = converter.convert(frame);
                     Platform.runLater(showUsedPicture);
+                    if (detected);
                     resetDetectionDelay.run();
                 } else if (remainingSeconds[0] < previousCheckpoint[0]) {
                     Platform.runLater(delayNotification);
@@ -219,11 +240,32 @@ public final class MainApp extends Application {
             System.out.println("@FACE_DETECTION: Stopped looping...");
         };
 
+        // Defining how the face is getting recognized.
+        final Runnable faceRecognition = () -> {
+            if (ivpPredict.exists() && !ivpPredict.delete()) throw new IllegalStateException("Failed to delete ivp prediction request!");
+            else if (ivpTerminate.exists() && !ivpTerminate.delete()) throw new IllegalStateException("Failed to delete ivp termination request!");
+
+            System.out.println("@FACE_RECOGNITION: Starting to loop...");
+            while (primaryStage.isShowing()) {
+                if (frames.empty()) continue;
+                else if (!recognitionModel.isRunning()) recognitionModel.start();
+                final var frame = frames.pop();
+                saver.save(ivpInput, frame);
+                generator.generate(ivpPredict);
+                final String out = recognitionModel.predict();
+                Platform.runLater(() -> detection.setImageLabelText("Recognized: " + out));
+            }
+
+            System.out.println("@FACE_RECOGNITION: Stopped looping...");
+            recognitionModel.terminate();
+        };
+
         // Assigning tasks that can ran simultaneously
         service.submit(conversation);
         service.submit(spellChecker);
         service.submit(grammarChecker);
         service.submit(faceDetection);
+        service.submit(faceRecognition);
 
         // Defining how the chat works
         chat.setOnKeyPressed(event -> {
