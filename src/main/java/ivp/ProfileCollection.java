@@ -114,7 +114,8 @@ public final class ProfileCollection implements Displayable {
         final File[] files = dir.listFiles();
         if (files == null) return;
         for (var file : files) {
-            if (file.isDirectory()) {
+            if (file.getName().equals(representations.getName())) continue;
+            if (file.isFile()) {
                 final String name = file.getName();
                 final var item = entry.generate(file);
                 item.setName(name);

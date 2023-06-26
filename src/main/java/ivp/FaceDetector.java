@@ -64,19 +64,19 @@ public class FaceDetector {
         this.setFrameHist(converter.convert(histToBGR));
 
 
-        // If face found - convert Mat to Frame
-        if (faceDetectedBasic || faceDetectedHist){
-            if (faceDetectedBasic){
-                Mat matRectangleBasic = drawRectangle(faceDetectionsBasic, input);
-                Frame frame = converter.convert(matRectangleBasic);
-                this.setFrameBasic(frame);
-            }
-            if (faceDetectedHist){
-                Mat matRectangleHist = drawRectangle(faceDetectionsHist, histToBGR);
-                Frame frame = converter.convert(matRectangleHist);
-                this.setFrameHist(frame);
-            }
-        }
+//        // If face found - convert Mat to Frame
+//        if (faceDetectedBasic || faceDetectedHist){
+//            if (faceDetectedBasic){
+//                Mat matRectangleBasic = drawRectangle(faceDetectionsBasic, input);
+//                Frame frame = converter.convert(matRectangleBasic);
+//                this.setFrameBasic(frame);
+//            }
+//            if (faceDetectedHist){
+//                Mat matRectangleHist = drawRectangle(faceDetectionsHist, histToBGR);
+//                Frame frame = converter.convert(matRectangleHist);
+//                this.setFrameHist(frame);
+//            }
+//        }
         return faceDetectedBasic || faceDetectedHist;
     }
     private Mat histogramEqualization(Mat input){

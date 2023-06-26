@@ -24,14 +24,13 @@ public final class FaceRecognition {
         );
 
         prediction = () -> {
-            if (predict.exists()) return;
             g.generate(predict);
             final long startTime = System.currentTimeMillis();
             while (predict.exists()) {
                 final long elapsedTime = System.currentTimeMillis() - startTime;
-                if (elapsedTime > 30000) {
+                if (elapsedTime > 10000) {
                     System.out.println("@FACE_RECOGNITION: Failed to complete prediction within allocated time.");
-                    out = "Could not be completed in 30 seconds...";
+                    out = "[FAILED]";
                     return;
                 }
             }
