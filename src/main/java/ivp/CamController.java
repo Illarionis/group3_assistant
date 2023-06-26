@@ -17,7 +17,7 @@ public class CamController {
     public Frame takePicture(){
         try {
             frameGrabber.start();
-            Thread.sleep(1000);
+            Thread.sleep(10);
             final var frame = frameGrabber.grab();
             frameGrabber.close();
             return frame;
@@ -26,31 +26,6 @@ public class CamController {
             throw new RuntimeException(e);
         }
     }
-
-    public void close() {
-        try {
-            frameGrabber.close();
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    public Frame capture() {
-        try {
-            return frameGrabber.grab();
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    public void start() {
-        try {
-            frameGrabber.start();
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
-
 
     public void addNewFace(File dir, String nameBasis){
         OpenCVFrameGrabber grabber = new OpenCVFrameGrabber(0);
