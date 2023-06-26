@@ -64,6 +64,26 @@ public final class ProfileCollection implements Displayable {
 
         final var converter = new JavaFXFrameConverter();
         final List<Node> entries = collectionHolder.getChildren();
+
+        final Entry entry = (targetDir, name) -> {
+            final var item = new Item(f);
+            item.setName(name);
+            item.setOnDelete(event -> {
+                entries.remove(item.getPanel());
+                final File[] storedImages = targetDir.listFiles();
+                if (storedImages != null) {
+                    for (var file : storedImages) {
+                        if (file.delete()) System.out.println("Successfully deleted user image");
+                        else System.out.println("Failed to delete user image at " + file.getPath());
+                    }
+                }
+                if (targetDir.delete()) System.out.println("Successfully deleted user image directory " + targetDir.getPath());
+                else System.out.println("Failed to delete user image directory " + targetDir.getPath());
+            });
+            entries.add(item.getPanel());
+            return item;
+        };
+
         save.setOnAction(saveEvent -> {
             final String name = user.getValue();
             if (name.isBlank()) {
@@ -95,22 +115,18 @@ public final class ProfileCollection implements Displayable {
 
             Platform.runLater(() -> pictureLabel.setText("Completed taking pictures"));
 
-            final var item = new Item(f);
-            item.setName(name);
-            item.setOnDelete(event -> {
-                entries.remove(item.getPanel());
-                final File[] storedImages = targetDir.listFiles();
-                if (storedImages != null) {
-                    for (var file : storedImages) {
-                        if (file.delete()) System.out.println("Successfully deleted user image");
-                        else System.out.println("Failed to delete user image at " + file.getPath());
-                    }
-                }
-                if (targetDir.delete()) System.out.println("Successfully deleted user image directory " + targetDir.getPath());
-                else System.out.println("Failed to delete user image directory " + targetDir.getPath());
-            });
-            entries.add(item.getPanel());
+            entry.generate(targetDir, name);
         });
+
+        final File[] files = dir.listFiles();
+        if (files == null) return;
+        for (var file : files) {
+            if (file.isDirectory()) {
+                final String name = dir.getName();
+                final var item = entry.generate(file, name);
+                item.setName(name);
+            }
+        }
     }
 
     private void setImage(Image i) {
@@ -122,5 +138,10 @@ public final class ProfileCollection implements Displayable {
     @Override
     public Region getPanel() {
         return panel;
+    }
+
+    @FunctionalInterface
+    private interface Entry {
+        Item generate(File targetDir, String name);
     }
 }
