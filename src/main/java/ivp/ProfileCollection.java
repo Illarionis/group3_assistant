@@ -66,6 +66,8 @@ public final class ProfileCollection implements Displayable {
         final var converter = new JavaFXFrameConverter();
         final List<Node> entries = collectionHolder.getChildren();
 
+        final File representations = new File("src/main/resources/ivp/database/representations_facenet512.pkl");
+
         final Entry entry = (file) -> {
             final var item = new Item(f);
             item.setName(file.getName().replace(".jpg", ""));
@@ -105,6 +107,7 @@ public final class ProfileCollection implements Displayable {
                 final var frame = c.takePicture();
                 s.save(target, frame);
                 setImage(converter.convert(frame));
+                if (representations.exists() && !representations.delete()) throw new IllegalStateException("Failed to delete face-net pkl so can not add a new user!");
                 try { Thread.sleep(200); }
                 catch (Exception e) { throw new RuntimeException(e); }
             });
