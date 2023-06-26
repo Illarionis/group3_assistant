@@ -35,15 +35,9 @@ def on_prediction_completed():
     os.remove(sys.argv[2])
 
 # Returns only the name of the person if the name is given as a path: folder1/folder2/Name of The Person (1).jpg
-def get_name_of_img(input_string):
-    # Find the index after the last "/"
-    start_index = input_string.rfind("/") + 1
-    # Find the index before the "("
-    end_index = input_string.find("(") - 1
-
-    sub_string = input_string[start_index:end_index]
-
-    return sub_string
+def get_name_of_img(image_file):
+    name = os.path.basename(image_file)
+    return os.path.splitext(name)[0]
 
 def recognize(img_full_path, database_full_path):
     # DeepFace.find() returns the a list of dataframes
@@ -63,9 +57,12 @@ def recognize(img_full_path, database_full_path):
 def predict():
     # Attempting to recognize the face
     print('Attemping to recognize person...')
-    person = recognize(sys.argv[4], sys.argv[3])
-    print("Detected " + person)
-
+    try:
+        person = recognize(sys.argv[4], sys.argv[3])
+        print("Detected " + person)
+    except:
+        print("Failed to find a representation.")
+        person = ""
     # Store result
     file = open(sys.argv[5], 'w')
     file.write(person)
@@ -77,13 +74,18 @@ start_time = datetime.now()
 while True :
     elapsed_time = datetime.now() - start_time
     if elapsed_time.total_seconds() > operational_seconds :
+        print('Stopping to loop as allocated operation time has been reached...')
         break
     elif should_terminate() :
-        delete_termination_flag()
+        print('Received termination request...')
+        on_termination_completed()
+        print('Completed termination request...')
         break
     elif should_predict() :
+        print('Received prediction request...')
         predict()
-        delete_prediction_flag()
+        on_prediction_completed()
+        print('Completed predction...')
 
 # Confirming termination
 print('Terminating...')

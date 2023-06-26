@@ -259,7 +259,7 @@ public final class MainApp extends Application {
                 saver.save(ivpInput, frame);
                 generator.generate(ivpPredict);
                 final String out = recognitionModel.predict();
-                if (out == null || out.equals("Null")) Platform.runLater(() -> detection.setImageLabelText("Failed to recognize..."));
+                if (out.isBlank()) Platform.runLater(() -> detection.setImageLabelText("Failed to recognize..."));
                 else Platform.runLater(() -> detection.setImageLabelText("Recognized: " + out));
             }
 
