@@ -25,14 +25,14 @@ public final class DetectionStatus implements Displayable {
 
     public DetectionStatus(Factory f, Designer d) {
         image = new ImageView();
-        label = f.createLabel("Recognized: ...", Pos.CENTER, 30, 30, Double.MAX_VALUE, 30);
-        final VBox content = f.createVBox(5, Paddings.CONTENT, Pos.CENTER, label, image);
+        label = f.createLabel("Recognized not started.", Pos.CENTER, 30, 30, Double.MAX_VALUE, 30);
+        final VBox content = f.createVBox(5, Paddings.CONTENT, Pos.CENTER, image);
         final ScrollPane viewport = f.createScrollPane(content);
         VBox.setVgrow(viewport, Priority.ALWAYS);
 
         detect = f.createButton("Click to detect...", 30, 30, Double.MAX_VALUE, 30);
-        panel  = f.createVBox(2, Paddings.DEFAULT, Pos.TOP_CENTER, detect, viewport);
-        d.setBorder(Borders.GRAY, detect, viewport);
+        panel  = f.createVBox(2, Paddings.DEFAULT, Pos.TOP_CENTER, detect, label, viewport);
+        d.setBorder(Borders.GRAY, detect, label, viewport);
     }
 
     public void setOnClick(EventHandler<ActionEvent> handler) {
@@ -45,11 +45,11 @@ public final class DetectionStatus implements Displayable {
         image.setFitHeight(panel.getHeight() - 50);
     }
 
-    public void setButtonText(String s) {
+    public void setDetectionText(String s) {
         detect.setText(s);
     }
 
-    public void setImageLabelText(String s) {
+    public void setRecognitionText(String s) {
         label.setText(s);
     }
 

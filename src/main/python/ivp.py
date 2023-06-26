@@ -18,6 +18,11 @@ print('Script may at most loop for ' + str(operational_seconds) + ' second(s)')
 print('Validating arguments...')
 assert len(sys.argv) == 6
 
+
+# Building the model
+model = DeepFace.build_model("Facenet512")
+
+
 # Defining a function to confirm whether a termination request has arrived
 def should_terminate():
     return os.path.exists(sys.argv[1])
@@ -62,7 +67,7 @@ def predict():
         print("Detected " + person)
     except:
         print("Failed to find a representation.")
-        person = ""
+        person = "[FAILED]"
     # Store result
     file = open(sys.argv[5], 'w')
     file.write(person)

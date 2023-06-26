@@ -40,23 +40,35 @@ public final class MainApp extends Application {
         final File nlpInput     = new File("src/main/resources/nlp/input.txt");
         final File nlpOutput    = new File("src/main/resources/nlp/output.txt");
 
-        // Requirements to run the face recognition model
-        final File ivpModel     = new File("/src/main/python/ivp.py");
-        final File ivpTerminate = new File("/src/main/resources/ivp/model.terminate");
-        final File ivpPredict   = new File("/src/main/resources/ivp/model.predict");
-        final File ivpDataset = new File("src/main/resources/ivp/database");
-        final File ivpInput   = new File("/src/main/resources/ivp/input.jpg");
-        final File ivpOutput = new File("/src/main/resources/ivp/output.txt");
+        // Validating model existence
+        if (!nlpModel.exists()) throw new IllegalStateException("Grammar model does not exist!");
 
-        // ...
-        final var assistant = new Assistant();
-        final var jazzy     = new Jazzy();
-        final var camera    = new CamController();
-        final var detector  = new FaceDetector();
-        final var saver     = new FrameSaver();
+        // Requirements to run the face recognition model
+        final File ivpModel     = new File("src/main/python/ivp.py");
+        final File ivpTerminate = new File("src/main/resources/ivp/model.terminate");
+        final File ivpPredict   = new File("src/main/resources/ivp/model.predict");
+        final File ivpDataset   = new File("src/main/resources/ivp/database");
+        final File ivpInput     = new File("src/main/resources/ivp/input.jpg");
+        final File ivpOutput    = new File("src/main/resources/ivp/output.txt");
+
+        // Validating model existence
+        if (!ivpModel.exists()) throw new IllegalStateException("Face recognition model does not exist!");
+
+        // IO Variables
         final var generator = new Generator();
         final var reader    = new Reader();
         final var writer    = new Writer();
+
+        // Back-End Variables
+        final var assistant = new Assistant();
+        final var jazzy     = new Jazzy();
+
+        // IVP Variables
+        final var camera    = new CamController();
+        final var detector  = new FaceDetector();
+        final var saver     = new FrameSaver();
+
+        // Front-End Variables
         final var designer  = new Designer();
         final var factory   = new Factory();
         final var chat      = new Chat(factory, designer);
@@ -216,10 +228,10 @@ public final class MainApp extends Application {
         final Runnable faceDetection = () -> {
             final var converter  = new JavaFXFrameConverter();
             final Image[] images = new Image[1];
-            final Runnable captureNotification = () -> detection.setButtonText("Detecting...");
-            final Runnable successNotification = () -> detection.setButtonText("Detected successfully!");
-            final Runnable failureNotification = () -> detection.setButtonText("No one detected!");
-            final Runnable delayNotification   = () -> detection.setButtonText("Detecting in " + remainingSeconds[0] + " seconds.");
+            final Runnable captureNotification = () -> detection.setDetectionText("Detecting...");
+            final Runnable successNotification = () -> detection.setDetectionText("Detected successfully!");
+            final Runnable failureNotification = () -> detection.setDetectionText("No one detected!");
+            final Runnable delayNotification   = () -> detection.setDetectionText("Detecting in " + remainingSeconds[0] + " seconds.");
             final Runnable showUsedPicture     = () -> detection.setImage(images[0]);
             System.out.println("@FACE_DETECTION: Starting to loop...");
             previousCheckpoint[0] = delaySeconds;
@@ -235,7 +247,7 @@ public final class MainApp extends Application {
                     images[0] = converter.convert(frame);
                     Platform.runLater(showUsedPicture);
                     if (detected) frames.push(frame);
-                    else Platform.runLater(() -> detection.setImageLabelText("No one detected..."));
+                    else Platform.runLater(() -> detection.setRecognitionText("No one detected..."));
                     manualDetectRequest[0] = false;
                     resetDetectionDelay.run();
                 } else if (remainingSeconds[0] < previousCheckpoint[0]) {
@@ -255,12 +267,14 @@ public final class MainApp extends Application {
             while (primaryStage.isShowing()) {
                 if (frames.empty()) continue;
                 else if (!recognitionModel.isRunning()) recognitionModel.start();
+                Platform.runLater(() -> detection.setRecognitionText("Attempting to recognize..."));
                 final var frame = frames.pop();
                 saver.save(ivpInput, frame);
                 generator.generate(ivpPredict);
                 final String out = recognitionModel.predict();
-                if (out.isBlank()) Platform.runLater(() -> detection.setImageLabelText("Failed to recognize..."));
-                else Platform.runLater(() -> detection.setImageLabelText("Recognized: " + out));
+                if (out.equals("[FAILED]")) Platform.runLater(() -> detection.setRecognitionText("Failed to recognize..."));
+                else Platform.runLater(() -> detection.setRecognitionText("Recognized: " + out));
+                System.out.println("Recognition result: " + out);
             }
 
             System.out.println("@FACE_RECOGNITION: Stopped looping...");
