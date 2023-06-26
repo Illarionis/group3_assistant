@@ -20,7 +20,6 @@ public final class Factory {
     public Factory() {
         final var resource = getClass().getResource("/css/scroll-pane.css");
         scrollPaneStylesheet = resource == null ? "" : resource.toExternalForm();
-        System.out.println(scrollPaneStylesheet);
     }
 
     public Button createButton(String text, double minWidth, double minHeight, double maxWidth, double maxHeight) {
