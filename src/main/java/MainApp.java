@@ -45,6 +45,7 @@ public final class MainApp extends Application {
         final var detection = new DetectionStatus(factory, designer);
         final var window    = new Window(factory);
         final var scene =  factory.createScene(window.getPanel(), 960, 960);
+        primaryStage.setTitle("ASSISTANT");
         primaryStage.setScene(scene);
         primaryStage.show();
 
