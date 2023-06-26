@@ -35,7 +35,7 @@ public final class DetectionStatus implements Displayable {
         d.setBorder(Borders.GRAY, detect, viewport);
     }
 
-    public void setDetection(EventHandler<ActionEvent> handler) {
+    public void setOnClick(EventHandler<ActionEvent> handler) {
         detect.setOnAction(handler);
     }
 

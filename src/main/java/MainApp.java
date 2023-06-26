@@ -198,6 +198,7 @@ public final class MainApp extends Application {
         final Stack<Frame> frames = new Stack<>();
 
         // Requirements to run face detections
+        final boolean[] manualDetectRequest = {false};
         final long delaySeconds = 31;
         final long[] delayStartTime = new long[1];
         final long[] remainingSeconds = new long[1];
@@ -207,6 +208,9 @@ public final class MainApp extends Application {
             previousCheckpoint[0] = delaySeconds;
             delayStartTime[0] = System.currentTimeMillis();
         };
+
+        // ...
+        detection.setOnClick(event -> manualDetectRequest[0] = true);
 
         // Defining how the face is getting detected
         final Runnable faceDetection = () -> {
@@ -222,7 +226,7 @@ public final class MainApp extends Application {
             delayStartTime[0] = System.currentTimeMillis();
             while(primaryStage.isShowing()) {
                 remainingSeconds[0] = delaySeconds - (System.currentTimeMillis() - delayStartTime[0]) / 1000;
-                if (remainingSeconds[0] <= 0) {
+                if (remainingSeconds[0] <= 0 || manualDetectRequest[0]) {
                     Platform.runLater(captureNotification);
                     final var frame = camera.takePicture();
                     final boolean detected = detector.detectFace(frame);
@@ -230,7 +234,9 @@ public final class MainApp extends Application {
                     else Platform.runLater(failureNotification);
                     images[0] = converter.convert(frame);
                     Platform.runLater(showUsedPicture);
-                    if (detected);
+                    if (detected) frames.push(frame);
+                    else detection.setImageLabelText("No one detected...");
+                    manualDetectRequest[0] = false;
                     resetDetectionDelay.run();
                 } else if (remainingSeconds[0] < previousCheckpoint[0]) {
                     Platform.runLater(delayNotification);
@@ -296,6 +302,18 @@ public final class MainApp extends Application {
                         + nlpDataset.getAbsolutePath() + " "
                         + nlpInput.getAbsolutePath() + " "
                         + nlpOutput.getAbsolutePath()
+        );
+
+        // Printing the python command
+        System.out.println(
+                "IVP Python Command:\n" +
+                        "python "
+                        + ivpModel.getAbsolutePath() + " "
+                        + ivpTerminate.getAbsolutePath() + " "
+                        + ivpPredict.getAbsolutePath() + " "
+                        + ivpDataset.getAbsolutePath() + " "
+                        + ivpInput.getAbsolutePath() + " "
+                        + ivpOutput.getAbsolutePath()
         );
     }
 }
