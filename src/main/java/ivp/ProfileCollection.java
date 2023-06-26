@@ -66,20 +66,13 @@ public final class ProfileCollection implements Displayable {
         final var converter = new JavaFXFrameConverter();
         final List<Node> entries = collectionHolder.getChildren();
 
-        final Entry entry = (targetDir, name) -> {
+        final Entry entry = (file) -> {
             final var item = new Item(f);
-            item.setName(name);
+            item.setName(file.getName().replace(".jpg", ""));
             item.setOnDelete(event -> {
                 entries.remove(item.getPanel());
-                final File[] storedImages = targetDir.listFiles();
-                if (storedImages != null) {
-                    for (var file : storedImages) {
-                        if (file.delete()) System.out.println("Successfully deleted user image");
-                        else System.out.println("Failed to delete user image at " + file.getPath());
-                    }
-                }
-                if (targetDir.delete()) System.out.println("Successfully deleted user image directory " + targetDir.getPath());
-                else System.out.println("Failed to delete user image directory " + targetDir.getPath());
+                if (file.delete()) System.out.println("Successfully deleted user image directory " + file.getPath());
+                else System.out.println("Failed to delete user image directory " + file.getPath());
             });
             entries.add(item.getPanel());
             return item;
@@ -92,9 +85,9 @@ public final class ProfileCollection implements Displayable {
                 return;
             }
             
-            final File targetDir = new File(dir.getPath() + "/" + name);
-            if (!targetDir.exists() && !targetDir.mkdirs()) {
-                System.out.println("Failed to generate user image directory at " + targetDir.getPath());
+            final File targetFile = new File(dir.getPath() + "/" + name + ".jpg");
+            if (!targetFile.exists() && !targetFile.mkdirs()) {
+                System.out.println("Failed to generate user image at " + targetFile.getPath());
                 return;
             }
 
@@ -104,7 +97,7 @@ public final class ProfileCollection implements Displayable {
                 catch (Exception e) { throw new RuntimeException(e); }
             });
 
-            final File target = new File(targetDir + "/" + name + "(" + 0 + ")" + ".jpg");
+            final File target = new File(targetFile + "/" + name + "(" + 0 + ")" + ".jpg");
             g.generate(target);
 
             Platform.runLater(() -> {
@@ -118,7 +111,7 @@ public final class ProfileCollection implements Displayable {
 
             Platform.runLater(() -> pictureLabel.setText("Completed taking pictures"));
 
-            entry.generate(targetDir, name);
+            entry.generate(targetFile);
         });
 
         final File[] files = dir.listFiles();
@@ -126,7 +119,7 @@ public final class ProfileCollection implements Displayable {
         for (var file : files) {
             if (file.isDirectory()) {
                 final String name = file.getName();
-                final var item = entry.generate(file, name);
+                final var item = entry.generate(file);
                 item.setName(name);
             }
         }
@@ -145,6 +138,6 @@ public final class ProfileCollection implements Displayable {
 
     @FunctionalInterface
     private interface Entry {
-        Item generate(File targetDir, String name);
+        Item generate(File f);
     }
 }
