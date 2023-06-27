@@ -76,7 +76,7 @@ public final class MainApp extends Application {
         final var grammar   = new GrammarEditor(factory, designer, assistant);
         final var skills    = new SkillEditor(factory, designer, assistant);
         final var detection = new DetectionStatus(factory, designer);
-        final var profiles  = new ProfileCollection(generator, factory, designer, camera, saver, ivpDataset);
+        final var profiles  = new ProfileCollection(generator, factory, designer, camera, saver, ivpDataset, ivpPredict);
         final var window    = new Window(factory);
         final var scene =  factory.createScene(window.getPanel(), 960, 960);
 
@@ -273,6 +273,7 @@ public final class MainApp extends Application {
                 generator.generate(ivpPredict);
                 final String out = recognitionModel.predict();
                 if (out.equals("[FAILED]")) Platform.runLater(() -> detection.setRecognitionText("Failed to recognize..."));
+                else if (out.equals("[TIME]")) Platform.runLater(() -> detection.setDetectionText("Failed to recognize within allocated time..."));
                 else Platform.runLater(() -> detection.setRecognitionText("Recognized: " + out));
                 System.out.println("Recognition result: " + out);
             }

@@ -28,9 +28,9 @@ public final class FaceRecognition {
             final long startTime = System.currentTimeMillis();
             while (predict.exists()) {
                 final long elapsedTime = System.currentTimeMillis() - startTime;
-                if (elapsedTime > 10000) {
+                if (elapsedTime > 20000) {
                     System.out.println("@FACE_RECOGNITION: Failed to complete prediction within allocated time.");
-                    out = "[FAILED]";
+                    out = "[TIME]";
                     return;
                 }
             }
