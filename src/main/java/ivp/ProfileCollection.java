@@ -20,7 +20,6 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
-import org.bytedeco.javacv.JavaFXFrameConverter;
 
 import java.io.File;
 import java.util.List;
@@ -93,6 +92,7 @@ public final class ProfileCollection implements Displayable {
                 entries.remove(item.getPanel());
                 if (file.delete()) System.out.println("Successfully deleted user image directory " + file.getPath());
                 else System.out.println("Failed to delete user image directory " + file.getPath());
+                if (representations.exists()) representations.delete();
                 if (image.getImage().getUrl().equals(file.getAbsolutePath())) {
                     image.setImage(null);
                     takePicture.setOnAction(null);
